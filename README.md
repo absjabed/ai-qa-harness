@@ -9,6 +9,25 @@ in `.claude/`; adding another tool is a one-line wrapper each — see [`agents/R
 It is application-agnostic: everything project-specific lives in **`PROJECT-PROFILE.md`** and **`.env`**.
 Nothing in `.claude/`, `config/`, or `lib/` names an application, a role, or a domain term.
 
+## Start here — the handbook
+
+**[`docs/index.html`](docs/index.html)** is the single page that explains the whole harness: how it learns
+your application, the ten setup steps, what each of the five agents does and refuses to do, every component
+in plain language, the workflows, and troubleshooting. Read it before the rest of this README.
+
+It is a self-contained page — no build step, no server, no network beyond its webfonts. Clone the repo and
+open it:
+
+```bash
+start docs/index.html      # Windows
+open docs/index.html       # macOS
+xdg-open docs/index.html   # Linux
+```
+
+> **Don't click it in GitHub's web UI.** GitHub serves `.html` files as source, so you'll get markup rather
+> than the page. Open it from a local clone, or publish `docs/` with GitHub Pages if you want a shareable
+> link for the team.
+
 ## Using this template
 
 This repository is a template, not a project. Nothing in it is specific to any application — you copy it,
@@ -32,7 +51,7 @@ application stays in your copy. That is the line that keeps this template reusab
 
 | Doc | For |
 |---|---|
-| **[docs/index.html](docs/index.html)** | The handbook — open it in a browser. Setup, agents, components, workflows, troubleshooting in one navigable page. Start here. |
+| **[docs/index.html](docs/index.html)** | **The handbook** — everything in one navigable page. Open from a local clone, not GitHub's web UI (see above). |
 | [SETUP.md](SETUP.md) | The ten setup steps, with the reasoning behind each |
 | [docs/COMPONENTS.md](docs/COMPONENTS.md) | Every file: purpose, usage, extension points, failure modes |
 | [docs/AGENTS.md](docs/AGENTS.md) | The five agents: inputs, outputs, checkpoints, what to expect, what they refuse |

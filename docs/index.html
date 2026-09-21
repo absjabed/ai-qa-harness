@@ -573,6 +573,8 @@ td code { white-space: nowrap; }
         application, its roles, its vocabulary, its modules, its severity rubric. <code>.env</code> — URLs
         and credentials. If you find yourself editing something else to make the harness fit, it probably
         belongs in the profile.</p>
+        <p>This repo is a <b>template</b>: you copy it per project rather than working in it directly.
+        <a href="#setup">Setup</a> opens with how to take a copy.</p>
       </div>
     </section>
 
@@ -681,6 +683,20 @@ td code { white-space: nowrap; }
       <h2>Setup, in nine steps</h2>
       <p class="lede">Work in order — later steps assume earlier ones. Most of the hour goes into steps 3
       and 6.</p>
+
+      <div class="note">
+        <p><strong>First, get a copy.</strong> This repository is a template, not a project. You copy it,
+        point the copy at your application, and that copy becomes your project's test suite — the template
+        itself never gains application-specific content.</p>
+        <pre style="margin-top:10px"><code>gh repo create &lt;org&gt;/&lt;app&gt;-tests --private --template &lt;org&gt;/ai-qa-harness --clone
+
+# or, without git history:
+git clone --depth 1 &lt;template-url&gt; &lt;app&gt;-tests &amp;&amp; rm -rf &lt;app&gt;-tests/.git &amp;&amp; git -C &lt;app&gt;-tests init</code></pre>
+        <p style="margin-top:10px">Improvements you make while working on a project come back upstream
+        <b>only if they are application-agnostic</b> — a sharper agent prompt, a new <code>BasePage</code>
+        helper, a better error message. Anything that names your application stays in your copy. That line
+        is what keeps the template reusable, and it erodes quietly if nobody holds it.</p>
+      </div>
 
       <ol class="steps">
 
@@ -1194,7 +1210,7 @@ npx playwright test tests/example.spec.ts</code></pre>
       <p class="eyebrow">Day to day</p>
       <h2>Workflows</h2>
       <p class="lede">Condensed. Full recipes — including adding page objects and DB assertions by hand,
-      and moving the harness to another project — in <a href="WORKFLOWS.md">WORKFLOWS.md</a>.</p>
+      and starting a new project from the template — in <a href="WORKFLOWS.md">WORKFLOWS.md</a>.</p>
 
       <h3>A test that passed last week now fails</h3>
       <p>Decide first whether the <b>application</b> changed or the <b>environment</b> did. They look

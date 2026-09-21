@@ -201,18 +201,40 @@ reviewing agent output is most of the job.
 
 ---
 
-## 7. Moving the harness to another project
+## 7. Starting a new project from the template
 
-Copy everything **except**:
+This repository is a template. You don't move a configured harness between projects — you take a fresh
+copy of the template each time, which is always already at the pristine state.
 
-- `.env` — never. New project, new credentials.
-- `specs/*.plan.md`, `specs/*.plan.csv` — story-specific
-- `specs/defects.csv`, `specs/temp-defects/` — project-specific
-- `tests/Release wise test cases/` — story-specific
-- Your page objects, beyond `BasePage`, `LoginPage`, `DashboardPage`, `common/`
-- `data/testData.ts` and `data/sql_queries.ts` contents — keep the files, reset to `CHANGE_ME`
+```bash
+gh repo create <org>/<app>-tests --private --template <org>/ai-qa-harness --clone
+```
 
-Then reset `PROJECT-PROFILE.md` to placeholders and run [SETUP.md](../SETUP.md).
+Or without git history, if the copy shouldn't be linked to the template at all:
 
-Faster alternative: keep a pristine copy of the harness as configured at the end of setup, before any
-project data went in, and branch from that each time.
+```bash
+git clone --depth 1 <template-url> <app>-tests && rm -rf <app>-tests/.git && git -C <app>-tests init
+```
+
+Then work through [SETUP.md](../SETUP.md).
+
+### Feeding improvements back
+
+Work on a real project is where the harness gets better — and also where it gets contaminated. The rule
+that keeps it reusable:
+
+| Goes back to the template | Stays in the project copy |
+|---|---|
+| A sharper agent prompt | Anything naming your application |
+| A new `BasePage` helper | Your page objects, beyond the shipped three |
+| A clearer error message | `testData.ts` / `sql_queries.ts` contents |
+| A fix to `DbConnection` handling | Your navigation-flow plans, module tags, plans, specs |
+| A new plan-template field | Your `PROJECT-PROFILE.md` answers |
+
+The failure mode is gradual: one project-specific example in an agent prompt, one domain term in a doc,
+and two projects later the template has a personality. Re-run a grep for your application's vocabulary
+before merging anything upstream.
+
+### Never copy back
+
+`.env`, in either direction. New project, new credentials.

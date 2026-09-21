@@ -7,6 +7,23 @@ in `PROJECT-PROFILE.md` instead.
 
 ---
 
+## 0. Take a copy
+
+This repository is a template. Work in a copy, never in the template itself — the template stays free of
+application-specific content so the next project can start clean.
+
+```bash
+gh repo create <org>/<app>-tests --private --template <org>/ai-qa-harness --clone
+```
+
+Or without git history:
+
+```bash
+git clone --depth 1 <template-url> <app>-tests && rm -rf <app>-tests/.git && git -C <app>-tests init
+```
+
+Everything below happens inside that copy.
+
 ## 1. Install
 
 ```bash

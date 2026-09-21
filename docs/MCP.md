@@ -6,6 +6,10 @@ access to the database. Both arrive through MCP servers configured in `.mcp.json
 Copy `.mcp.json.example` to `.mcp.json` and fill it in. `.mcp.json` is gitignored, because a database entry
 usually carries a connection string.
 
+That file is Claude Code's format. MCP is an open protocol, so the same servers work in any MCP-capable
+tool — only the config file's location and shape differ. [`agents/README.md`](../agents/README.md) lists
+where each tool looks.
+
 ---
 
 ## `playwright-test` — required
@@ -14,6 +18,14 @@ usually carries a connection string.
 |---|---|
 | Needed by | `playwright-test-generator`, `playwright-test-healer` |
 | Without it | The generator cannot drive the browser, so it will not write a test. The healer cannot inspect a failing page. |
+
+It ships with `@playwright/test`, so there is nothing extra to install:
+
+```json
+{ "command": "npx", "args": ["playwright", "run-test-mcp-server"] }
+```
+
+That entry is verified — it is what `npx playwright init-agents` generates for itself.
 
 This is not a soft dependency. The generator's whole method is to perform each step against the real
 application and then write up what actually happened — take the browser away and there is nothing left but

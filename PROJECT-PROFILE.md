@@ -1,6 +1,6 @@
 # Project Profile
 
-**This is the one file you fill in per project.** Every AI agent in `.claude/commands/` reads it before
+**This is the one file you fill in per project.** Every agent in `agents/` reads it before
 doing anything, and `config/projectProfile.ts` mirrors the machine-readable parts for the TypeScript side.
 Nothing else in this harness should need to know your application's name, vocabulary, or roles.
 

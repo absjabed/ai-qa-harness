@@ -1,12 +1,15 @@
 {
-  "//": "Copy to .mcp.json and fill in. .mcp.json is gitignored — it may contain a connection string.",
-  "//  playwright-test": "Required by the generator and healer agents. Without it the generator cannot drive the browser and will not write tests.",
-  "//  database": "Optional but high value. Lets agents introspect the real schema instead of asking you for every query. Use a READ-ONLY account against a QA database. Never production.",
+  "//": "Copy to .mcp.json and fill in. .mcp.json is gitignored — the database entry carries a connection string.",
+  "//  This is Claude Code's format. Other tools use the same servers in their own config file —": "",
+  "//  see agents/README.md for where each one looks.": "",
+
+  "//  playwright-test": "REQUIRED by the context-builder, generator and healer. Ships with @playwright/test — no separate install. Verified against `npx playwright init-agents`, which generates this exact entry.",
+  "//  database": "OPTIONAL but high value. Lets agents introspect the real schema instead of asking you for every query. Use a READ-ONLY account against a QA database. Never production. See docs/MCP.md.",
 
   "mcpServers": {
     "playwright-test": {
       "command": "npx",
-      "args": ["-y", "@playwright/mcp@latest", "--caps=testing"]
+      "args": ["playwright", "run-test-mcp-server"]
     },
 
     "database": {

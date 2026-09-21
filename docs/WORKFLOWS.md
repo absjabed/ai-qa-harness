@@ -191,7 +191,7 @@ Give them this order:
 
 1. `docs/index.html` — open in a browser, read the orientation and agent sections
 2. `SETUP.md` — even if the harness is already configured, it explains why each piece exists
-3. `.claude/TEST-AUTHORING-INVARIANTS.md` — seven rules, one page
+3. `TEST-AUTHORING-INVARIANTS.md` — seven rules, one page
 4. `tests/example.spec.ts` — the conventions in working code
 5. Their first task: add one page object by hand (workflow 3). Faster to understand the Page Factory by
    wiring one than by reading about it.

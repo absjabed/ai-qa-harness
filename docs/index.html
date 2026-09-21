@@ -762,6 +762,22 @@ cp .mcp.json.example .mcp.json</code></pre>
               there is no undo. Read-only removes the possibility rather than relying on judgment. Never
               point it at production.</p>
             </div>
+            <h4 style="font-size:14px;margin:18px 0 6px">If you are not using Claude Code</h4>
+            <p>The harness does not require it. The test suite uses no AI at all, the knowledge layer is
+            plain markdown, and the agent definitions live in <code>agents/</code> as plain prose with no
+            vendor's frontmatter and no vendor's tool names. Only the wrappers in <code>.claude/</code> are
+            Claude-specific, and each is a single line pointing at its canonical file.</p>
+            <p>To add another tool: put a one-line wrapper where that tool looks for agent definitions,
+            translate the frontmatter, and point it at the same MCP servers — the protocol is open, only
+            the config file's shape differs. <code>agents/README.md</code> has the locations and the
+            tool-name translation table.</p>
+            <div class="note">
+              <p><strong>Whichever tool you use, edit <code>agents/*.md</code>, never a wrapper</strong> —
+              a wrapper that grows instructions of its own is a second copy waiting to drift. And note that
+              porting is the easy part: these definitions depend on blocking checkpoints, refusals and
+              self-audits, and a weaker model drops those first. Match the model intent, not just the
+              syntax.</p>
+            </div>
           </div>
         </li>
 
@@ -1243,7 +1259,7 @@ npx playwright test tests/example.spec.ts</code></pre>
       <p class="eyebrow">Reference</p>
       <h2>Invariants I1–I7</h2>
       <p class="lede">The conventions every test follows. They live in one file,
-      <code>.claude/TEST-AUTHORING-INVARIANTS.md</code>, cited by number from three agents — so a
+      <code>TEST-AUTHORING-INVARIANTS.md</code>, cited by number from three agents — so a
       convention has exactly one place to change.</p>
 
       <div class="inv">
@@ -1585,7 +1601,7 @@ npx playwright test tests/example.spec.ts</code></pre>
       <ol>
         <li>This page — orientation and agents</li>
         <li><code>SETUP.md</code>, even if the harness is already configured — it explains why each piece exists</li>
-        <li><code>.claude/TEST-AUTHORING-INVARIANTS.md</code> — seven rules, one page</li>
+        <li><code>TEST-AUTHORING-INVARIANTS.md</code> — seven rules, one page</li>
         <li><code>tests/example.spec.ts</code> — the conventions in working code</li>
         <li>First task: add one page object by hand. Faster to understand the Page Factory by wiring one
         than by reading about it.</li>

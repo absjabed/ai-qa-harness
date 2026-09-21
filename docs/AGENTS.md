@@ -1,6 +1,10 @@
 # Agent Reference
 
-Five agents in `.claude/commands/`. They form a pipeline but each runs alone.
+Five agents, defined in [`agents/`](../agents/) as vendor-neutral markdown and wired into Claude Code by
+thin wrappers in `.claude/commands/`. They form a pipeline but each runs alone.
+
+Not using Claude Code? [`agents/README.md`](../agents/README.md) covers porting — it is a one-line wrapper
+per agent, plus frontmatter translation.
 
 `playwright-context-builder` runs first and rarely: it establishes what the harness knows about the
 application, which the other four then read. See the handbook's **How it learns your application** section
@@ -25,7 +29,7 @@ story ──▶ planner ──▶ plan.md + plan.csv ──▶ generator ──�
 ```
 
 All five read `PROJECT-PROFILE.md` first. Three of them also read
-`.claude/TEST-AUTHORING-INVARIANTS.md` and cite invariants by number rather than restating them — one file,
+`TEST-AUTHORING-INVARIANTS.md` and cite invariants by number rather than restating them — one file,
 so a convention has a single place to change.
 
 ---

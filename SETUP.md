@@ -64,10 +64,32 @@ No database? Set `DB_VALIDATION_ENABLED=false` and skip the `DB_*` block. No API
 cp .mcp.json.example .mcp.json
 ```
 
-The Playwright entry is required — the generator and healer cannot work without a browser. The database
-entry is optional but removes the single biggest source of friction in this harness: with it, agents can
-read your schema instead of asking you for every query. Use a **read-only** account against a QA database,
-never production. [docs/MCP.md](docs/MCP.md) has the reasoning and the caveats.
+The Playwright entry is required — the context-builder, generator and healer cannot work without a browser.
+It ships with `@playwright/test`, so there is nothing extra to install. The database entry is optional but
+removes the single biggest source of friction in this harness: with it, agents read your schema instead of
+asking you for every query. Use a **read-only** account against a QA database, never production.
+[docs/MCP.md](docs/MCP.md) has the reasoning and the caveats.
+
+### If you are not using Claude Code
+
+The harness does not require it. Three of its four layers are vendor-neutral already:
+
+- The **test suite** (`playwright.config.ts`, `config/`, `data/`, `lib/`, `pages/`, `tests/`) uses no AI at
+  all — `npm test` runs it.
+- The **knowledge layer** (`PROJECT-PROFILE.md`, `context/`, `specs/`,
+  `TEST-AUTHORING-INVARIANTS.md`) is plain markdown any tool can read.
+- The **agent definitions** live in [`agents/`](agents/) as plain prose with no vendor's frontmatter and no
+  vendor's tool names.
+
+Only the wrappers in `.claude/` are Claude-specific, and they contain no instructions — each is one line
+pointing at its canonical file in `agents/`. To support another tool, write the equivalent one-line wrapper
+where that tool looks, translate the frontmatter, and point it at the same MCP servers.
+[`agents/README.md`](agents/README.md) has the locations, the tool-name translation table, and the part
+that actually matters: these definitions depend on blocking checkpoints, refusals and self-audits, and a
+weaker model drops those first.
+
+**Whichever tool you use, edit `agents/*.md`, never a wrapper.** A wrapper that grows instructions of its
+own is a second copy waiting to drift.
 
 ## 3. Baseline the application
 

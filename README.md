@@ -1,7 +1,10 @@
 # AI Test Harness — Playwright + TypeScript
 
-An AI-driven test automation harness. Five Claude agents learn your application, plan, generate, heal, and
-file defects against a Playwright + TypeScript suite built on the Page Object / Page Factory pattern.
+An AI-driven test automation harness. Five agents learn your application, plan, generate, heal, and file
+defects against a Playwright + TypeScript suite built on the Page Object / Page Factory pattern.
+
+The agents are defined in [`agents/`](agents/) as plain, vendor-neutral markdown. Claude Code wrappers ship
+in `.claude/`; adding another tool is a one-line wrapper each — see [`agents/README.md`](agents/README.md).
 
 It is application-agnostic: everything project-specific lives in **`PROJECT-PROFILE.md`** and **`.env`**.
 Nothing in `.claude/`, `config/`, or `lib/` names an application, a role, or a domain term.
@@ -37,11 +40,12 @@ application stays in your copy. That is the line that keeps this template reusab
 | [docs/MCP.md](docs/MCP.md) | Wiring the browser and database MCP servers, and why read-only matters |
 | [context/README.md](context/README.md) | What project knowledge goes in `context/`, and in what shape |
 | [PROJECT-PROFILE.md](PROJECT-PROFILE.md) | The file you fill in per project |
-| [.claude/TEST-AUTHORING-INVARIANTS.md](.claude/TEST-AUTHORING-INVARIANTS.md) | I1–I7, the conventions every test follows |
+| [TEST-AUTHORING-INVARIANTS.md](TEST-AUTHORING-INVARIANTS.md) | I1–I7, the conventions every test follows |
+| [agents/README.md](agents/README.md) | Using these agents with a tool other than Claude Code |
 
 ## What the AI layer does
 
-Five agents in `.claude/commands/`, run as slash commands. They hand off in sequence but each works alone.
+Five agents, defined in `agents/` and run as slash commands via the `.claude/` wrappers. They hand off in sequence but each works alone.
 
 | Agent | Input | Output |
 |---|---|---|
@@ -68,7 +72,7 @@ first pass; `context/README.md` explains what belongs there and why distilled be
 
 ## Conventions
 
-`.claude/TEST-AUTHORING-INVARIANTS.md` holds invariants I1–I7 — one file, cited by number from the three
+`TEST-AUTHORING-INVARIANTS.md` holds invariants I1–I7 — one file, cited by number from the three
 authoring agents so a convention has a single place to change.
 
 | | Invariant |
@@ -84,9 +88,11 @@ authoring agents so a convention has a single place to change.
 ## Layout
 
 ```
+agents/                          the five agent definitions - canonical, vendor-neutral
+  README.md                      porting them to another tool
 .claude/
-  TEST-AUTHORING-INVARIANTS.md   I1-I7, the single source of truth
-  commands/                      the five agents
+  commands/                      thin Claude Code wrappers - one line each, no instructions
+TEST-AUTHORING-INVARIANTS.md     I1-I7, the single source of truth
 context/
   README.md                      what project knowledge goes here, and in what shape
   BASELINE.md                    what is known about the app - and what is not
@@ -161,7 +167,8 @@ has the rest.
 ## Requirements
 
 - Node.js 18+
-- The Playwright Test MCP server, for the context-builder, generator and healer agents
+- An agentic coding tool. Claude Code works out of the box; any MCP-capable tool works with a one-line wrapper per agent
+- The Playwright test MCP server (`npx playwright run-test-mcp-server`, ships with `@playwright/test`) — for the context-builder, generator and healer
 - Optionally a read-only database MCP server — see [docs/MCP.md](docs/MCP.md)
 - SQL Server access, if DB validation is in scope (`PROJECT-PROFILE.md` section 5)
 

@@ -35,6 +35,13 @@ npm install
 npx playwright install
 ```
 
+Then open the handbook — it covers everything below in more depth, and is the fastest way to understand
+what you are configuring:
+
+```bash
+npm run docs
+```
+
 ## 2. Connect it to your application
 
 Two files. The agents need both before they can do anything useful.

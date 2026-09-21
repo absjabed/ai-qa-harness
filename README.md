@@ -15,18 +15,20 @@ Nothing in `.claude/`, `config/`, or `lib/` names an application, a role, or a d
 your application, the ten setup steps, what each of the five agents does and refuses to do, every component
 in plain language, the workflows, and troubleshooting. Read it before the rest of this README.
 
-It is a self-contained page — no build step, no server, no network beyond its webfonts. Clone the repo and
-open it:
+It is a self-contained page — no build step, no server, no network beyond its webfonts. From a clone:
 
 ```bash
-start docs/index.html      # Windows
-open docs/index.html       # macOS
-xdg-open docs/index.html   # Linux
+npm run docs
 ```
 
-> **Don't click it in GitHub's web UI.** GitHub serves `.html` files as source, so you'll get markup rather
-> than the page. Open it from a local clone, or publish `docs/` with GitHub Pages if you want a shareable
-> link for the team.
+Or open `docs/index.html` in a browser yourself.
+
+> **Don't click it in GitHub's web UI.** GitHub serves `.html` as source, so you'll get 88 KB of markup
+> rather than the page.
+>
+> There is deliberately no hosted URL. GitHub Pages would publish this to the open internet even though
+> the repository is private — Pages does not inherit repository privacy, and access-controlled Pages is an
+> Enterprise Cloud feature. The handbook stays a local file.
 
 ## Using this template
 
@@ -141,6 +143,9 @@ tests/
   example.spec.ts                reference spec demonstrating I1-I7
   seed.spec.ts                   the generator's live-drive starting point
   common/                        test-side helpers
+docs/
+  index.html                     the handbook - `npm run docs` opens it
+scripts/open-docs.js             opens the handbook cross-platform
 PROJECT-PROFILE.md               the one file you fill in per project
 .env.example                     copy to .env
 .mcp.json.example                copy to .mcp.json - browser + optional database access
@@ -150,6 +155,7 @@ PROJECT-PROFILE.md               the one file you fill in per project
 
 ```bash
 npm install && npx playwright install
+npm run docs                  # open the handbook
 npm test                      # everything
 npm run test:regression       # --grep "@Regression"
 npm run test:headed

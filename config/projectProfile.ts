@@ -7,7 +7,7 @@
  */
 
 /** Role keys for this application. Must match PROJECT-PROFILE.md section 2 and `data/auth_data.ts`. */
-export const roles = ['admin', 'role2', 'role3'] as const;
+export const roles = ['admin', 'standardUser', 'readOnlyUser'] as const;
 
 export type Role = (typeof roles)[number];
 

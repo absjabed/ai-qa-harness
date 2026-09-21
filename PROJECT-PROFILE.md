@@ -29,8 +29,8 @@ which navigation-flow plan to read. One row per role that can log in.
 | Role key | Display name | Credential key in `data/auth_data.ts` | Scope of authority | Navigation plan |
 |---|---|---|---|---|
 | `<admin>` | `<Administrator>` | `testUsers.<admin>` | `<full system configuration>` | `specs/UserFlowsUserRolePermissions/<admin>NavigationFlow.plan.md` |
-| `<role2>` | `<...>` | `testUsers.<role2>` | `<...>` | `specs/UserFlowsUserRolePermissions/<role2>NavigationFlow.plan.md` |
-| `<role3>` | `<...>` | `testUsers.<role3>` | `<view-only>` | `specs/UserFlowsUserRolePermissions/<role3>NavigationFlow.plan.md` |
+| `<standardUser>` | `<...>` | `testUsers.<standardUser>` | `<...>` | `specs/UserFlowsUserRolePermissions/<standardUser>NavigationFlow.plan.md` |
+| `<readOnlyUser>` | `<...>` | `testUsers.<readOnlyUser>` | `<view-only>` | `specs/UserFlowsUserRolePermissions/<readOnlyUser>NavigationFlow.plan.md` |
 
 **Baseline role** (the full-access role every other role's restrictions are defined against): `<role key>`
 
@@ -102,7 +102,7 @@ to tracker columns. Replace the examples with your own quality plan's wording; k
 
 | What | Path convention |
 |---|---|
-| Story-wise specs | `tests/Release wise test cases/<release>/<STORY-KEY>.spec.ts` |
+| Story-wise specs | `tests/stories/<release>/<STORY-KEY>.spec.ts` |
 | Module-wise specs | `tests/<module>.spec.ts` |
 | Test plans | `specs/<STORY-KEY>.plan.md` + `specs/<STORY-KEY>.plan.csv` |
 | Page objects | `pages/<Name>Page.ts`, shared widgets in `pages/common/` |

@@ -4,9 +4,8 @@ Reference doc for the `playwright-test-planner` agent. Consult at Workflow Step 
 whenever a story's feature surfaces on **more than one page** and/or is used by **more than one
 role**.
 
-Generalized from a real multi-page/multi-role feature (one panel replicated across five pages and
-layered across five roles). The rules below are application-agnostic — nothing here needs editing
-per project.
+The rules below are application-agnostic — nothing here needs editing per project. They apply whenever
+one feature surfaces on several screens, or behaves differently depending on who is looking at it.
 
 ## 1. When this pattern applies
 

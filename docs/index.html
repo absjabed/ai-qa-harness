@@ -371,6 +371,16 @@ td code { white-space: nowrap; }
 .agent-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; margin-bottom: 4px; }
 .agent-name { font-family: var(--mono); font-size: 15px; font-weight: 600; letter-spacing: -.01em; }
 .agent-role { font-size: 13px; color: var(--ink-soft); }
+.agent-plain {
+  font-family: var(--serif);
+  font-size: 15.5px;
+  line-height: 1.55;
+  color: var(--ink);
+  margin: 14px 0 0;
+  padding-left: 13px;
+  border-left: 2px solid var(--accent);
+  max-width: 62ch;
+}
 .agent h4 {
   font-family: var(--mono);
   font-size: 10.5px;
@@ -381,6 +391,56 @@ td code { white-space: nowrap; }
 }
 .agent p, .agent ul { max-width: 64ch; }
 .agent ul { margin-bottom: 0; }
+
+/* ---------- component entries ---------- */
+
+.comp {
+  border-top: 1px solid var(--line);
+  padding: 16px 0;
+}
+.comp:first-of-type { border-top: 0; }
+.comp-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 9px; margin-bottom: 7px; }
+.comp-name { font-family: var(--mono); font-size: 13.5px; font-weight: 600; background: none; border: 0; padding: 0; color: var(--ink); }
+.comp-tag {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  padding: 1px 7px;
+  border-radius: 100px;
+  background: var(--surface-alt);
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+.comp-tag.you { background: var(--accent-soft); color: var(--accent-ink); }
+.comp-plain { font-family: var(--serif); font-size: 15.5px; color: var(--ink); margin: 0 0 8px; max-width: 64ch; }
+.comp p { font-size: 13.8px; margin: 0 0 7px; max-width: 66ch; }
+.comp p:last-child { margin-bottom: 0; }
+.comp .you-do { color: var(--ink-soft); }
+.comp .you-do b { color: var(--ink); }
+
+/* ---------- walkthrough ---------- */
+
+.walk { list-style: none; padding: 0; margin: 0 0 8px; max-width: none; counter-reset: walk; }
+.walk li {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 12px;
+  padding: 9px 0;
+  margin: 0;
+  border-top: 1px dashed var(--line);
+}
+.walk li:first-child { border-top: 0; }
+.walk li::before {
+  counter-increment: walk;
+  content: counter(walk);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  padding-top: 2px;
+}
+.walk li > div { min-width: 0; font-size: 13.8px; }
 
 .pills { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 4px; }
 .pill {
@@ -494,7 +554,6 @@ td code { white-space: nowrap; }
 <div class="mobile-bar">
   <select id="mobile-nav" aria-label="Jump to section">
     <option value="#orientation">Orientation</option>
-    <option value="#origin">In production</option>
     <option value="#setup">Setup — 9 steps</option>
     <option value="#agents">The four agents</option>
     <option value="#invariants">Invariants I1–I7</option>
@@ -517,7 +576,6 @@ td code { white-space: nowrap; }
 
     <nav class="nav" id="nav">
       <a href="#orientation"><span class="ord">·</span> Orientation</a>
-      <a href="#origin"><span class="ord">·</span> In production</a>
 
       <div class="nav-group">Get running</div>
       <a href="#setup"><span class="ord">1–9</span> Setup</a>
@@ -575,105 +633,6 @@ td code { white-space: nowrap; }
         belongs in the profile.</p>
         <p>This repo is a <b>template</b>: you copy it per project rather than working in it directly.
         <a href="#setup">Setup</a> opens with how to take a copy.</p>
-      </div>
-    </section>
-
-    <!-- ================= ORIGIN ================= -->
-    <section id="origin">
-      <p class="eyebrow">Where this came from</p>
-      <h2>In production: the suite this was extracted from</h2>
-      <p class="lede">This harness is the genericized form of a working QA suite for a multi-role
-      enterprise web application — roughly 1,100 tests across five user roles, built with these four
-      agents and these seven invariants. The numbers below are counted from that suite, not estimated.
-      Story keys and module names are anonymized; the figures are not.</p>
-
-      <h3>What the agents produced</h3>
-      <p>Seven stories in one release, each planned by the planner and written by the generator:</p>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Story</th><th>Tests</th><th>test.step calls</th><th>Spec lines</th><th>Plan lines</th></tr></thead>
-          <tbody>
-            <tr><td>Story 1</td><td>108</td><td>224</td><td>2,890</td><td>1,453</td></tr>
-            <tr><td>Story 2</td><td>107</td><td>447</td><td>3,262</td><td>1,208</td></tr>
-            <tr><td>Story 3</td><td>63</td><td>189</td><td>2,405</td><td>1,147</td></tr>
-            <tr><td>Story 4</td><td>29</td><td>100</td><td>2,222</td><td>657</td></tr>
-            <tr><td>Story 5</td><td>13</td><td>41</td><td>288</td><td>—</td></tr>
-            <tr><td>Story 6</td><td>12</td><td>38</td><td>296</td><td>280</td></tr>
-            <tr><td>Story 7</td><td>7</td><td>42</td><td>317</td><td>160</td></tr>
-            <tr><td><b>Total</b></td><td><b>339</b></td><td><b>1,081</b></td><td><b>11,680</b></td><td><b>4,905</b></td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p>Alongside those, 760 tests in 24 module-wise spec files — the older, pre-agent part of the suite
-      the conventions were reverse-engineered from. About 1,100 tests in total.</p>
-
-      <div class="note">
-        <p><strong>Every test step is wrapped.</strong> 1,081 <code>test.step</code> calls across 339
-        tests — an average of 3.2 per test, and no test without them. That's the generator following its
-        one-step-per-plan-line rule, which is what makes a failure report name the business action that
-        broke rather than a line number.</p>
-      </div>
-
-      <h3>Plan first, then code</h3>
-      <p>4,905 lines of reviewed plan produced 11,680 lines of spec. The planning artifact is roughly 40%
-      the size of the code it generates, and it is the half a QA lead can actually review — which is the
-      argument for the planner's seven checkpoints existing at all.</p>
-      <p>A plan at this scale is not a formality. The largest story's plan runs 1,453 lines for 108
-      scenarios; its CSV export runs 531 rows into the QA tracker.</p>
-
-      <h3>Tags, as actually applied</h3>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Tag</th><th>Count</th><th>Meaning</th></tr></thead>
-          <tbody>
-            <tr><td><code>@Regression</code></td><td>160</td><td>Regression-worthy — the <code>npm run test:regression</code> set</td></tr>
-            <tr><td><code>@Priority1</code></td><td>113</td><td>Core flow or data integrity, no workaround</td></tr>
-            <tr><td><code>@Priority2</code></td><td>51</td><td>Secondary flow, or a P1 replicated for another role</td></tr>
-            <tr><td><code>@Priority3</code></td><td>3</td><td>Cosmetic or rare — deliberately excluded from regression</td></tr>
-            <tr><td>14 module tags</td><td>86</td><td>Long tail — the largest module covered 18 tests, the next 11, then 10, then single digits</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p>Note the shape of that distribution: <b>113 P1 against 3 P3</b>. The planner's rubric says ties
-      round toward P3, and this suite still came out overwhelmingly P1 — because the application's core
-      flows carry real data-integrity consequences, so question 1 of the rubric is genuinely true for most
-      of it. The rubric doesn't force a bell curve onto a domain that doesn't have one.</p>
-
-      <h3>What the invariants bought</h3>
-      <p>Because every interaction went through a page object (I1), shared behavior concentrated rather
-      than scattering. Two shared page objects carry most of the suite:</p>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Page object</th><th>Lines</th><th>Methods (approx.)</th></tr></thead>
-          <tbody>
-            <tr><td>Largest shared page object, in <code>pages/common/</code></td><td>12,874</td><td>~700</td></tr>
-            <tr><td>Second largest, same folder</td><td>4,862</td><td>~285</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p>23 page objects total. A file of that size is only defensible because the alternative — those
-      same 700 interactions inlined across 1,100 specs — is unmaintainable in a way that only shows up
-      when the application's markup changes. It did, repeatedly, and the fix stayed in one file each time.</p>
-
-      <h3>Honest gaps in that suite</h3>
-      <p>Worth seeing, because they're the failure modes this harness is most likely to reproduce:</p>
-      <ul>
-        <li><b>Only 3 of 6 plans had a CSV export.</b> The planner produces both, but the CSV is the last
-        checkpoint and the easiest to skip under deadline. The tracker import then lags the plan.</li>
-        <li><b>Module tags reached 86 of 339 tests.</b> Two of the largest story files were never
-        retrofitted. The suite's own <code>regression-tags.md</code> records this per-file rather than
-        hiding it — which is why a partially-tagged <code>--grep</code> run is visibly incomplete rather
-        than quietly under-reporting.</li>
-        <li><b>One <code>test.fixme</code> across 339 tests, and it isn't a defect.</b> That scenario was
-        retired because a later story replaced the mode it exercised — product owner confirmed, not an
-        application bug. The <code>fixme</code> mechanism gets used for obsolete scenarios as well as
-        defects, so read the comment above one before assuming a bug is open.</li>
-      </ul>
-
-      <div class="note warn">
-        <p><strong>Scale takes time, not just agents.</strong> Those 339 tests are one release's work on a
-        suite that already had 760 tests, 23 page objects and documented navigation flows to build on. A
-        fresh harness gets its first real story in a day; it does not get 108 scenarios in a day.</p>
       </div>
     </section>
 
@@ -865,8 +824,14 @@ npx playwright test tests/example.spec.ts</code></pre>
     <section id="agents">
       <p class="eyebrow">Reference</p>
       <h2>The four agents</h2>
-      <p class="lede">They form a pipeline, but each runs alone and reads its input from disk. A plan
-      reviewed on Monday generates fine on Wednesday.</p>
+      <p class="lede">Think of them as four roles on a QA team: an analyst who plans, an engineer who
+      automates, an engineer who triages failures, and an administrator who files the paperwork. Each
+      hands off to the next, but each also works alone and reads its input from disk — a plan reviewed on
+      Monday generates fine on Wednesday.</p>
+      <p>You are the fifth role, and not an optional one. The first two stop and ask for your approval at
+      every decision that would be expensive to get wrong; the third asks before calling anything a defect.
+      None of them is designed to be left running unattended — except the fourth, which makes no judgments
+      at all.</p>
 
       <!-- planner -->
       <article class="agent">
@@ -880,6 +845,11 @@ npx playwright test tests/example.spec.ts</code></pre>
           <span class="pill">7 checkpoints</span>
           <span class="pill">writes specs/*.plan.md + .csv</span>
         </div>
+
+        <p class="agent-plain"><b>The role it plays:</b> the senior test analyst who reads a story properly.
+        It works out which roles the change touches, which scenarios are worth writing, and which are
+        low-value permutations — then walks you through its thinking in stages and waits for your sign-off
+        before anything is written down. It writes no test code at all.</p>
 
         <h4>How to invoke</h4>
         <p>Paste the story into the conversation — key, title, description, AC as plain text — then run the
@@ -941,6 +911,12 @@ npx playwright test tests/example.spec.ts</code></pre>
           <span class="pill">writes tests/ + pages/ + lib/BaseTest.ts</span>
         </div>
 
+        <p class="agent-plain"><b>The role it plays:</b> the automation engineer who actually opens the
+        application. It clicks through each step of the approved plan in a real browser to find out how the
+        page really behaves, then writes that up in your suite's conventions — reusing existing page objects
+        where they fit and building new ones where they don't. It will not write a line for a step it never
+        performed.</p>
+
         <h4>The loop, per step</h4>
         <ol>
           <li><code>generator_setup_page</code> — mandatory, even when the plan reads descriptive enough to
@@ -995,6 +971,12 @@ npx playwright test tests/example.spec.ts</code></pre>
           <span class="pill">3 attempts per test</span>
           <span class="pill">writes specs/temp-defects/defect-log.json</span>
         </div>
+
+        <p class="agent-plain"><b>The role it plays:</b> the engineer who triages a red build. It runs the
+        failures, reproduces them, and works out whether the test is wrong or the application is. Most
+        failures are the test's fault — a moved button, a race, stale data — and it fixes those itself. When
+        it believes the application is genuinely broken it stops, shows you the evidence, and asks you to
+        confirm before anything is recorded as a defect.</p>
 
         <h4>The three-attempt rule</h4>
         <p>Up to 3 fix attempts per test, then one of three things:</p>
@@ -1051,6 +1033,12 @@ npx playwright test tests/example.spec.ts</code></pre>
           <span class="pill">unattended — asks nothing</span>
           <span class="pill">writes specs/defects.csv</span>
         </div>
+
+        <p class="agent-plain"><b>The role it plays:</b> the administrator who does the paperwork. Every
+        judgment was already made and confirmed by a person; this agent only turns it into a properly
+        formatted bug row and marks the failing test as a known issue so it stops breaking the build. It
+        asks nothing and decides nothing — if an entry looks wrong, it stops and tells you rather than
+        filing something approximate.</p>
 
         <h4>Per pending entry</h4>
         <ol>
@@ -1146,63 +1134,215 @@ npx playwright test tests/example.spec.ts</code></pre>
     <!-- ================= COMPONENTS ================= -->
     <section id="components">
       <p class="eyebrow">Reference</p>
-      <h2>Components</h2>
-      <p class="lede">What each piece is and what to expect from it. The full reference — including
-      extension points and failure modes — is in <a href="COMPONENTS.md">COMPONENTS.md</a>.</p>
+      <h2>Components, explained</h2>
+      <p class="lede">Nothing here is clever, but the pieces only make sense in relation to each other. So
+      first: what actually happens when one test runs, and which file does what along the way.</p>
 
-      <h3>Configuration</h3>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>File</th><th>What it is</th><th>What to expect</th></tr></thead>
-          <tbody>
-            <tr><td><code>PROJECT-PROFILE.md</code></td><td>Single source of project identity, 9 sections</td><td>All four agents read it first, every run. Quality downstream tracks quality here.</td></tr>
-            <tr><td><code>config/projectProfile.ts</code></td><td>Machine-readable mirror of sections 1, 2, 5</td><td><code>roles</code> drives the <code>Role</code> type, so a typo is a compile error.</td></tr>
-            <tr><td><code>config/testConfig.ts</code></td><td>Every env-derived value (I6)</td><td><code>baseUrl</code> is a getter that <b>throws</b> when unset — a default URL silently tests the wrong system and looks green.</td></tr>
-            <tr><td><code>config/DbConnection.ts</code></td><td>SQL Server pool + failure handling</td><td>Names missing env vars before connecting; latches persistent refusals so a blocked IP costs one timeout, not one per test.</td></tr>
-            <tr><td><code>playwright.config.ts</code></td><td>3 projects: chromium, edge, api</td><td>Serial by default — parallelising before test data is isolated makes failures unreadable.</td></tr>
-          </tbody>
-        </table>
+      <h3>Follow one test through the harness</h3>
+      <ol class="walk">
+        <li><div>Playwright starts, reads <code>playwright.config.ts</code>, which loads <code>.env</code>
+        and decides which browsers to run in.</div></li>
+        <li><div>The spec file imports <code>test</code> from <code>lib/BaseTest.ts</code>. It asks for the
+        page objects it needs by name — <code>{ loginPage, dashboardPage }</code> — and gets them
+        constructed and ready.</div></li>
+        <li><div><code>beforeEach</code> calls <code>userLogin</code>, which asks
+        <code>data/auth_data.ts</code> for a role's credentials. Those are read from <code>.env</code> at
+        that moment — they exist nowhere in the code.</div></li>
+        <li><div><code>userLogin</code> drives <code>pages/LoginPage.ts</code> to sign in, then asks
+        <code>pages/DashboardPage.ts</code> to confirm the session really started.</div></li>
+        <li><div>Each <code>test.step</code> calls a method on a page object. The spec never touches a
+        selector — the page object owns those, so when the markup changes there is one file to fix.</div></li>
+        <li><div>A value the test needs — an account number, a status, a boundary — comes from a named key
+        in <code>data/testData.ts</code>, never typed into the test.</div></li>
+        <li><div>If the test checks the database, the page object fetches the query from
+        <code>data/sql_queries.ts</code> and runs it through <code>config/DbConnection.ts</code>, then
+        compares that against what the screen showed.</div></li>
+        <li><div>The tags on the test — <code>@Regression</code>, <code>@Priority1</code>, a module tag —
+        decide whether it ran at all under a filtered <code>--grep</code>.</div></li>
+      </ol>
+
+      <div class="note">
+        <p><strong>The through-line:</strong> a spec file says <em>what</em> is being checked, in business
+        terms. Everything else — how to find an element, what a valid account number is, how to reach the
+        database — lives somewhere a person can find without reading the test. That separation is what the
+        seven invariants exist to protect.</p>
       </div>
 
-      <h3>Data</h3>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>File</th><th>Holds</th><th>What to expect</th></tr></thead>
-          <tbody>
-            <tr><td><code>data/auth_data.ts</code></td><td>Credentials, resolved from <code>.env</code></td><td>Lazy — a suite touching 2 of 5 roles isn't blocked by the 3 it never uses. Throws at first use, not import.</td></tr>
-            <tr><td><code>data/testData.ts</code></td><td>Domain values, boundaries, adversarial inputs</td><td>Keep the four-state shape for <code>recordData</code>; it covers most partitioning and error-guessing scenarios.</td></tr>
-            <tr><td><code>data/sql_queries.ts</code></td><td>Every query the suite runs</td><td>Agents add keys under its conventions but never invent the SQL.</td></tr>
-          </tbody>
-        </table>
+      <h3>Configuration — what the harness knows about your app</h3>
+
+      <div class="comp">
+        <div class="comp-head"><code class="comp-name">PROJECT-PROFILE.md</code><span class="comp-tag you">you fill this in</span></div>
+        <p class="comp-plain">A briefing document about your application, written for the AI agents.</p>
+        <p>Nine sections: what the app is, who can log into it, what its business entities are called, what
+        its feature areas are, whether it has a database and an API, how your team rates defect severity,
+        and where test files go.</p>
+        <p class="you-do"><b>You touch it:</b> once at setup, then whenever the application gains a role, a
+        module, or a new domain term. Every agent reads it before doing anything.</p>
       </div>
 
-      <h3>Fixtures and pages</h3>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>File</th><th>What it is</th><th>What to expect</th></tr></thead>
-          <tbody>
-            <tr><td><code>lib/BaseTest.ts</code></td><td>The Page Factory (I2)</td><td>The generator reads it for exact fixture names. A fixture breaking the camelCase convention is one it won't find.</td></tr>
-            <tr><td><code>pages/BasePage.ts</code></td><td>Shared nav, waiting, table reads, DB comparison</td><td>A helper here must be page-agnostic. Once it needs to know a screen, it belongs on that screen.</td></tr>
-            <tr><td><code>pages/LoginPage.ts</code><br><code>pages/DashboardPage.ts</code></td><td>The two page objects that ship wired</td><td><code>expectGroupsMatchDatabase()</code> is the reference DB-backed assertion — copy its shape.</td></tr>
-            <tr><td><code>pages/common/</code></td><td><code>userLogin</code> + chrome widgets</td><td>Widgets reachable from every page live here; screen-specific objects live in <code>pages/</code>.</td></tr>
-          </tbody>
-        </table>
+      <div class="comp">
+        <div class="comp-head"><code class="comp-name">config/projectProfile.ts</code><span class="comp-tag you">you fill this in</span></div>
+        <p class="comp-plain">The same briefing, in a form the code can read.</p>
+        <p>Chiefly the list of role names. Because it is a typed list, a misspelled role is caught when the
+        project compiles rather than when a test runs at midnight.</p>
+        <p class="you-do"><b>You touch it:</b> at setup, and whenever you add a role.</p>
       </div>
 
-      <h3>Specs and tests</h3>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Path</th><th>Role</th></tr></thead>
-          <tbody>
-            <tr><td><code>specs/TEMPLATES/</code></td><td>Canonical plan markdown + CSV shapes, with field rules</td></tr>
-            <tr><td><code>specs/RegressionTags/</code></td><td>Tag registry. Includes the Gotchas that caused false-positive <code>--grep</code> matches in the suite this came from.</td></tr>
-            <tr><td><code>specs/ScenarioGenerationPatterns/</code></td><td>When to replicate a scenario set across pages and roles, and the exceptions</td></tr>
-            <tr><td><code>specs/UserFlowsUserRolePermissions/</code></td><td>Per-role navigation plans + cross-role matrix. The highest-leverage docs in the repo.</td></tr>
-            <tr><td><code>tests/example.spec.ts</code></td><td>Reference spec demonstrating I1–I7. Not coverage.</td></tr>
-            <tr><td><code>tests/seed.spec.ts</code></td><td>The generator's live-drive starting point. Body stays empty.</td></tr>
-          </tbody>
-        </table>
+      <div class="comp">
+        <div class="comp-head"><code class="comp-name">config/testConfig.ts</code><span class="comp-tag">rarely edited</span></div>
+        <p class="comp-plain">Everything that differs between QA, UAT and local — in one place, read from <code>.env</code>.</p>
+        <p>The application URL and the database settings live here. Ask it for the base URL when
+        <code>BASE_URL</code> is not set and it raises an error instead of guessing a default. That is
+        deliberate: a harness that quietly falls back to some default address will happily test the wrong
+        system and report all green.</p>
+        <p class="you-do"><b>You touch it:</b> only to add a new environment setting — and add it to
+        <code>.env.example</code> at the same time.</p>
       </div>
+
+      <div class="comp">
+        <div class="comp-head"><code class="comp-name">config/DbConnection.ts</code><span class="comp-tag">rarely edited</span></div>
+        <p class="comp-plain">How tests read the database, and how they report it when they cannot.</p>
+        <p>Two behaviors worth knowing. It checks your database settings are filled in <em>before</em>
+        dialling, so a missing <code>.env</code> reads as "you have not configured this" instead of a
+        connection stack trace that looks like an outage. And when the server refuses for a reason that
+        will not fix itself — a firewall that does not know your IP, a wrong password — it remembers, so the
+        rest of the run fails instantly instead of waiting out a full timeout on every single test.</p>
+        <p class="you-do"><b>You touch it:</b> only if your project uses something other than SQL Server.</p>
+      </div>
+
+      <div class="comp">
+        <div class="comp-head"><code class="comp-name">playwright.config.ts</code><span class="comp-tag">rarely edited</span></div>
+        <p class="comp-plain">How the tests are run: which browsers, how long to wait, what to capture on failure.</p>
+        <p>Three run configurations — Chromium, Edge, and an API one that launches no browser at all. Tests
+        run one at a time by default, because they share the same test data; running them in parallel before
+        each test owns its own data produces failures nobody can reproduce.</p>
+        <p class="you-do"><b>You touch it:</b> to add a browser, or to delete the API configuration if your
+        project has no API.</p>
+      </div>
+
+      <h3>Data — the values tests use</h3>
+
+      <div class="comp">
+        <div class="comp-head"><code class="comp-name">data/auth_data.ts</code><span class="comp-tag">reads .env</span></div>
+        <p class="comp-plain">Who the tests log in as.</p>
+        <p>It holds no passwords. Ask it for a role and it fetches that role's credentials from
+        <code>.env</code> at that moment. A role nobody configured only causes an error if a test actually
+        tries to use it — so a suite covering two roles is not blocked by the three it never touches.</p>
+        <p class="you-do"><b>You touch it:</b> almost never. You add roles in <code>.env</code> and
+        <code>projectProfile.ts</code>; this file follows automatically.</p>
+      </div>
+
+      <div class="comp">
+        <div class="comp-head"><code class="comp-name">data/testData.ts</code><span class="comp-tag you">you fill this in</span></div>
+        <p class="comp-plain">Every business value a test needs, each under a name.</p>
+        <p>An account number that exists, one that does not, one that is malformed, one that has been closed
+        — those four cases cover most of what good test design asks for. Also the application's real limits
+        (field lengths, page sizes) for boundary tests, and a set of awkward inputs (empty, very long,
+        unicode, special characters) for the error-guessing ones.</p>
+        <p class="you-do"><b>You touch it:</b> at setup, and every time a test needs a value that is not
+        there yet. Adding a key here is what stops that value being typed into a test.</p>
+      </div>
+
+      <div class="comp">
+        <div class="comp-head"><code class="comp-name">data/sql_queries.ts</code><span class="comp-tag you">you fill this in</span></div>
+        <p class="comp-plain">Every database query the suite runs, each under a name.</p>
+        <p>Keeping them together means a schema change has one place to be fixed, and a reviewer can see the
+        whole database surface the tests depend on in a single read. The agents will add queries here when
+        asked, but they never write the SQL themselves — they cannot see your schema, so anything they
+        invented would look plausible and be wrong.</p>
+        <p class="you-do"><b>You touch it:</b> whenever a test needs to verify something against the
+        database.</p>
+      </div>
+
+      <h3>Page objects — how tests talk to screens</h3>
+
+      <div class="comp">
+        <div class="comp-head"><code class="comp-name">lib/BaseTest.ts</code><span class="comp-tag you">you extend this</span></div>
+        <p class="comp-plain">The switchboard: a test asks for a screen by name, and gets it ready to use.</p>
+        <p>Instead of every test building its own copy of a page object, each one is registered here once. A
+        test writes <code>async ({ dashboardPage }) =&gt;</code> and it arrives. Two benefits: a change to how
+        a page object is built is one edit rather than a hundred, and you can see a test's dependencies in
+        its first line.</p>
+        <p class="you-do"><b>You touch it:</b> every time you add a page object — three small edits: import
+        it, list it, register it.</p>
+      </div>
+
+      <div class="comp">
+        <div class="comp-head"><code class="comp-name">pages/BasePage.ts</code><span class="comp-tag">shared behavior</span></div>
+        <p class="comp-plain">The things every screen needs, written once.</p>
+        <p>Navigating to a page, waiting for something to appear properly (rather than sleeping for a fixed
+        number of seconds and hoping), reading a table column into a list, comparing what the screen shows
+        against what the database returned, and narrowing a selector that would otherwise match several
+        elements.</p>
+        <p class="you-do"><b>You touch it:</b> when you find yourself writing the same helper on a third
+        page object — but only if it genuinely applies to any screen.</p>
+      </div>
+
+      <div class="comp">
+        <div class="comp-head"><code class="comp-name">pages/LoginPage.ts</code> · <code class="comp-name">pages/DashboardPage.ts</code><span class="comp-tag you">point these at your app</span></div>
+        <p class="comp-plain">Two working examples, already connected to everything else.</p>
+        <p>They ship with placeholder selectors. Replace those with your application's real ones and the
+        login flow, the example test and the whole fixture chain start working. <code>DashboardPage</code>
+        also carries the reference example of checking the screen against the database — copy its shape when
+        you write your own.</p>
+        <p class="you-do"><b>You touch it:</b> at setup, step 4. This is the moment the harness becomes
+        <em>your</em> harness.</p>
+      </div>
+
+      <div class="comp">
+        <div class="comp-head"><code class="comp-name">pages/common/</code><span class="comp-tag">shared widgets</span></div>
+        <p class="comp-plain">Parts of the interface that are not any one screen.</p>
+        <p>The sign-out menu, the shared login helper, and anything else reachable from everywhere — a nav
+        bar, a global search, a notification tray. Screen-specific page objects live one level up in
+        <code>pages/</code>.</p>
+        <p class="you-do"><b>You touch it:</b> when a widget appears on more than one screen.</p>
+      </div>
+
+      <h3>Specs — plans, conventions and tests</h3>
+
+      <div class="comp">
+        <div class="comp-head"><code class="comp-name">specs/UserFlowsUserRolePermissions/</code><span class="comp-tag you">highest value</span></div>
+        <p class="comp-plain">How each role moves through the application, and what each one is not allowed to do.</p>
+        <p>One document per role, plus a matrix comparing them. This is the most valuable thing you can
+        write here. All three authoring agents read it before working out a navigation path themselves, and
+        the healer checks it before deciding a blocked button is a bug. Leave it empty and the healer will
+        eventually file a working permission rule as a defect.</p>
+        <p class="you-do"><b>You touch it:</b> at setup for the main role's happy path, then grow it as you
+        cover more.</p>
+      </div>
+
+      <div class="comp">
+        <div class="comp-head"><code class="comp-name">specs/RegressionTags/</code><span class="comp-tag you">you fill this in</span></div>
+        <p class="comp-plain">The list of valid tag names, so filtered runs mean something.</p>
+        <p>When you run only the checkout tests, this file is what says <code>@Checkout</code> is the right
+        name. The generator looks a scenario's area up here and stops to ask rather than inventing a tag
+        nobody else uses. It also lists the ways a filtered run can silently mislead you.</p>
+        <p class="you-do"><b>You touch it:</b> at setup, then whenever the application gains a feature
+        area.</p>
+      </div>
+
+      <div class="comp">
+        <div class="comp-head"><code class="comp-name">specs/TEMPLATES/</code> · <code class="comp-name">specs/ScenarioGenerationPatterns/</code><span class="comp-tag">reference</span></div>
+        <p class="comp-plain">The shape of a test plan, and how to cover a feature that appears in several places.</p>
+        <p>The templates fix the format of a plan and its spreadsheet export. The patterns document answers
+        a question that comes up constantly: when the same feature appears on four screens and behaves
+        differently for three roles, do you write it out four times or once? The planner reads it so the
+        answer is consistent rather than decided fresh each time.</p>
+        <p class="you-do"><b>You touch it:</b> rarely — mostly you read them.</p>
+      </div>
+
+      <div class="comp">
+        <div class="comp-head"><code class="comp-name">tests/example.spec.ts</code> · <code class="comp-name">tests/seed.spec.ts</code><span class="comp-tag">reference</span></div>
+        <p class="comp-plain">A worked example, and a starting point for the generator.</p>
+        <p>The example demonstrates all seven conventions in working code — the fastest way to understand
+        them is to read it alongside the invariants. It fails until you point the harness at a real
+        application, which makes it a useful check that setup is finished. The seed file is where the
+        generator's browser session begins; its body stays empty.</p>
+        <p class="you-do"><b>You touch it:</b> keep the example as a smoke check, or delete it once real
+        tests exist.</p>
+      </div>
+
+      <p style="margin-top:22px"><a href="COMPONENTS.md">Deeper reference — extension points, exports and failure modes →</a></p>
     </section>
 
     <!-- ================= WORKFLOWS ================= -->

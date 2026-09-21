@@ -46,7 +46,7 @@ Out: the spec, plus new page object methods and fixtures, implemented and wired.
 ### Step 4 — Run
 
 ```bash
-npx playwright test "tests/Release wise test cases/<release>/<KEY>.spec.ts"
+npx playwright test "tests/stories/<release>/<KEY>.spec.ts"
 ```
 
 ### Step 5 — Heal what fails
@@ -180,8 +180,8 @@ npx playwright test --project=api                                 # API only, no
 
 **Watch for false positives.** `--grep` matches the full title string, not just real tags. A role or module
 name written into a `test.describe` title will match even when the tests inside have nothing to do with it.
-Tags belong in `{ tag: [...] }`. The Gotchas section of `specs/RegressionTags/regression-tags.md` has the
-cases that actually bit the suite this harness came from.
+Tags belong in `{ tag: [...] }`. The Gotchas section of `specs/RegressionTags/regression-tags.md` lists the
+ways this goes wrong in practice.
 
 ---
 

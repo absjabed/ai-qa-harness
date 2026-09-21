@@ -25,7 +25,7 @@ function envKeyFor(role: string): string {
 
 /**
  * Read a role's credentials. Throws at first use rather than at import, so a suite that only
- * exercises two of five roles isn't blocked by the three it never touches being unconfigured.
+ * exercises two of the project's roles isn't blocked by the others being unconfigured.
  */
 function credentialsFor(role: string): UserCredentials {
     const key = envKeyFor(role);
@@ -64,11 +64,11 @@ export const defaultUsers = {
     get admin(): UserCredentials {
         return credentialsFor('admin');
     },
-    get role2(): UserCredentials {
-        return credentialsFor('role2');
+    get standardUser(): UserCredentials {
+        return credentialsFor('standardUser');
     },
-    get role3(): UserCredentials {
-        return credentialsFor('role3');
+    get readOnlyUser(): UserCredentials {
+        return credentialsFor('readOnlyUser');
     },
     /** An account that should fail authentication, for negative-path tests. */
     get invalid(): UserCredentials {

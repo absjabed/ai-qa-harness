@@ -84,9 +84,9 @@ Required environment variable BASE_URL is not set.
 2. **Persistent-refusal latch.** When the server refuses for a reason that won't clear on its own — a
    firewall rule that doesn't cover this machine's IP, or rejected credentials — the failure is latched.
    Every later connection attempt in that worker fails instantly instead of sitting through its own connect
-   timeout. Without it, a blocked IP costs the full timeout *per test*: a 31-test run once spent about an
-   hour failing every test for the same reason, and the run had to be read carefully to notice the cause
-   was environmental rather than 31 separate regressions.
+   timeout. Without it, a blocked IP costs the full timeout *per test*, so a suite of any size burns its
+   entire run failing everything for one environmental reason — and the report reads like a mass regression
+   rather than a single misconfiguration.
 
    Transient faults (a dropped socket, a momentary timeout) are deliberately **not** latched — those can
    recover within a run, and latching on them would let one blip void everything after it.
@@ -163,7 +163,7 @@ and rotating a password means editing code instead of an environment. Nothing in
 | `defaultUser(role)` | Typed accessor when the role is computed. |
 | `UserCredentials` | The `{ email, password, role? }` shape. |
 
-**Lazy on purpose** A suite exercising two of five roles isn't blocked by the three it never touches being
+**Lazy on purpose** A suite exercising two of the project's roles isn't blocked by the others being
 unconfigured. The throw lands at first use, not at import.
 
 **What to expect on failure**

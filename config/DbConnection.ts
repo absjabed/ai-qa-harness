@@ -6,9 +6,9 @@ import { appConfig } from './testConfig';
  * that does not cover this machine's IP, or bad credentials. Every later connection attempt in this
  * worker then fails immediately instead of sitting through its own connect timeout.
  *
- * Without this, a blocked IP costs the full timeout *per test*: a 31-test run spent about an hour
- * failing every test for the same reason, and the run had to be read carefully to notice that the
- * cause was environmental rather than 31 separate regressions.
+ * Without this, a blocked IP costs the full connect timeout *per test*. A suite of any size then
+ * spends its whole run failing every test for one environmental reason, and the report has to be
+ * read carefully to notice the cause is not N separate regressions.
  *
  * Deliberately NOT latched for transient faults (dropped socket, momentary timeout) — those can
  * recover within a run, and latching on them would let one blip void everything after it.

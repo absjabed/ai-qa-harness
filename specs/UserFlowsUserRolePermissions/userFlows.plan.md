@@ -7,8 +7,8 @@ scratch, so keeping them current saves both agents from re-deriving navigation e
 Create one file per role in PROJECT-PROFILE.md section 2, from
 [`_roleNavigationFlow.template.md`](_roleNavigationFlow.template.md), and list them here.
 
-- [&lt;Role 1&gt; — Core Navigation Flow](role1NavigationFlow.plan.md)
-- [&lt;Role 2&gt; — Core Navigation Flow and Permission Boundaries](role2NavigationFlow.plan.md)
+- [&lt;Role 1&gt; — Core Navigation Flow](adminNavigationFlow.plan.md)
+- [&lt;Role 2&gt; — Core Navigation Flow and Permission Boundaries](standardUserNavigationFlow.plan.md)
 - [Cross-Role Access Control](crossRoleAccessControl.plan.md)
 
 ## Application Overview

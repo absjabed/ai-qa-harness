@@ -1,0 +1,8 @@
+TCID,Test Type,Story,Module,Sub Module,Summary,Test Steps,Expected Result,Status,Data,Priority,Bug ID,Bug Status,Severity,Comment
+STORY-KEY-TC001,Automated,STORY-KEY,<Module>,<Sub Module>,Validate that <descriptive title>,"Given <starting state>
+And <additional precondition>
+When <action under test> (<fixture>.<method>())
+Then <in-flow check> (<fixture>.<method>())",<what is visible or true afterwards - exact screen/wording/state>,,<dataKey>,Priority 1,,,,<mirrors the plan's Scope Notes prose>
+STORY-KEY-TC002,Automated,STORY-KEY,<Module>,<Sub Module>,Validate that <descriptive title>,"Given <starting state>
+When <action under test> (<fixture>.<method>())
+Then <in-flow check> (<fixture>.<method>())",<what is visible or true afterwards>,,<dataKey>,Priority 2,,,,

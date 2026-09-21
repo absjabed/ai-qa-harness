@@ -1,0 +1,1433 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>QA Harness Handbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:ital,wght@0,400;0,500;1,400&display=swap">
+<style>
+:root {
+  --ground:      #F4F7F8;
+  --surface:     #FFFFFF;
+  --surface-alt: #EDF2F3;
+  --ink:         #14212A;
+  --ink-soft:    #53666F;
+  --ink-faint:   #7D8F97;
+  --line:        #D9E2E5;
+  --line-strong: #B9C8CD;
+  --accent:      #0B6E75;
+  --accent-soft: #E0F0F0;
+  --accent-ink:  #075055;
+  --pass:        #2C7A4B;
+  --pass-soft:   #E2F1E7;
+  --fail:        #A83226;
+  --fail-soft:   #F8E5E2;
+  --warn:        #97650A;
+  --warn-soft:   #F7EDDA;
+  --code-bg:     #EDF2F3;
+  --shadow:      0 1px 2px rgba(20, 33, 42, .06), 0 6px 18px rgba(20, 33, 42, .05);
+
+  --sans: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --serif: "IBM Plex Serif", ui-serif, Georgia, "Times New Roman", serif;
+  --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground:      #0E1518;
+    --surface:     #151E22;
+    --surface-alt: #1B262B;
+    --ink:         #E2EAEC;
+    --ink-soft:    #9AACB3;
+    --ink-faint:   #74878F;
+    --line:        #26343A;
+    --line-strong: #37484F;
+    --accent:      #43B8BE;
+    --accent-soft: #10353A;
+    --accent-ink:  #7FD4D8;
+    --pass:        #5CB07E;
+    --pass-soft:   #16301F;
+    --fail:        #E07C6C;
+    --fail-soft:   #351B17;
+    --warn:        #D2A244;
+    --warn-soft:   #322611;
+    --code-bg:     #101A1E;
+    --shadow:      0 1px 2px rgba(0,0,0,.4), 0 6px 18px rgba(0,0,0,.3);
+  }
+}
+
+:root[data-theme="dark"] {
+  --ground:      #0E1518;
+  --surface:     #151E22;
+  --surface-alt: #1B262B;
+  --ink:         #E2EAEC;
+  --ink-soft:    #9AACB3;
+  --ink-faint:   #74878F;
+  --line:        #26343A;
+  --line-strong: #37484F;
+  --accent:      #43B8BE;
+  --accent-soft: #10353A;
+  --accent-ink:  #7FD4D8;
+  --pass:        #5CB07E;
+  --pass-soft:   #16301F;
+  --fail:        #E07C6C;
+  --fail-soft:   #351B17;
+  --warn:        #D2A244;
+  --warn-soft:   #322611;
+  --code-bg:     #101A1E;
+  --shadow:      0 1px 2px rgba(0,0,0,.4), 0 6px 18px rgba(0,0,0,.3);
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:hover { color: var(--accent-ink); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+
+code, kbd, pre { font-family: var(--mono); }
+
+code {
+  font-size: .87em;
+  background: var(--code-bg);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: .08em .34em;
+  word-break: break-word;
+}
+
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  font-size: 13px;
+  line-height: 1.55;
+  margin: 0;
+}
+pre code { background: none; border: 0; padding: 0; font-size: inherit; }
+
+/* ---------- shell ---------- */
+
+.shell {
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr);
+  gap: 0;
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+.rail {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  align-self: start;
+  height: 100vh;
+  overflow-y: auto;
+  padding: 28px 20px 40px 24px;
+  border-right: 1px solid var(--line);
+  background: var(--ground);
+}
+
+.brand { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+.brand-mark {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+.brand-name { font-weight: 700; font-size: 15px; letter-spacing: -.01em; }
+.brand-sub {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+  margin: 0 0 22px;
+  letter-spacing: .02em;
+}
+
+.nav { display: flex; flex-direction: column; gap: 1px; }
+.nav-group {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 18px 0 6px;
+}
+.nav a {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 5px 9px;
+  border-radius: 5px;
+  color: var(--ink-soft);
+  text-decoration: none;
+  font-size: 13.5px;
+  border-left: 2px solid transparent;
+}
+.nav a:hover { background: var(--surface-alt); color: var(--ink); }
+.nav a.active {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  border-left-color: var(--accent);
+  font-weight: 500;
+}
+.nav a .ord {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--ink-faint);
+  min-width: 14px;
+}
+.nav a.active .ord { color: var(--accent); }
+
+.theme-btn {
+  margin-top: 26px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .06em;
+  background: var(--surface);
+  color: var(--ink-soft);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+}
+.theme-btn:hover { border-color: var(--line-strong); color: var(--ink); }
+
+.main {
+  min-width: 0;
+  padding: 40px 32px 96px;
+}
+
+/* ---------- mobile nav ---------- */
+
+.mobile-bar {
+  display: none;
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 20;
+  background: var(--ground);
+  border-bottom: 1px solid var(--line);
+  padding: 10px 16px;
+  gap: 10px;
+  align-items: center;
+}
+.mobile-bar select {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--sans);
+  font-size: 14px;
+  padding: 7px 9px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+/* ---------- content ---------- */
+
+section { scroll-margin-top: 24px; }
+section + section { margin-top: 56px; }
+
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 8px;
+}
+
+h1 {
+  font-size: clamp(28px, 5vw, 38px);
+  line-height: 1.15;
+  letter-spacing: -.02em;
+  margin: 0 0 14px;
+  text-wrap: balance;
+}
+h2 {
+  font-size: clamp(21px, 3.4vw, 26px);
+  line-height: 1.25;
+  letter-spacing: -.015em;
+  margin: 0 0 12px;
+  text-wrap: balance;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+h3 {
+  font-size: 16.5px;
+  letter-spacing: -.005em;
+  margin: 30px 0 8px;
+  text-wrap: balance;
+}
+h4 {
+  font-size: 14px;
+  margin: 20px 0 6px;
+  color: var(--ink);
+}
+
+p { margin: 0 0 13px; max-width: 68ch; }
+ul, ol { margin: 0 0 13px; padding-left: 20px; max-width: 68ch; }
+li { margin-bottom: 5px; }
+li > ul, li > ol { margin-top: 5px; }
+
+.lede {
+  font-family: var(--serif);
+  font-size: 17px;
+  line-height: 1.62;
+  color: var(--ink-soft);
+  max-width: 62ch;
+  margin-bottom: 20px;
+}
+
+.meta-line {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--ink-faint);
+  letter-spacing: .02em;
+  margin-bottom: 26px;
+}
+
+/* ---------- tables ---------- */
+
+.table-wrap { overflow-x: auto; margin: 0 0 16px; border-radius: 8px; border: 1px solid var(--line); }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; background: var(--surface); }
+th, td { text-align: left; padding: 9px 13px; border-bottom: 1px solid var(--line); vertical-align: top; }
+thead th {
+  background: var(--surface-alt);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  font-weight: 600;
+  white-space: nowrap;
+}
+tbody tr:last-child td { border-bottom: 0; }
+td code { white-space: nowrap; }
+
+/* ---------- steps ---------- */
+
+.steps { list-style: none; padding: 0; margin: 0; max-width: none; counter-reset: step; }
+.step {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 14px;
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+  margin: 0;
+}
+.step:first-child { border-top: 0; padding-top: 4px; }
+.step-n {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 6px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.step-body { min-width: 0; }
+.step-body h3 { margin: 2px 0 7px; font-size: 15.5px; }
+.step-body p:last-child, .step-body pre:last-child { margin-bottom: 0; }
+
+/* ---------- agent cards ---------- */
+
+.agent {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 20px 22px;
+  margin-bottom: 18px;
+  box-shadow: var(--shadow);
+}
+.agent-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; margin-bottom: 4px; }
+.agent-name { font-family: var(--mono); font-size: 15px; font-weight: 600; letter-spacing: -.01em; }
+.agent-role { font-size: 13px; color: var(--ink-soft); }
+.agent h4 {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 18px 0 7px;
+}
+.agent p, .agent ul { max-width: 64ch; }
+.agent ul { margin-bottom: 0; }
+
+.pills { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 4px; }
+.pill {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: .03em;
+  padding: 2px 8px;
+  border-radius: 100px;
+  border: 1px solid var(--line-strong);
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+.pill.on-accent { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.pill.on-warn { border-color: var(--warn); color: var(--warn); background: var(--warn-soft); }
+
+/* ---------- callouts ---------- */
+
+.note {
+  border-left: 3px solid var(--accent);
+  background: var(--accent-soft);
+  border-radius: 0 8px 8px 0;
+  padding: 12px 16px;
+  margin: 0 0 16px;
+  font-size: 14px;
+  max-width: 68ch;
+}
+.note.warn { border-left-color: var(--warn); background: var(--warn-soft); }
+.note.stop { border-left-color: var(--fail); background: var(--fail-soft); }
+.note p:last-child { margin-bottom: 0; }
+.note strong { font-weight: 600; }
+
+/* ---------- pipeline ---------- */
+
+.pipeline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 8px;
+  margin: 0 0 20px;
+  padding: 0;
+  list-style: none;
+  max-width: none;
+}
+.pipe-step {
+  flex: 1 1 150px;
+  min-width: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin: 0;
+}
+.pipe-step .pipe-n {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .1em;
+  color: var(--accent);
+  display: block;
+  margin-bottom: 4px;
+}
+.pipe-step b { display: block; font-family: var(--mono); font-size: 13px; font-weight: 600; margin-bottom: 4px; word-break: break-word; }
+.pipe-step span.desc { font-size: 12.5px; color: var(--ink-soft); display: block; line-height: 1.45; }
+
+/* ---------- invariants ---------- */
+
+.inv { display: grid; grid-template-columns: 46px minmax(0, 1fr); gap: 14px; padding: 13px 0; border-top: 1px solid var(--line); }
+.inv:first-of-type { border-top: 0; }
+.inv-id {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--accent);
+}
+.inv-body { min-width: 0; }
+.inv-body b { font-size: 14px; }
+.inv-body p { margin: 3px 0 0; font-size: 13.5px; color: var(--ink-soft); }
+
+/* ---------- misc ---------- */
+
+.sev { font-family: var(--mono); font-size: 11px; font-weight: 600; padding: 1px 6px; border-radius: 4px; white-space: nowrap; }
+.sev.p1 { background: var(--fail-soft); color: var(--fail); }
+.sev.p2 { background: var(--warn-soft); color: var(--warn); }
+.sev.p3 { background: var(--accent-soft); color: var(--accent-ink); }
+.sev.p4 { background: var(--surface-alt); color: var(--ink-soft); }
+
+.footer {
+  margin-top: 64px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+  font-size: 12.5px;
+  color: var(--ink-faint);
+  font-family: var(--mono);
+}
+
+@media (max-width: 860px) {
+  .shell { grid-template-columns: minmax(0, 1fr); }
+  .rail { display: none; }
+  .mobile-bar { display: flex; }
+  .main { padding: 24px 16px 80px; }
+  section + section { margin-top: 44px; }
+  .step { grid-template-columns: 28px minmax(0, 1fr); gap: 11px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="mobile-bar">
+  <select id="mobile-nav" aria-label="Jump to section">
+    <option value="#orientation">Orientation</option>
+    <option value="#origin">In production</option>
+    <option value="#setup">Setup — 9 steps</option>
+    <option value="#agents">The four agents</option>
+    <option value="#invariants">Invariants I1–I7</option>
+    <option value="#components">Components</option>
+    <option value="#workflows">Workflows</option>
+    <option value="#troubleshooting">Troubleshooting</option>
+    <option value="#commands">Commands</option>
+  </select>
+  <button class="theme-btn" id="theme-btn-mobile" style="width:auto;margin:0" type="button">THEME</button>
+</div>
+
+<div class="shell">
+
+  <aside class="rail">
+    <div class="brand">
+      <span class="brand-mark">QA</span>
+      <span class="brand-name">Harness Handbook</span>
+    </div>
+    <p class="brand-sub">playwright · typescript · 4 agents</p>
+
+    <nav class="nav" id="nav">
+      <a href="#orientation"><span class="ord">·</span> Orientation</a>
+      <a href="#origin"><span class="ord">·</span> In production</a>
+
+      <div class="nav-group">Get running</div>
+      <a href="#setup"><span class="ord">1–9</span> Setup</a>
+      <a href="#first-test"><span class="ord">→</span> First real test</a>
+
+      <div class="nav-group">Reference</div>
+      <a href="#agents"><span class="ord">4</span> The agents</a>
+      <a href="#invariants"><span class="ord">I1–7</span> Invariants</a>
+      <a href="#components"><span class="ord">·</span> Components</a>
+
+      <div class="nav-group">Day to day</div>
+      <a href="#workflows"><span class="ord">·</span> Workflows</a>
+      <a href="#troubleshooting"><span class="ord">·</span> Troubleshooting</a>
+      <a href="#commands"><span class="ord">·</span> Commands</a>
+    </nav>
+
+    <button class="theme-btn" id="theme-btn" type="button">◐ THEME</button>
+  </aside>
+
+  <main class="main">
+
+    <!-- ================= ORIENTATION ================= -->
+    <section id="orientation">
+      <p class="eyebrow">Handbook</p>
+      <h1>AI-driven QA test harness</h1>
+      <p class="lede">Four agents plan, generate, heal, and file defects against a Playwright + TypeScript
+      suite built on the Page Object / Page Factory pattern. Everything project-specific lives in two files —
+      <code>PROJECT-PROFILE.md</code> and <code>.env</code>. Nothing in the agents, the config, or the
+      fixtures names an application.</p>
+      <p class="meta-line">Setup ≈ 1 hour · Node 18+ · Playwright Test MCP required for 2 of 4 agents</p>
+
+      <h3>The pipeline</h3>
+      <ol class="pipeline">
+        <li class="pipe-step"><span class="pipe-n">01</span><b>planner</b><span class="desc">A pasted story becomes a reviewed plan + CSV.</span></li>
+        <li class="pipe-step"><span class="pipe-n">02</span><b>generator</b><span class="desc">Drives the real browser, then writes the spec and any page objects.</span></li>
+        <li class="pipe-step"><span class="pipe-n">03</span><b>healer</b><span class="desc">Fixes failures, or confirms a genuine bug with you.</span></li>
+        <li class="pipe-step"><span class="pipe-n">04</span><b>defect-raiser</b><span class="desc">Files the CSV row and marks the test <code>fixme</code>.</span></li>
+      </ol>
+
+      <h3>What makes this different from asking an LLM to write tests</h3>
+      <p><b>The generator does not write from plan text.</b> It drives the real browser through the
+      Playwright MCP server first, reads back its own action log, and refuses to write a test for any step
+      that has no recorded action. Plan text states intent; only the drive establishes what the DOM
+      actually does.</p>
+      <p><b>They stop and ask.</b> The planner has seven mandatory approval checkpoints. The generator
+      blocks on the target file path and on any new page object it is about to create.</p>
+      <p><b>They refuse rather than guess.</b> A placeholder still in the profile stops the run. An
+      unregistered module tag stops the run. A missing SQL query stops the run. Each is a point where a
+      guess would produce work that looks right and is wrong.</p>
+
+      <div class="note">
+        <p><strong>Two files you edit per project.</strong> <code>PROJECT-PROFILE.md</code> — the
+        application, its roles, its vocabulary, its modules, its severity rubric. <code>.env</code> — URLs
+        and credentials. If you find yourself editing something else to make the harness fit, it probably
+        belongs in the profile.</p>
+      </div>
+    </section>
+
+    <!-- ================= ORIGIN ================= -->
+    <section id="origin">
+      <p class="eyebrow">Where this came from</p>
+      <h2>In production: the suite this was extracted from</h2>
+      <p class="lede">This harness is the genericized form of a working QA suite for a multi-role
+      enterprise web application — roughly 1,100 tests across five user roles, built with these four
+      agents and these seven invariants. The numbers below are counted from that suite, not estimated.
+      Story keys and module names are anonymized; the figures are not.</p>
+
+      <h3>What the agents produced</h3>
+      <p>Seven stories in one release, each planned by the planner and written by the generator:</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Story</th><th>Tests</th><th>test.step calls</th><th>Spec lines</th><th>Plan lines</th></tr></thead>
+          <tbody>
+            <tr><td>Story 1</td><td>108</td><td>224</td><td>2,890</td><td>1,453</td></tr>
+            <tr><td>Story 2</td><td>107</td><td>447</td><td>3,262</td><td>1,208</td></tr>
+            <tr><td>Story 3</td><td>63</td><td>189</td><td>2,405</td><td>1,147</td></tr>
+            <tr><td>Story 4</td><td>29</td><td>100</td><td>2,222</td><td>657</td></tr>
+            <tr><td>Story 5</td><td>13</td><td>41</td><td>288</td><td>—</td></tr>
+            <tr><td>Story 6</td><td>12</td><td>38</td><td>296</td><td>280</td></tr>
+            <tr><td>Story 7</td><td>7</td><td>42</td><td>317</td><td>160</td></tr>
+            <tr><td><b>Total</b></td><td><b>339</b></td><td><b>1,081</b></td><td><b>11,680</b></td><td><b>4,905</b></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Alongside those, 760 tests in 24 module-wise spec files — the older, pre-agent part of the suite
+      the conventions were reverse-engineered from. About 1,100 tests in total.</p>
+
+      <div class="note">
+        <p><strong>Every test step is wrapped.</strong> 1,081 <code>test.step</code> calls across 339
+        tests — an average of 3.2 per test, and no test without them. That's the generator following its
+        one-step-per-plan-line rule, which is what makes a failure report name the business action that
+        broke rather than a line number.</p>
+      </div>
+
+      <h3>Plan first, then code</h3>
+      <p>4,905 lines of reviewed plan produced 11,680 lines of spec. The planning artifact is roughly 40%
+      the size of the code it generates, and it is the half a QA lead can actually review — which is the
+      argument for the planner's seven checkpoints existing at all.</p>
+      <p>A plan at this scale is not a formality. The largest story's plan runs 1,453 lines for 108
+      scenarios; its CSV export runs 531 rows into the QA tracker.</p>
+
+      <h3>Tags, as actually applied</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Tag</th><th>Count</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><code>@Regression</code></td><td>160</td><td>Regression-worthy — the <code>npm run test:regression</code> set</td></tr>
+            <tr><td><code>@Priority1</code></td><td>113</td><td>Core flow or data integrity, no workaround</td></tr>
+            <tr><td><code>@Priority2</code></td><td>51</td><td>Secondary flow, or a P1 replicated for another role</td></tr>
+            <tr><td><code>@Priority3</code></td><td>3</td><td>Cosmetic or rare — deliberately excluded from regression</td></tr>
+            <tr><td>14 module tags</td><td>86</td><td>Long tail — the largest module covered 18 tests, the next 11, then 10, then single digits</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Note the shape of that distribution: <b>113 P1 against 3 P3</b>. The planner's rubric says ties
+      round toward P3, and this suite still came out overwhelmingly P1 — because the application's core
+      flows carry real data-integrity consequences, so question 1 of the rubric is genuinely true for most
+      of it. The rubric doesn't force a bell curve onto a domain that doesn't have one.</p>
+
+      <h3>What the invariants bought</h3>
+      <p>Because every interaction went through a page object (I1), shared behavior concentrated rather
+      than scattering. Two shared page objects carry most of the suite:</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Page object</th><th>Lines</th><th>Methods (approx.)</th></tr></thead>
+          <tbody>
+            <tr><td>Largest shared page object, in <code>pages/common/</code></td><td>12,874</td><td>~700</td></tr>
+            <tr><td>Second largest, same folder</td><td>4,862</td><td>~285</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>23 page objects total. A file of that size is only defensible because the alternative — those
+      same 700 interactions inlined across 1,100 specs — is unmaintainable in a way that only shows up
+      when the application's markup changes. It did, repeatedly, and the fix stayed in one file each time.</p>
+
+      <h3>Honest gaps in that suite</h3>
+      <p>Worth seeing, because they're the failure modes this harness is most likely to reproduce:</p>
+      <ul>
+        <li><b>Only 3 of 6 plans had a CSV export.</b> The planner produces both, but the CSV is the last
+        checkpoint and the easiest to skip under deadline. The tracker import then lags the plan.</li>
+        <li><b>Module tags reached 86 of 339 tests.</b> Two of the largest story files were never
+        retrofitted. The suite's own <code>regression-tags.md</code> records this per-file rather than
+        hiding it — which is why a partially-tagged <code>--grep</code> run is visibly incomplete rather
+        than quietly under-reporting.</li>
+        <li><b>One <code>test.fixme</code> across 339 tests, and it isn't a defect.</b> That scenario was
+        retired because a later story replaced the mode it exercised — product owner confirmed, not an
+        application bug. The <code>fixme</code> mechanism gets used for obsolete scenarios as well as
+        defects, so read the comment above one before assuming a bug is open.</li>
+      </ul>
+
+      <div class="note warn">
+        <p><strong>Scale takes time, not just agents.</strong> Those 339 tests are one release's work on a
+        suite that already had 760 tests, 23 page objects and documented navigation flows to build on. A
+        fresh harness gets its first real story in a day; it does not get 108 scenarios in a day.</p>
+      </div>
+    </section>
+
+    <!-- ================= SETUP ================= -->
+    <section id="setup">
+      <p class="eyebrow">Get running</p>
+      <h2>Setup, in nine steps</h2>
+      <p class="lede">Work in order — later steps assume earlier ones. Most of the hour goes into steps 3
+      and 6.</p>
+
+      <ol class="steps">
+
+        <li class="step">
+          <span class="step-n">1</span>
+          <div class="step-body">
+            <h3>Install</h3>
+            <pre><code>npm install
+npx playwright install</code></pre>
+          </div>
+        </li>
+
+        <li class="step">
+          <span class="step-n">2</span>
+          <div class="step-body">
+            <h3>Fill in the project profile</h3>
+            <p>Open <code>PROJECT-PROFILE.md</code>, work through sections 1–8. Both the TypeScript layer
+            and all four agents read it, so vague answers here produce vague test plans.</p>
+            <ul>
+              <li><b>Section 2 (Roles)</b> — the planner uses this to decide which roles a story implicates.
+              Name the baseline full-access role explicitly.</li>
+              <li><b>Section 3 (Vocabulary)</b> — the entities the planner is forbidden to inline. Anything
+              missing here ends up hardcoded in a test.</li>
+              <li><b>Section 7 (Severity rubric)</b> — the healer classifies every confirmed defect
+              against it.</li>
+            </ul>
+            <p>Then mirror sections 1, 2 and 5 into <code>config/projectProfile.ts</code>: the
+            <code>roles</code> array, the <code>baselineRole</code>, and the DB/API flags.</p>
+          </div>
+        </li>
+
+        <li class="step">
+          <span class="step-n">3</span>
+          <div class="step-body">
+            <h3>Configure the environment</h3>
+            <pre><code>cp .env.example .env</code></pre>
+            <p>Required to run anything: <code>APP_NAME</code>, <code>TRACKER_PROJECT_KEY</code>,
+            <code>BASE_URL</code>, and one <code>&lt;ROLE&gt;_EMAIL</code>/<code>&lt;ROLE&gt;_PASSWORD</code>
+            pair per role you'll actually test.</p>
+            <p>The env var name is the role key uppercased, split on the camelCase boundary:
+            <code>caseWorker</code> → <code>CASE_WORKER_EMAIL</code>.</p>
+            <div class="note warn">
+              <p><strong>Credentials live only here.</strong> <code>.env</code> is gitignored.
+              <code>data/auth_data.ts</code> resolves values at runtime and throws if a role is
+              unconfigured — it never holds a password. A harness that ships credentials in source is one
+              push from leaking them.</p>
+            </div>
+          </div>
+        </li>
+
+        <li class="step">
+          <span class="step-n">4</span>
+          <div class="step-body">
+            <h3>Point the two shipped page objects at the real app</h3>
+            <p><code>pages/LoginPage.ts</code> and <code>pages/DashboardPage.ts</code> ship wired into the
+            fixtures and the login helper, with <code>CHANGE_ME</code> selectors. Replace them. Prefer
+            <code>getByRole</code> / <code>getByLabel</code> over XPath where the app gives you the
+            choice — they survive markup changes a positional XPath doesn't.</p>
+            <pre><code>npx playwright test tests/example.spec.ts --grep "@Priority1"</code></pre>
+            <p>That passing means login and the dashboard are wired. It's the milestone worth stopping
+            at — everything after builds on it.</p>
+          </div>
+        </li>
+
+        <li class="step">
+          <span class="step-n">5</span>
+          <div class="step-body">
+            <h3>Fill in test data</h3>
+            <p><code>data/testData.ts</code> — replace the <code>CHANGE_ME</code> keys with your section 3
+            entities. Keep the shape: a valid case, an unknown case, a malformed case, a terminal-state
+            case. Those four cover most of what the planner's partitioning and error-guessing scenarios
+            ask for.</p>
+            <p>Fill <code>boundaries</code> with the app's real limits — BVA scenarios read them.
+            <code>adversarialInput</code> is generic; leave it.</p>
+            <p><code>data/sql_queries.ts</code> — replace the example keys, then:</p>
+            <pre><code>npm run db:check</code></pre>
+          </div>
+        </li>
+
+        <li class="step">
+          <span class="step-n">6</span>
+          <div class="step-body">
+            <h3>Document the navigation flows</h3>
+            <p>Per role, copy <code>specs/UserFlowsUserRolePermissions/_roleNavigationFlow.template.md</code>
+            to <code>&lt;role&gt;NavigationFlow.plan.md</code>. List them in <code>userFlows.plan.md</code>,
+            then build the matrix in <code>crossRoleAccessControl.plan.md</code>.</p>
+            <div class="note stop">
+              <p><strong>The step most worth not skipping.</strong> Planner and generator both read these
+              before tracing a flow through <code>pages/</code> themselves, and the healer checks them
+              before calling a blocked action a defect. Leave them empty and all three re-derive navigation
+              every run — and the healer will eventually report a working permission boundary as a bug.</p>
+            </div>
+            <p>You don't need them complete before the first test. Start with the baseline role's happy
+            path and grow it.</p>
+          </div>
+        </li>
+
+        <li class="step">
+          <span class="step-n">7</span>
+          <div class="step-body">
+            <h3>Register your modules</h3>
+            <p>Fill the module tags table in <code>specs/RegressionTags/regression-tags.md</code> from
+            profile section 4. The generator looks up a scenario's module there; anything unregistered
+            makes it stop and ask.</p>
+          </div>
+        </li>
+
+        <li class="step">
+          <span class="step-n">8</span>
+          <div class="step-body">
+            <h3>Decide what to delete</h3>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>If</th><th>Delete</th></tr></thead>
+                <tbody>
+                  <tr><td>No API tests</td><td><code>lib/api/</code>, the <code>apiClient</code> fixture, the <code>api</code> project in the Playwright config</td></tr>
+                  <tr><td>No database</td><td><code>config/DbConnection.ts</code>, <code>config/testDbConnection.ts</code>, the <code>db:check</code> script, the <code>mssql</code> deps, <code>expectGroupsMatchDatabase</code></td></tr>
+                  <tr><td>One browser only</td><td>The <code>edge</code> project in the Playwright config</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </li>
+
+        <li class="step">
+          <span class="step-n">9</span>
+          <div class="step-body">
+            <h3>Verify</h3>
+            <p>Walk the checklist in profile section 9, then:</p>
+            <pre><code>npm run typecheck
+npx playwright test tests/example.spec.ts</code></pre>
+            <p>Once <code>example.spec.ts</code> passes end to end, the harness is wired. Keep it as a
+            smoke check or delete it — it's a reference, not coverage.</p>
+          </div>
+        </li>
+
+      </ol>
+    </section>
+
+    <!-- ================= FIRST TEST ================= -->
+    <section id="first-test">
+      <p class="eyebrow">Get running</p>
+      <h2>Your first real test</h2>
+
+      <ol>
+        <li><b>Paste the story</b> into the conversation, then run <code>/playwright-test-planner</code>.
+        Work its checkpoints. Out: <code>specs/&lt;KEY&gt;.plan.md</code> and <code>.plan.csv</code>.</li>
+        <li><b>Read the plan's gap table</b> — "new page objects, fixtures and data keys required". If a
+        data key is listed, add it to <code>data/testData.ts</code> yourself; the generator flags data keys
+        but doesn't author them.</li>
+        <li><b>Generate</b> with <code>/playwright-test-generator</code>. It drives the browser, then stops
+        twice: for the target file path, and for each new page object.</li>
+        <li><b>Run</b> the spec.</li>
+        <li><b>Heal</b> what fails with <code>/playwright-test-healer</code>.</li>
+        <li><b>File</b> confirmed defects with <code>/playwright-defect-raiser</code>.</li>
+      </ol>
+
+      <div class="note">
+        <p><strong>Checkpoint 4 is the cheapest redirect in the pipeline.</strong> The planner shows you
+        scenario titles only, before any scenario is written out. Trimming there costs a sentence; trimming
+        at the full-plan checkpoint means re-reviewing everything.</p>
+      </div>
+    </section>
+
+    <!-- ================= AGENTS ================= -->
+    <section id="agents">
+      <p class="eyebrow">Reference</p>
+      <h2>The four agents</h2>
+      <p class="lede">They form a pipeline, but each runs alone and reads its input from disk. A plan
+      reviewed on Monday generates fine on Wednesday.</p>
+
+      <!-- planner -->
+      <article class="agent">
+        <div class="agent-head">
+          <span class="agent-name">/playwright-test-planner</span>
+          <span class="agent-role">story → reviewed test plan</span>
+        </div>
+        <div class="pills">
+          <span class="pill on-accent">opus · effort xhigh</span>
+          <span class="pill">no browser</span>
+          <span class="pill">7 checkpoints</span>
+          <span class="pill">writes specs/*.plan.md + .csv</span>
+        </div>
+
+        <h4>How to invoke</h4>
+        <p>Paste the story into the conversation — key, title, description, AC as plain text — then run the
+        command. No tracker API. Screenshots are supplementary: used for field names, layout and labels the
+        text omitted, never to invent behavior they only imply.</p>
+
+        <h4>The seven checkpoints</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>It shows you</th><th>You give</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>Story key, title, AC as understood, flagged gaps</td><td>Approval / correction</td></tr>
+              <tr><td>2</td><td>Conventions it will follow (cited I1–I7)</td><td>Approval</td></tr>
+              <tr><td>3</td><td>Existing page objects, fixtures, data keys found</td><td>Approval / scope cut</td></tr>
+              <tr><td>4</td><td><b>Scenario titles only</b></td><td>Approval / trim</td></tr>
+              <tr><td>5</td><td>New page object or fixture needed, and where it slots in</td><td>Approval</td></tr>
+              <tr><td>6</td><td>The complete plan, in chat</td><td>Approval</td></tr>
+              <tr><td>7</td><td>The CSV rows</td><td>Approval</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h4>How it assigns priority</h4>
+        <p>Four questions, in order, stopping at the first yes — so priority isn't assigned by vibe:</p>
+        <ol>
+          <li>Failure corrupts/loses data, or blocks a role from a core action with <b>no workaround</b>? → <span class="sev p1">P1</span></li>
+          <li>The <b>only</b> coverage for its AC, so cutting it leaves that AC untested? → <span class="sev p1">P1</span></li>
+          <li>Replicates a covered P1 for a secondary role, or a secondary flow <b>with</b> a workaround? → <span class="sev p2">P2</span></li>
+          <li>Otherwise — cosmetic, rare, low blast radius → <span class="sev p3">P3</span></li>
+        </ol>
+        <p>Ties round <b>toward P3</b>, unless skipping would leave a data-integrity or core-flow gap
+        uncovered elsewhere.</p>
+
+        <h4>The completeness critique</h4>
+        <p>After drafting, it re-reads its own scenario set as a skeptic: which implicated role has no
+        scenario, which page variant was skipped, which technique fits an AC but wasn't applied, which
+        cross-feature interaction was never asked about. A different failure mode from the self-audit —
+        that only catches gaps against ACs already named.</p>
+
+        <h4>What it will not do</h4>
+        <ul>
+          <li>Invent a story key</li>
+          <li>Guess a selector for an element with no page object</li>
+          <li>Name a data key that doesn't exist</li>
+          <li>Dictate which spec file a scenario lands in — that's the generator's checkpoint</li>
+        </ul>
+      </article>
+
+      <!-- generator -->
+      <article class="agent">
+        <div class="agent-head">
+          <span class="agent-name">/playwright-test-generator</span>
+          <span class="agent-role">plan → spec + page objects</span>
+        </div>
+        <div class="pills">
+          <span class="pill on-accent">opus</span>
+          <span class="pill on-warn">requires Playwright Test MCP</span>
+          <span class="pill">2 blocking checkpoints</span>
+          <span class="pill">writes tests/ + pages/ + lib/BaseTest.ts</span>
+        </div>
+
+        <h4>The loop, per step</h4>
+        <ol>
+          <li><code>generator_setup_page</code> — mandatory, even when the plan reads descriptive enough to
+          write code directly.</li>
+          <li>Drive the step live. This drive is <b>exploratory</b> — it operates on the raw page to
+          discover real behavior, and is not the shape the final code takes.</li>
+          <li>Map it back to conventions: which page object method (I1), which fixture (I2), which data key
+          (I3/I4). Scope ambiguous locators now (I7), at the point the locator is written.</li>
+          <li><code>generator_read_log</code> — confirm a real recorded action exists for every step. Empty
+          or partial log means the drive didn't happen: it stops and re-runs rather than writing.</li>
+        </ol>
+
+        <h4>Two blocking checkpoints</h4>
+        <p><b>Target file path.</b> It will not assume a path from the scenario name, even when one seems
+        obvious. It asks for release and story key, assembles the path per profile section 8, and confirms
+        the folder exists — <code>generator_write_test</code> can't create parent folders.</p>
+        <p><b>New page objects.</b> Before implementing it tells you which file it's about to touch and
+        waits — "this page already exists, I'm going to implement <code>addRecord</code> on
+        <code>RecordListPage.ts</code>".</p>
+
+        <h4>What to expect in the output</h4>
+        <ul>
+          <li>One test per file, inside a <code>test.describe</code> matching the plan's top-level item</li>
+          <li><code>import test from '@lib/BaseTest'</code>, <code>expect</code> from <code>@playwright/test</code></li>
+          <li>Every plan step wrapped in its own <code>test.step(...)</code></li>
+          <li><code>test.beforeEach</code> calling <code>userLogin</code> for anything authenticated</li>
+          <li>Tags: <span class="sev p1">P1</span> → <code>['@Regression','@Priority1','@Module']</code> ·
+          <span class="sev p2">P2</span> → <code>@Priority2</code> variant ·
+          <span class="sev p3">P3</span> → <code>['@Priority3','@Module']</code>, no <code>@Regression</code></li>
+          <li>Any new page object wired into <code>lib/BaseTest.ts</code> — implemented, not left as a comment</li>
+        </ul>
+
+        <h4>What it will not do</h4>
+        <ul>
+          <li>Write a test for a step it never drove</li>
+          <li>Assume a file path</li>
+          <li>Invent a module tag — it asks, then writes the row into <code>regression-tags.md</code> itself</li>
+          <li>Invent SQL</li>
+          <li>Write a role name into a describe title as a substitute for a tag</li>
+        </ul>
+      </article>
+
+      <!-- healer -->
+      <article class="agent">
+        <div class="agent-head">
+          <span class="agent-name">/playwright-test-healer</span>
+          <span class="agent-role">failing tests → fixes, or a confirmed defect</span>
+        </div>
+        <div class="pills">
+          <span class="pill on-accent">opus</span>
+          <span class="pill on-warn">requires Playwright Test MCP</span>
+          <span class="pill">3 attempts per test</span>
+          <span class="pill">writes specs/temp-defects/defect-log.json</span>
+        </div>
+
+        <h4>The three-attempt rule</h4>
+        <p>Up to 3 fix attempts per test, then one of three things:</p>
+        <ul>
+          <li><b>Passes</b> → done.</li>
+          <li><b>High confidence it's a real bug</b> → stops immediately, even mid-attempt, and runs the
+          Defect Confirmation Workflow.</li>
+          <li><b>Still failing, criteria not met</b> → stops, summarizes what it tried and what it still
+          suspects, asks. It won't guess "bug", and won't retry past 3.</li>
+        </ul>
+
+        <h4>Ruled out before calling something a bug</h4>
+        <ul>
+          <li>A selector that changed and can be updated</li>
+          <li>A timing issue fixable with a proper wait</li>
+          <li>An ambiguous locator matching a different element than intended (I7)</li>
+          <li>Stale test data or an incorrect assumption</li>
+          <li>Flakiness — <b>reproduced at least twice</b></li>
+          <li>A documented permission boundary — it checks the navigation plans first</li>
+        </ul>
+
+        <h4>The database blind spot</h4>
+        <p>DB queries run in the Node process, not the browser. None of the healer's tools can see what the
+        database contains. So it first looks for a code-level explanation — wrong column, mismatched
+        parameter, stale schema — and distinguishes an unreachable database (an environment fault, reported
+        and stopped on, never "fixed" around) from a failed assertion.</p>
+        <p>If query and comparison both look correct, it does <b>not</b> run the normal defect workflow —
+        that expects browser evidence it has no equivalent of here. It stops and tells you which assertion
+        failed, the query involved, and that it cannot verify the database's state.</p>
+        <div class="note">
+          <p><strong>This is the one place the harness deliberately declines to reach a conclusion.</strong>
+          You run the query by hand and decide: matching result means a timing bug in the test; different
+          and wrong means an application bug; different and stale means reseed.</p>
+        </div>
+
+        <h4>Defect Confirmation Workflow</h4>
+        <p>The single exception to "don't ask questions". It presents the test, the violated expected-result
+        line, observed behavior, evidence ruling out a test-side cause, and a severity classified against
+        profile section 7 — judged by observed impact, <b>never</b> by the test's <code>@PriorityN</code>
+        tag, which is coverage priority, not defect impact.</p>
+        <p>On your confirmation it appends to the defect log. It does not write the CSV and does not mark
+        the test <code>fixme()</code>. The test stays red until the defect-raiser runs.</p>
+      </article>
+
+      <!-- raiser -->
+      <article class="agent">
+        <div class="agent-head">
+          <span class="agent-name">/playwright-defect-raiser</span>
+          <span class="agent-role">defect log → tracker CSV + fixme</span>
+        </div>
+        <div class="pills">
+          <span class="pill on-accent">opus</span>
+          <span class="pill">no browser</span>
+          <span class="pill">unattended — asks nothing</span>
+          <span class="pill">writes specs/defects.csv</span>
+        </div>
+
+        <h4>Per pending entry</h4>
+        <ol>
+          <li>Map severity to tracker columns via profile section 7. Default:
+          <span class="sev p1">P1</span> Highest/Critical ·
+          <span class="sev p2">P2</span> High/Major ·
+          <span class="sev p3">P3</span> Medium/Minor ·
+          <span class="sev p4">P4</span> Low/Low.</li>
+          <li>Append a row to <code>specs/defects.csv</code>.</li>
+          <li>Find the <code>test()</code> whose title matches exactly, change to <code>test.fixme(</code>,
+          add a comment referencing the defect and what the app does instead.</li>
+          <li>Set <code>status: "raised"</code>, add <code>raisedAt</code>.</li>
+        </ol>
+
+        <h4>Safety behaviors</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Situation</th><th>What happens</th></tr></thead>
+            <tbody>
+              <tr><td>Severity missing or not P1–P4</td><td>Entry left <code>pending</code>, reported</td></tr>
+              <tr><td>Test renamed or removed since detection</td><td>Entry left <code>pending</code>, reported — never guesses which test</td></tr>
+              <tr><td>CSV row already exists for that <code>id</code></td><td>Skipped, log reconciled. Re-run safe.</td></tr>
+              <tr><td>Tracker key still a placeholder</td><td>Stops. A CSV filed under a placeholder key is worse than no CSV.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>It never alters the facts of a defect — those came from the human-confirmed healer finding. Its
+        only judgment is a table lookup.</p>
+      </article>
+
+      <p><a href="AGENTS.md">Full agent reference →</a></p>
+    </section>
+
+    <!-- ================= INVARIANTS ================= -->
+    <section id="invariants">
+      <p class="eyebrow">Reference</p>
+      <h2>Invariants I1–I7</h2>
+      <p class="lede">The conventions every test follows. They live in one file,
+      <code>.claude/TEST-AUTHORING-INVARIANTS.md</code>, cited by number from three agents — so a
+      convention has exactly one place to change.</p>
+
+      <div class="inv">
+        <span class="inv-id">I1</span>
+        <div class="inv-body"><b>Page Object Model</b>
+        <p>Every UI interaction is a method on a page object. No raw locator in a spec file. Locators are
+        <code>readonly</code> properties initialized in the constructor — never built inline in a method
+        body, where they're invisible to anyone auditing what the page depends on.</p></div>
+      </div>
+      <div class="inv">
+        <span class="inv-id">I2</span>
+        <div class="inv-body"><b>Page Factory fixtures</b>
+        <p><code>import test from '@lib/BaseTest'</code>, <code>expect</code> separately. Destructure only
+        what you need. Never <code>new SomePage(page)</code> — one construction site per page object means
+        a constructor change is one line, not a grep.</p></div>
+      </div>
+      <div class="inv">
+        <span class="inv-id">I3</span>
+        <div class="inv-body"><b>Centralized test data and SQL</b>
+        <p>No literal business value in a test or plan — reference a <code>data/testData.ts</code> key. No
+        inline SQL — reference a <code>sqlQueries.&lt;key&gt;</code>, executed inside a page object method.
+        The agents don't invent SQL; they have no schema visibility, so a query they wrote would be
+        plausible and wrong.</p></div>
+      </div>
+      <div class="inv">
+        <span class="inv-id">I4</span>
+        <div class="inv-body"><b>Credentials</b>
+        <p>Only <code>testUsers.&lt;role&gt;</code> / <code>defaultUsers.&lt;role&gt;</code>, driven through
+        <code>userLogin</code> in a <code>beforeEach</code>. Never a literal, not even as an example. Values
+        live in <code>.env</code>.</p></div>
+      </div>
+      <div class="inv">
+        <span class="inv-id">I5</span>
+        <div class="inv-body"><b>No hardcoded assertion values</b>
+        <p>Counts, statuses, dates and list contents that vary by environment get asserted via pattern,
+        set-membership, or a before/after comparison against a runtime value — never a number copied out of
+        a manual exploration run.</p></div>
+      </div>
+      <div class="inv">
+        <span class="inv-id">I6</span>
+        <div class="inv-body"><b>Environment-driven config</b>
+        <p>URLs and DB settings come from <code>.env</code> via <code>appConfig</code>. Never a literal
+        environment URL, hostname, or credential anywhere in the repo.</p></div>
+      </div>
+      <div class="inv">
+        <span class="inv-id">I7</span>
+        <div class="inv-body"><b>Locator uniqueness</b>
+        <p>Anything that could match several elements gets scoped to one. An ambiguous locator that happens
+        to work during an exploratory drive is exactly what produces a flaky test weeks later — scope it at
+        authoring time, not after a healer pass finds it.</p></div>
+      </div>
+    </section>
+
+    <!-- ================= COMPONENTS ================= -->
+    <section id="components">
+      <p class="eyebrow">Reference</p>
+      <h2>Components</h2>
+      <p class="lede">What each piece is and what to expect from it. The full reference — including
+      extension points and failure modes — is in <a href="COMPONENTS.md">COMPONENTS.md</a>.</p>
+
+      <h3>Configuration</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>File</th><th>What it is</th><th>What to expect</th></tr></thead>
+          <tbody>
+            <tr><td><code>PROJECT-PROFILE.md</code></td><td>Single source of project identity, 9 sections</td><td>All four agents read it first, every run. Quality downstream tracks quality here.</td></tr>
+            <tr><td><code>config/projectProfile.ts</code></td><td>Machine-readable mirror of sections 1, 2, 5</td><td><code>roles</code> drives the <code>Role</code> type, so a typo is a compile error.</td></tr>
+            <tr><td><code>config/testConfig.ts</code></td><td>Every env-derived value (I6)</td><td><code>baseUrl</code> is a getter that <b>throws</b> when unset — a default URL silently tests the wrong system and looks green.</td></tr>
+            <tr><td><code>config/DbConnection.ts</code></td><td>SQL Server pool + failure handling</td><td>Names missing env vars before connecting; latches persistent refusals so a blocked IP costs one timeout, not one per test.</td></tr>
+            <tr><td><code>playwright.config.ts</code></td><td>3 projects: chromium, edge, api</td><td>Serial by default — parallelising before test data is isolated makes failures unreadable.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Data</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>File</th><th>Holds</th><th>What to expect</th></tr></thead>
+          <tbody>
+            <tr><td><code>data/auth_data.ts</code></td><td>Credentials, resolved from <code>.env</code></td><td>Lazy — a suite touching 2 of 5 roles isn't blocked by the 3 it never uses. Throws at first use, not import.</td></tr>
+            <tr><td><code>data/testData.ts</code></td><td>Domain values, boundaries, adversarial inputs</td><td>Keep the four-state shape for <code>recordData</code>; it covers most partitioning and error-guessing scenarios.</td></tr>
+            <tr><td><code>data/sql_queries.ts</code></td><td>Every query the suite runs</td><td>Agents add keys under its conventions but never invent the SQL.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Fixtures and pages</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>File</th><th>What it is</th><th>What to expect</th></tr></thead>
+          <tbody>
+            <tr><td><code>lib/BaseTest.ts</code></td><td>The Page Factory (I2)</td><td>The generator reads it for exact fixture names. A fixture breaking the camelCase convention is one it won't find.</td></tr>
+            <tr><td><code>pages/BasePage.ts</code></td><td>Shared nav, waiting, table reads, DB comparison</td><td>A helper here must be page-agnostic. Once it needs to know a screen, it belongs on that screen.</td></tr>
+            <tr><td><code>pages/LoginPage.ts</code><br><code>pages/DashboardPage.ts</code></td><td>The two page objects that ship wired</td><td><code>expectGroupsMatchDatabase()</code> is the reference DB-backed assertion — copy its shape.</td></tr>
+            <tr><td><code>pages/common/</code></td><td><code>userLogin</code> + chrome widgets</td><td>Widgets reachable from every page live here; screen-specific objects live in <code>pages/</code>.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Specs and tests</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Path</th><th>Role</th></tr></thead>
+          <tbody>
+            <tr><td><code>specs/TEMPLATES/</code></td><td>Canonical plan markdown + CSV shapes, with field rules</td></tr>
+            <tr><td><code>specs/RegressionTags/</code></td><td>Tag registry. Includes the Gotchas that caused false-positive <code>--grep</code> matches in the suite this came from.</td></tr>
+            <tr><td><code>specs/ScenarioGenerationPatterns/</code></td><td>When to replicate a scenario set across pages and roles, and the exceptions</td></tr>
+            <tr><td><code>specs/UserFlowsUserRolePermissions/</code></td><td>Per-role navigation plans + cross-role matrix. The highest-leverage docs in the repo.</td></tr>
+            <tr><td><code>tests/example.spec.ts</code></td><td>Reference spec demonstrating I1–I7. Not coverage.</td></tr>
+            <tr><td><code>tests/seed.spec.ts</code></td><td>The generator's live-drive starting point. Body stays empty.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================= WORKFLOWS ================= -->
+    <section id="workflows">
+      <p class="eyebrow">Day to day</p>
+      <h2>Workflows</h2>
+      <p class="lede">Condensed. Full recipes — including adding page objects and DB assertions by hand,
+      and moving the harness to another project — in <a href="WORKFLOWS.md">WORKFLOWS.md</a>.</p>
+
+      <h3>A test that passed last week now fails</h3>
+      <p>Decide first whether the <b>application</b> changed or the <b>environment</b> did. They look
+      identical from a red test and have completely different fixes.</p>
+      <pre><code>npm run db:check</code></pre>
+      <p>Unreachable → environment. Fix that before touching any test. Then run the healer and expect one
+      of four outcomes:</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Outcome</th><th>Means</th></tr></thead>
+          <tbody>
+            <tr><td>Fixed in ≤3 attempts</td><td>Selector drift, timing, or an ambiguous locator</td></tr>
+            <tr><td>Asks you to confirm a defect</td><td>App behavior genuinely contradicts an expected-result line</td></tr>
+            <tr><td>"Cannot verify database state"</td><td>A DB-backed assertion it can't adjudicate — you run the query</td></tr>
+            <tr><td>Stops after 3, lists suspicions</td><td>Doesn't meet bug criteria and isn't an obvious test fix</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Adding a page object by hand</h3>
+      <p>Often faster than a full generate for a small screen. Three moves: create the file extending
+      <code>BasePage</code>, wire it into <code>lib/BaseTest.ts</code> (import, <code>Fixtures</code> field,
+      factory), destructure the fixture in a test.</p>
+      <pre><code>export default class RecordListPage extends BasePage {
+    readonly rows: Locator;
+
+    constructor(page: Page) {
+        super(page);
+        this.rows = page.getByRole('row');
+    }
+
+    async openFirstRecord(): Promise&lt;void&gt; {
+        // I7: rows matches many — scope before acting
+        await this.firstOf(this.rows).click();
+    }
+}</code></pre>
+      <p>The generator follows this exact shape, so a hand-written page object and a generated one are
+      indistinguishable in review. That's the point.</p>
+
+      <h3>Onboarding someone new</h3>
+      <ol>
+        <li>This page — orientation and agents</li>
+        <li><code>SETUP.md</code>, even if the harness is already configured — it explains why each piece exists</li>
+        <li><code>.claude/TEST-AUTHORING-INVARIANTS.md</code> — seven rules, one page</li>
+        <li><code>tests/example.spec.ts</code> — the conventions in working code</li>
+        <li>First task: add one page object by hand. Faster to understand the Page Factory by wiring one
+        than by reading about it.</li>
+      </ol>
+      <p>Skip the agents until after that. Someone who doesn't know the conventions can't review agent
+      output — and reviewing agent output is most of the job.</p>
+    </section>
+
+    <!-- ================= TROUBLESHOOTING ================= -->
+    <section id="troubleshooting">
+      <p class="eyebrow">Day to day</p>
+      <h2>Troubleshooting</h2>
+      <p class="lede">Every message below is one the harness raises on purpose. Each replaced a failure
+      mode that used to be diagnosed by reading a stack trace.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Message</th><th>Cause</th><th>Fix</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><code>Required environment variable BASE_URL is not set.</code></td>
+              <td><code>.env</code> missing or unpopulated</td>
+              <td>Copy <code>.env.example</code>. The refusal is deliberate — a default URL would silently test the wrong system.</td>
+            </tr>
+            <tr>
+              <td><code>Credentials for role 'x' are not configured.</code></td>
+              <td>Role in <code>projectProfile.ts</code> has no env pair</td>
+              <td>Add <code>&lt;ROLE&gt;_EMAIL</code>/<code>_PASSWORD</code>, or remove the role from <code>roles</code>.</td>
+            </tr>
+            <tr>
+              <td><code>Project profile not configured: ... CHANGE_ME</code></td>
+              <td><code>APP_NAME</code> or <code>TRACKER_PROJECT_KEY</code> unset</td>
+              <td>Set both in <code>.env</code>.</td>
+            </tr>
+            <tr>
+              <td><code>Database is not configured: DB_SERVER, ...</code></td>
+              <td>DB block missing from <code>.env</code></td>
+              <td>Fill it, or set <code>DB_VALIDATION_ENABLED=false</code>.</td>
+            </tr>
+            <tr>
+              <td><code>Database unreachable — this is an environment problem, not a test failure.</code></td>
+              <td>Firewall, or rejected credentials</td>
+              <td>The message names the blocked IP and prints the firewall rule to add. Fix the environment; don't heal tests around it.</td>
+            </tr>
+            <tr>
+              <td>An agent says a section is still a placeholder</td>
+              <td><code>&lt;...&gt;</code> left in <code>PROJECT-PROFILE.md</code></td>
+              <td>Fill that section. The agents refuse to invent your vocabulary, which is the point.</td>
+            </tr>
+            <tr>
+              <td><code>--grep</code> matches tests that don't belong to that module</td>
+              <td>A role or module name written into a <code>test.describe</code> <b>title</b></td>
+              <td>Grep matches full title strings, not just tags. Move it into <code>{ tag: [...] }</code>.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================= COMMANDS ================= -->
+    <section id="commands">
+      <p class="eyebrow">Day to day</p>
+      <h2>Commands</h2>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Command</th><th>Does</th></tr></thead>
+          <tbody>
+            <tr><td><code>npm test</code></td><td>Full suite</td></tr>
+            <tr><td><code>npm run test:regression</code></td><td><code>--grep "@Regression"</code></td></tr>
+            <tr><td><code>npm run test:headed</code></td><td>Watched</td></tr>
+            <tr><td><code>npm run test:debug</code></td><td>Stepped through the inspector</td></tr>
+            <tr><td><code>npm run test:ui</code></td><td>Interactive UI mode</td></tr>
+            <tr><td><code>npm run test:api</code></td><td>The <code>api</code> project only, no browser</td></tr>
+            <tr><td><code>npm run db:check</code></td><td>Database connectivity</td></tr>
+            <tr><td><code>npm run typecheck</code></td><td><code>tsc --noEmit</code></td></tr>
+            <tr><td><code>npm run report</code></td><td>Open the last HTML report</td></tr>
+            <tr><td><code>npm run setup</code></td><td><code>playwright install</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Tag filtering</h3>
+      <pre><code>npx playwright test --grep "@Regression"                          # full regression
+npx playwright test --grep "@Priority1"                           # smoke equivalent
+npx playwright test --grep "@RecordSearch"                        # one module
+npx playwright test --grep "(?=.*@Regression)(?=.*@RecordSearch)" # module, regression only
+npx playwright test --project=chromium                            # one browser
+npx playwright test --project=api                                 # API only</code></pre>
+
+      <h3>Tag convention</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Plan priority</th><th>Tag array</th></tr></thead>
+          <tbody>
+            <tr><td><span class="sev p1">Priority 1</span></td><td><code>['@Regression', '@Priority1', '@Module']</code></td></tr>
+            <tr><td><span class="sev p2">Priority 2</span></td><td><code>['@Regression', '@Priority2', '@Module']</code></td></tr>
+            <tr><td><span class="sev p3">Priority 3</span></td><td><code>['@Priority3', '@Module']</code> — no <code>@Regression</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="footer">
+        Handbook · setup + agents + components + workflows<br>
+        Deeper reference: <a href="COMPONENTS.md">COMPONENTS.md</a> ·
+        <a href="AGENTS.md">AGENTS.md</a> ·
+        <a href="WORKFLOWS.md">WORKFLOWS.md</a> ·
+        <a href="../SETUP.md">SETUP.md</a> ·
+        <a href="../PROJECT-PROFILE.md">PROJECT-PROFILE.md</a>
+      </p>
+    </section>
+
+  </main>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // --- theme toggle, persisted per viewer ---
+  var root = document.documentElement;
+
+  function readStored() {
+    try { return localStorage.getItem('qa-handbook-theme'); } catch (e) { return null; }
+  }
+  function store(v) {
+    try { localStorage.setItem('qa-handbook-theme', v); } catch (e) { /* private mode */ }
+  }
+
+  var stored = readStored();
+  if (stored === 'dark' || stored === 'light') root.setAttribute('data-theme', stored);
+
+  function currentlyDark() {
+    var attr = root.getAttribute('data-theme');
+    if (attr) return attr === 'dark';
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+
+  function toggleTheme() {
+    var next = currentlyDark() ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    store(next);
+  }
+
+  ['theme-btn', 'theme-btn-mobile'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('click', toggleTheme);
+  });
+
+  // --- scroll spy on the rail ---
+  var links = Array.prototype.slice.call(document.querySelectorAll('.nav a'));
+  var sections = links
+    .map(function (a) { return document.querySelector(a.getAttribute('href')); })
+    .filter(Boolean);
+
+  function setActive(id) {
+    links.forEach(function (a) {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + id);
+    });
+  }
+
+  if ('IntersectionObserver' in window && sections.length) {
+    var visible = new Map();
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        visible.set(entry.target.id, entry.isIntersecting ? entry.intersectionRatio : 0);
+      });
+      var best = null, bestRatio = 0;
+      visible.forEach(function (ratio, id) {
+        if (ratio > bestRatio) { bestRatio = ratio; best = id; }
+      });
+      if (best) setActive(best);
+    }, { rootMargin: '-10% 0px -70% 0px', threshold: [0, 0.25, 0.5, 1] });
+
+    sections.forEach(function (s) { observer.observe(s); });
+  }
+
+  setActive('orientation');
+
+  // --- mobile jump menu ---
+  var mobileNav = document.getElementById('mobile-nav');
+  if (mobileNav) {
+    mobileNav.addEventListener('change', function () {
+      var target = document.querySelector(mobileNav.value);
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+})();
+</script>
+
+</body>
+</html>

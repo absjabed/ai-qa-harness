@@ -1,0 +1,25 @@
+node_modules/
+
+# env — never commit real credentials. .env.example is the committed template.
+.env
+.env.*
+!.env.example
+
+# Playwright
+test-results/
+test-results-old/
+playwright-report/
+.playwright-mcp/
+blob-report/
+playwright/.cache/
+
+# Allure
+allure-report/
+allure-results/
+
+# Transient defect-pipeline state written by the healer agent between runs.
+# specs/defects.csv is intentionally NOT ignored — that one is a deliverable.
+specs/temp-defects/
+
+# TypeScript build output
+dist/

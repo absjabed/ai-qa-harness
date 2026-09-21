@@ -1,0 +1,35 @@
+{
+  "name": "ai-qa-harness",
+  "version": "1.0.0",
+  "description": "AI-driven Playwright test harness. Configure per project via PROJECT-PROFILE.md.",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "test:ui": "playwright test --ui",
+    "test:regression": "playwright test --grep \"@Regression\"",
+    "test:api": "playwright test --project=api",
+    "report": "playwright show-report",
+    "typecheck": "tsc --noEmit",
+    "db:check": "ts-node -r tsconfig-paths/register config/testDbConnection.ts",
+    "setup": "playwright install"
+  },
+  "keywords": [
+    "playwright",
+    "test-automation",
+    "ai"
+  ],
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@playwright/test": "^1.57.0",
+    "@types/mssql": "^9.1.9",
+    "@types/node": "^25.0.9",
+    "dotenv": "^17.2.3",
+    "mssql": "^12.2.0",
+    "playwright": "^1.57.0",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.9.3"
+  }
+}

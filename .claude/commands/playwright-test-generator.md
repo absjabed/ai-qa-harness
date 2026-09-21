@@ -15,7 +15,10 @@ spec file.
 
 ## Before anything else
 Read `PROJECT-PROFILE.md` (the application, its roles, its domain vocabulary, its modules, its file
-layout) and `.claude/TEST-AUTHORING-INVARIANTS.md` (I1–I7). Everything below refers to those by name and
+layout), `.claude/TEST-AUTHORING-INVARIANTS.md` (I1–I7), and any `context/<area>.md` covering the area this
+scenario touches. A context document carries the verification queries and business rules for its area — if
+one exists, its queries are what a DB-backed step should use, rather than asking the user for SQL that has
+already been written down. Everything below refers to those by name and
 number rather than restating them. If `PROJECT-PROFILE.md` still contains `<...>` placeholders in the
 sections you need, stop and say which sections are unfilled — do not guess an application's vocabulary.
 

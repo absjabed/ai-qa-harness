@@ -1,6 +1,10 @@
 # Agent Reference
 
-Four agents in `.claude/commands/`. They form a pipeline but each runs alone.
+Five agents in `.claude/commands/`. They form a pipeline but each runs alone.
+
+`playwright-context-builder` runs first and rarely: it establishes what the harness knows about the
+application, which the other four then read. See the handbook's **How it learns your application** section
+for why a separate repository needs this at all.
 
 ```
 story ──▶ planner ──▶ plan.md + plan.csv ──▶ generator ──▶ spec.ts + page objects
@@ -20,7 +24,7 @@ story ──▶ planner ──▶ plan.md + plan.csv ──▶ generator ──�
                                                                     defects.csv + test.fixme()
 ```
 
-All four read `PROJECT-PROFILE.md` first. Three of them also read
+All five read `PROJECT-PROFILE.md` first. Three of them also read
 `.claude/TEST-AUTHORING-INVARIANTS.md` and cite invariants by number rather than restating them — one file,
 so a convention has a single place to change.
 

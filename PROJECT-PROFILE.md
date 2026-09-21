@@ -108,11 +108,34 @@ to tracker columns. Replace the examples with your own quality plan's wording; k
 | Page objects | `pages/<Name>Page.ts`, shared widgets in `pages/common/` |
 | Fixtures | `lib/BaseTest.ts` |
 
-## 9. Setup checklist
+## 9. Knowledge sources
 
-- [ ] Sections 1–8 above filled in, no `<...>` placeholders left
+This harness is a separate repository from the application. It sees nothing of your source, schema or API
+except what is recorded here and in `context/`.
+
+| Source | Reachable by agents? | Where |
+|---|---|---|
+| Running application | Yes, via `BASE_URL` and the Playwright MCP server | `.env` |
+| Database schema | `<yes, via a read-only MCP server / no>` | `.mcp.json` — see [docs/MCP.md](docs/MCP.md) |
+| Application source | `<no / yes, at a path a person reads and distils>` | `<path>` |
+| API documentation | `<no / yes>` | `<url or path>` |
+| Everything else | Only once distilled into `context/` | `context/BASELINE.md` |
+
+Run `/playwright-context-builder` to establish the baseline — it inventories what is available, explores
+the application, and drafts `context/BASELINE.md`, sections 2–4 above, and the navigation-flow plans.
+Re-run it when the application gains a module or a role.
+
+**The rule that matters:** a gap recorded in `context/BASELINE.md` section 8 is useful, because it makes
+the agents ask. A gap filled with a plausible guess is the most damaging thing in this repository, because
+everything downstream will trust it.
+
+## 10. Setup checklist
+
+- [ ] Sections 1–9 above filled in, no `<...>` placeholders left
 - [ ] `config/projectProfile.ts` updated to match sections 1, 2 and 5
 - [ ] `.env` created from `.env.example` and populated
+- [ ] `.mcp.json` created from `.mcp.json.example`; Playwright MCP connected
+- [ ] `context/BASELINE.md` written, including its known-unknowns section
 - [ ] `data/auth_data.ts` role keys match section 2 (credentials come from `.env`, never inline)
 - [ ] `data/testData.ts` keys match section 3
 - [ ] `pages/LoginPage.ts` + `pages/DashboardPage.ts` selectors point at the real app

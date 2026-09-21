@@ -1,7 +1,7 @@
 # AI Test Harness — Playwright + TypeScript
 
-An AI-driven test automation harness. Four Claude agents plan, generate, heal, and file defects against a
-Playwright + TypeScript suite built on the Page Object / Page Factory pattern.
+An AI-driven test automation harness. Five Claude agents learn your application, plan, generate, heal, and
+file defects against a Playwright + TypeScript suite built on the Page Object / Page Factory pattern.
 
 It is application-agnostic: everything project-specific lives in **`PROJECT-PROFILE.md`** and **`.env`**.
 Nothing in `.claude/`, `config/`, or `lib/` names an application, a role, or a domain term.
@@ -30,19 +30,22 @@ application stays in your copy. That is the line that keeps this template reusab
 | Doc | For |
 |---|---|
 | **[docs/index.html](docs/index.html)** | The handbook — open it in a browser. Setup, agents, components, workflows, troubleshooting in one navigable page. Start here. |
-| [SETUP.md](SETUP.md) | The nine setup steps, with the reasoning behind each |
+| [SETUP.md](SETUP.md) | The ten setup steps, with the reasoning behind each |
 | [docs/COMPONENTS.md](docs/COMPONENTS.md) | Every file: purpose, usage, extension points, failure modes |
-| [docs/AGENTS.md](docs/AGENTS.md) | The four agents: inputs, outputs, checkpoints, what to expect, what they refuse |
+| [docs/AGENTS.md](docs/AGENTS.md) | The five agents: inputs, outputs, checkpoints, what to expect, what they refuse |
 | [docs/WORKFLOWS.md](docs/WORKFLOWS.md) | End-to-end recipes — first story, healing a regression, onboarding, porting |
+| [docs/MCP.md](docs/MCP.md) | Wiring the browser and database MCP servers, and why read-only matters |
+| [context/README.md](context/README.md) | What project knowledge goes in `context/`, and in what shape |
 | [PROJECT-PROFILE.md](PROJECT-PROFILE.md) | The file you fill in per project |
 | [.claude/TEST-AUTHORING-INVARIANTS.md](.claude/TEST-AUTHORING-INVARIANTS.md) | I1–I7, the conventions every test follows |
 
 ## What the AI layer does
 
-Four agents in `.claude/commands/`, run as slash commands. They hand off in sequence but each works alone.
+Five agents in `.claude/commands/`, run as slash commands. They hand off in sequence but each works alone.
 
 | Agent | Input | Output |
 |---|---|---|
+| `playwright-context-builder` | The application, plus whatever access exists | `context/BASELINE.md`, context docs, drafts of the profile and flow plans |
 | `playwright-test-planner` | A story pasted into the conversation | `specs/<KEY>.plan.md` + `specs/<KEY>.plan.csv` |
 | `playwright-test-generator` | An approved plan | A spec file, plus any page objects and fixtures it needed |
 | `playwright-test-healer` | Failing tests | Fixed tests, or a confirmed defect in `specs/temp-defects/defect-log.json` |
@@ -54,13 +57,18 @@ Two things distinguish this from asking an LLM to write tests:
 server first, reads back its own action log, and refuses to write a test for any step that has no recorded
 action. Plan text states intent; only the drive establishes what the DOM actually does.
 
-**Both planning agents stop and ask.** The planner has seven mandatory approval checkpoints; the generator
-blocks on the target file path and on any new page object it is about to create. Neither invents a
-selector, a data key, or a SQL query when it can't find one — it flags the gap instead.
+**They stop and ask.** The context-builder works in checkpoints and records what it could not establish
+rather than guessing; the planner has seven mandatory approval checkpoints; the generator blocks on the
+target file path and on any new page object it is about to create. None invents a selector, a data key, or
+a SQL query when it can't find one — it flags the gap instead.
+
+**It is fed deliberately.** The harness is a separate repository from the application, so it sees nothing
+of your source, schema or API except what someone puts in `context/`. `playwright-context-builder` does the
+first pass; `context/README.md` explains what belongs there and why distilled beats dumped.
 
 ## Conventions
 
-`.claude/TEST-AUTHORING-INVARIANTS.md` holds invariants I1–I7 — one file, cited by number from all three
+`.claude/TEST-AUTHORING-INVARIANTS.md` holds invariants I1–I7 — one file, cited by number from the three
 authoring agents so a convention has a single place to change.
 
 | | Invariant |
@@ -78,7 +86,11 @@ authoring agents so a convention has a single place to change.
 ```
 .claude/
   TEST-AUTHORING-INVARIANTS.md   I1-I7, the single source of truth
-  commands/                      the four agents
+  commands/                      the five agents
+context/
+  README.md                      what project knowledge goes here, and in what shape
+  BASELINE.md                    what is known about the app - and what is not
+  _TEMPLATE.md                   the shape of a per-area context document
 config/
   projectProfile.ts              machine-readable mirror of PROJECT-PROFILE.md
   testConfig.ts                  env-driven config; throws on missing required vars
@@ -106,6 +118,7 @@ tests/
   common/                        test-side helpers
 PROJECT-PROFILE.md               the one file you fill in per project
 .env.example                     copy to .env
+.mcp.json.example                copy to .mcp.json - browser + optional database access
 ```
 
 ## Running
@@ -148,7 +161,8 @@ has the rest.
 ## Requirements
 
 - Node.js 18+
-- The Playwright Test MCP server, for the generator and healer agents
+- The Playwright Test MCP server, for the context-builder, generator and healer agents
+- Optionally a read-only database MCP server — see [docs/MCP.md](docs/MCP.md)
 - SQL Server access, if DB validation is in scope (`PROJECT-PROFILE.md` section 5)
 
 ## Security

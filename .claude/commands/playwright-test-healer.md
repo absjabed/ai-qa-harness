@@ -83,6 +83,10 @@ inside the test/Node process, not in the browser — none of your tools (`browse
 `browser_console_messages`, `browser_network_requests`) can see or verify what the database contains.
 
 When a DB-backed assertion fails:
+- Check `context/<area>.md` for that area first, if one exists. It carries the schema quick reference, the
+  invariants the application enforces, and the verification queries this assertion was probably built from.
+  A failure that contradicts a documented invariant is a strong signal; a failure that contradicts nothing
+  documented may just mean the document is stale, which is itself worth reporting.
 - First check whether the failure is explainable purely from the code: a wrong column or field name in the
   query, a mismatched parameter, incorrect comparison logic, or a query that no longer matches the current
   schema. Fix those as any other code-level issue, then verify per step 6.

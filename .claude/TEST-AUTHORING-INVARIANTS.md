@@ -40,9 +40,13 @@ matching key yet → flag it; never invent a literal.
 
 The same applies to DB-backed validation: reference a `sqlQueries.<key>` from `data/sql_queries.ts`,
 executed via `config/DbConnection.ts` **inside a page object method** (I1) — never inline SQL or a
-raw DB call in a spec file. No matching query key yet → do not write the SQL yourself; you have no
-schema visibility to get it right. Ask for the query text, then add it to `data/sql_queries.ts`
-following that file's naming and formatting conventions.
+raw DB call in a spec file.
+
+No matching query key yet → look in `context/<area>.md` first: a context document's "Verification"
+section holds queries written to be lifted straight into `data/sql_queries.ts`, and using one is
+preferred over asking. If no context document covers the area, do not write the SQL yourself — without
+schema visibility a query you invent will look plausible and be wrong. Ask for the query text, then add
+it under that file's naming and formatting conventions.
 
 **I4 — Credentials.**
 Only `testUsers.<role>` / `defaultUsers.<role>` from `@data/auth_data`, driven through the

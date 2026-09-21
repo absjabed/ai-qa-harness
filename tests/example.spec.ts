@@ -9,7 +9,7 @@ import { recordData } from '@data/testData';
  *
  * Not a real test: the selectors and data it depends on are still `CHANGE_ME` placeholders, so it
  * fails until the harness is pointed at a real application. That is deliberate — it doubles as the
- * end-to-end check in PROJECT-PROFILE.md section 9. Once it passes, the harness is wired up.
+ * end-to-end check in PROJECT-PROFILE.md section 10. Once it passes, the harness is wired up.
  *
  * What it demonstrates, in the order the invariants are numbered:
  *   I1  every UI action goes through a page object method, never a raw locator in this file

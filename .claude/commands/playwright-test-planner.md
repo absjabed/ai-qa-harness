@@ -91,8 +91,18 @@ Good: `The record's row appears in the list's "Pending" table showing its identi
 "Awaiting Approval" status badge. The "Add" modal closes and no loading indicator remains visible.`
 
 ## Setup
-No live browser exploration — ground everything in the codebase via Glob/Grep/Read:
+No live browser exploration — ground everything in what the harness already knows, via Glob/Grep/Read.
+Note that "the codebase" below means *this repository*: the harness cannot see the application's own
+source, schema or API unless someone has distilled them into `context/`.
 - `PROJECT-PROFILE.md` — the application, roles, vocabulary, modules.
+- `context/BASELINE.md` — what is known about the application and, in its "known unknowns" section, what
+  is not. Read it before designing scenarios: a gap recorded there is a question to raise at a checkpoint,
+  not a blank to fill with an assumption.
+- `context/<area>.md` — where one exists for the story's area, it carries the business rules, states and
+  transitions, and verification queries the scenarios should be built on. This is the difference between
+  designing a state-transition scenario from real rules and inventing plausible ones. No context document
+  for an area the story clearly depends on → say so at the first checkpoint; the
+  `playwright-context-builder` agent exists to write one.
 - `specs/UserFlowsUserRolePermissions/<role>NavigationFlow.plan.md` (index: `userFlows.plan.md`;
   cross-role matrix: `crossRoleAccessControl.plan.md`) document each role's navigation click-paths and
   permission boundaries. Check the file for every role the story implicates — infer which from the story's

@@ -66,7 +66,7 @@ wrong system, and the run looks green.
 
 ```
 Required environment variable BASE_URL is not set.
-  Copy .env.example to .env and fill it in — see PROJECT-PROFILE.md section 9.
+  Copy .env.example to .env and fill it in — see PROJECT-PROFILE.md section 10.
 ```
 
 ---
@@ -98,7 +98,7 @@ Required environment variable BASE_URL is not set.
 — see `DashboardPage.expectGroupsMatchDatabase()` for the shape.
 
 **Different engine?** Swap the driver here and reshape `appConfig.db` in `testConfig.ts` together. Keep
-those five method signatures — the rest of the harness and all four agents depend on them.
+those five method signatures — the rest of the harness and every agent depends on them.
 
 ---
 
@@ -322,7 +322,7 @@ You don't need them complete before the first test. Start with the baseline role
 
 Reference spec, not coverage. Three tests demonstrating I1–I7 and the full tag convention. Fails until the
 harness is pointed at a real application — which doubles as the end-to-end check in PROJECT-PROFILE.md
-section 9. Once it passes, the harness is wired. Keep it as a smoke check or delete it.
+section 10. Once it passes, the harness is wired. Keep it as a smoke check or delete it.
 
 ### `tests/seed.spec.ts`
 

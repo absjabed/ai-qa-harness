@@ -10,6 +10,9 @@ test-results/
 test-results-old/
 playwright-report/
 .playwright-mcp/
+
+# MCP config may carry a connection string. .mcp.json.example is the committed template.
+.mcp.json
 blob-report/
 playwright/.cache/
 

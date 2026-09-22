@@ -7,14 +7,78 @@ Ordered by how often you touch it — configuration first, then the layers a tes
 
 ---
 
+## Knowledge layer
+
+### `agents/`
+
+**What** The five agent definitions, canonical and vendor-neutral — plain markdown with no tool's
+frontmatter and no tool's tool names. Each opens with a header stating its role, interaction model, file
+access, MCP servers and model guidance.
+
+**How to use** Edit these. `.claude/commands/*.md` are one-line wrappers that point here and deliberately
+carry no prose, so the two cannot drift. `agents/README.md` covers porting to another agentic tool.
+
+**What to expect** Changing an agent's behavior is one edit in one file, regardless of how many tools you
+have wired up.
+
+---
+
+### `context/`
+
+**What** Everything the harness knows about your application beyond the profile. `BASELINE.md` is the
+inventory — sources, modules, roles, vocabulary, data layer, and a known-unknowns section.
+`<area>.md` documents carry per-area business rules, states and transitions, recipes and verification
+queries. `_TEMPLATE.md` is the shape; `README.md` is the convention.
+
+**Why it exists** The harness is a separate repository from the application, so it has no sight of your
+source, schema or API. This is the only durable channel for that knowledge.
+
+**How to use** `/playwright-context-builder` writes the first pass; you correct it. Distil, never dump — a
+schema dump buries the few facts that matter.
+
+**What to expect** The known-unknowns section is the deliverable, not the leftovers. A recorded gap makes
+the agents ask; a guessed one makes them confidently wrong.
+
+**Failure mode** Drift. A context document that no longer matches reality is worse than none, because an
+agent will act on it confidently. Fix the document in the same change as the test that caught it.
+
+---
+
+### `.mcp.json`
+
+**What** How agents reach the browser and, optionally, the database. Copied from `.mcp.json.example`;
+gitignored, because the database entry carries a connection string.
+
+**The required entry** `npx playwright run-test-mcp-server` — ships with `@playwright/test`, nothing extra
+to install. Three of the five agents cannot work without it.
+
+**The optional entry** A read-only database server. Biggest single reduction in friction available: with
+it, agents read your schema rather than asking you for every query.
+
+**What to expect** Introspection reports structure, and not always correctly — confirm anything surprising
+with a direct query before writing it into a context document. Full reasoning in
+[MCP.md](MCP.md).
+
+---
+
+### `scripts/open-docs.js`
+
+**What** `npm run docs`. Opens the handbook in the default browser, cross-platform.
+
+**Why a script rather than a URL** The handbook is a local file by decision, not omission: GitHub Pages
+does not inherit repository privacy, so publishing it would make the docs public even with the repo
+private. The README records the full reasoning.
+
+---
+
 ## Configuration layer
 
 ### `PROJECT-PROFILE.md`
 
-**What** The single source of project identity. Nine sections: application, roles, domain vocabulary,
-modules, data layer, API layer, severity rubric, file layout, setup checklist.
+**What** The single source of project identity. Ten sections: application, roles, domain vocabulary,
+modules, data layer, API layer, severity rubric, file layout, knowledge sources, setup checklist.
 
-**Who reads it** All four AI agents, every run, before doing anything else. You, when onboarding.
+**Who reads it** All five agents, every run, before doing anything else. You, when onboarding.
 
 **How to use** Fill in every `<...>` placeholder. Delete rows that don't apply. Never delete a section
 heading — the agents look sections up by name and number.
@@ -39,7 +103,6 @@ agents refuse to invent your application's vocabulary rather than guess at it.
 | `roles` | `as const` tuple of role keys. Drives `Role`, and `auth_data.ts` derives its credential set from it. |
 | `Role` | Union type of the role keys, so a typo in a role name is a compile error. |
 | `projectProfile` | The resolved profile object. |
-| `assertProfileConfigured()` | Throws if `appName` or `trackerProjectKey` is still `CHANGE_ME`. |
 
 **How to extend** Adding a role is one edit here (`roles`), one pair of variables in `.env`, and one row in
 PROJECT-PROFILE.md section 2. `data/auth_data.ts` needs no change — it derives from `roles`.
@@ -57,7 +120,7 @@ project that ignores both flags still gets DB behavior and no API project.
 rather than falling back to a default. That is the point: a harness with a default URL silently tests the
 wrong system, and the run looks green.
 
-**Exports** `appConfig` (the whole config), `getDbConfig()`.
+**Exports** `appConfig` — the whole configuration object.
 
 **How to extend** Add a value as `optional('MY_VAR', 'fallback')` when a sane default exists, or
 `required('MY_VAR')` when there isn't one. Add it to `.env.example` in the same commit.
@@ -135,7 +198,6 @@ Path aliases, used by every import in the harness:
 | `@pages/*` | `pages/*` |
 | `@config/*` | `config/*` |
 | `@data/*` | `data/*` |
-| `@common/*` | `pages/common/*` |
 
 Playwright resolves these natively. `ts-node` needs `-r tsconfig-paths/register`, which the `db:check`
 script already passes.

@@ -73,8 +73,4 @@ export const appConfig = {
     },
 };
 
-export function getDbConfig(): any {
-    return appConfig.db;
-}
-
 export default appConfig;

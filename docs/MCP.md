@@ -16,8 +16,8 @@ where each tool looks.
 
 | | |
 |---|---|
-| Needed by | `playwright-test-generator`, `playwright-test-healer` |
-| Without it | The generator cannot drive the browser, so it will not write a test. The healer cannot inspect a failing page. |
+| Needed by | `playwright-context-builder`, `playwright-test-generator`, `playwright-test-healer` |
+| Without it | The context-builder cannot walk the application. The generator cannot drive the browser, so it will not write a test. The healer cannot inspect a failing page. |
 
 It ships with `@playwright/test`, so there is nothing extra to install:
 

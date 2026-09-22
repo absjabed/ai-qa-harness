@@ -38,21 +38,4 @@ export const projectProfile: ProjectProfile = {
     schemaPrefix: process.env.DB_SCHEMA_PREFIX || 'dbo',
 };
 
-/**
- * Fail loudly at import time if the profile was never filled in, rather than letting a run proceed
- * and produce results that look real but were taken against a placeholder configuration.
- */
-export function assertProfileConfigured(): void {
-    const unset = Object.entries(projectProfile)
-        .filter(([, value]) => value === 'CHANGE_ME')
-        .map(([key]) => key);
-
-    if (unset.length > 0) {
-        throw new Error(
-            `Project profile not configured: ${unset.join(', ')} still set to CHANGE_ME.\n` +
-            `  Fill in PROJECT-PROFILE.md, then set the matching values in .env (see .env.example).`
-        );
-    }
-}
-
 export default projectProfile;

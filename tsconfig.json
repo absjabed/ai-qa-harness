@@ -28,9 +28,6 @@
       ],
       "@data/*": [
         "./data/*"
-      ],
-      "@common/*": [
-        "./pages/common/*"
       ]
     }
   },

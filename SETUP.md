@@ -131,7 +131,7 @@ same work, done without a first draft.
 
 ## 4. Review and finish the project profile
 
-Open **`PROJECT-PROFILE.md`** and go through all nine sections, correcting what step 3 drafted and filling
+Open **`PROJECT-PROFILE.md`** and go through all ten sections, correcting what step 3 drafted and filling
 what it could not know.
 
 The sections that matter most:

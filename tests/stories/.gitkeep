@@ -1,0 +1,8 @@
+Generated story-wise specs land here, one folder per release:
+  tests/stories/<release>/<STORY-KEY>.spec.ts
+
+This folder is committed empty because generator_write_test cannot create parent
+directories — the generator confirms the target folder exists before writing, and
+without this it would stop on the very first story.
+
+Create the <release> subfolder before generating into a new release.

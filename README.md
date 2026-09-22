@@ -26,9 +26,17 @@ Or open `docs/index.html` in a browser yourself.
 > **Don't click it in GitHub's web UI.** GitHub serves `.html` as source, so you'll get 88 KB of markup
 > rather than the page.
 >
-> There is deliberately no hosted URL. GitHub Pages would publish this to the open internet even though
-> the repository is private — Pages does not inherit repository privacy, and access-controlled Pages is an
-> Enterprise Cloud feature. The handbook stays a local file.
+> **There is deliberately no hosted URL**, and GitHub Pages is not the answer. Two independent reasons,
+> both checked rather than assumed:
+>
+> 1. Pages on a **private** repo needs a paid plan. On Free the API refuses outright —
+>    `Your current plan does not support GitHub Pages for this repository` (HTTP 422).
+> 2. More importantly, **Pages does not inherit repository privacy**. On Pro or Team the repo stays
+>    private but the published site is readable by anyone with the URL. Access-controlled Pages is an
+>    Enterprise Cloud feature. "Private repo" and "private docs" are not the same thing.
+>
+> So the handbook stays a local file. If you ever do want a shared URL, use an internal host rather than
+> Pages — unless publishing this publicly is a deliberate decision.
 
 ## Using this template
 

@@ -35,8 +35,8 @@ guessing from plan text, which it refuses to do.
 
 | | |
 |---|---|
-| Used by | `playwright-context-builder` mainly; the others benefit indirectly |
-| Without it | Agents cannot see your schema, so they will not write SQL. Every database assertion needs you to hand over the query text. |
+| Used by | `playwright-context-builder` to introspect the schema · `playwright-test-healer` to adjudicate a failing DB-backed assertion instead of handing it back to you |
+| Without it | Agents cannot see your schema, so they will not write SQL — every database assertion needs you to hand over the query text. And the healer cannot tell a timing problem from a real defect when a DB-backed assertion fails; it stops and asks you instead. |
 
 This is the single biggest reduction in setup friction available. The agents' refusal to invent SQL is
 correct — a query written without schema visibility is plausible and wrong — but it is a refusal born of

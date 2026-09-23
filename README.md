@@ -71,6 +71,7 @@ application stays in your copy. That is the line that keeps this template reusab
 | [PROJECT-PROFILE.md](PROJECT-PROFILE.md) | The file you fill in per project |
 | [TEST-AUTHORING-INVARIANTS.md](TEST-AUTHORING-INVARIANTS.md) | I1–I7, the conventions every test follows |
 | [agents/README.md](agents/README.md) | Using these agents with a tool other than Claude Code |
+| [CHANGELOG.md](CHANGELOG.md) | What changed between template versions, and whether a copy should adopt it |
 
 ## What the AI layer does
 
@@ -153,7 +154,10 @@ tests/
   common/                        test-side helpers
 docs/
   index.html                     the handbook - `npm run docs` opens it
-scripts/open-docs.js             opens the handbook cross-platform
+scripts/
+  open-docs.js                   opens the handbook cross-platform
+  check-docs.js                  asserts the docs still match the repo
+.github/workflows/               typecheck + docs check on every push
 PROJECT-PROFILE.md               the one file you fill in per project
 .env.example                     copy to .env
 .mcp.json.example                copy to .mcp.json - browser + optional database access
@@ -171,6 +175,8 @@ npm run test:ui
 npm run test:api              # the api project only
 npm run db:check              # database connectivity
 npm run typecheck             # tsc --noEmit
+npm run check:docs            # docs still match the repo
+npm run check                 # both of the above
 npm run report                # open the last HTML report
 ```
 

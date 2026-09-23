@@ -13,6 +13,8 @@
     "test:api": "playwright test --project=api",
     "report": "playwright show-report",
     "typecheck": "tsc --noEmit",
+    "check:docs": "node scripts/check-docs.js",
+    "check": "npm run typecheck && npm run check:docs",
     "db:check": "ts-node -r tsconfig-paths/register config/testDbConnection.ts",
     "setup": "playwright install"
   },

@@ -1,0 +1,37 @@
+name: checks
+
+# Runs on the template itself, and on any copy made from it.
+#
+# Deliberately does NOT run the Playwright suite. Those tests need a live application and credentials,
+# which a copy configures per project — a workflow that tried would fail on every fresh clone and teach
+# people to ignore a red badge. Add a separate workflow for the suite once your environment is reachable
+# from CI.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      # Catches documentation that has drifted from the repository: an agent added without being
+      # documented, a section total gone stale, a directory missing from the component reference, a
+      # broken link, or a term from another project leaking into a template that must stay neutral.
+      - name: Check docs against the repository
+        run: npm run check:docs

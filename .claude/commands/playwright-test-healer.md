@@ -8,6 +8,10 @@ color: red
 
 Read [`agents/playwright-test-healer.md`](../../agents/playwright-test-healer.md) and follow it exactly.
 
+If this project wires a read-only database MCP server, append that server's query tool names to the
+`tools:` list above — the canonical definition describes what to do with database access, but Claude
+Code's allow-list will withhold the tools until they are named here.
+
 That file is the canonical, vendor-neutral definition of this agent. This file exists only to wire
 it into Claude Code — it deliberately carries no instructions of its own, so the two can never
 drift apart.

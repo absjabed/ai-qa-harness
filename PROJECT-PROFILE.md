@@ -20,6 +20,8 @@ look them up by name.
 | Base URL | Read from `BASE_URL` in `.env` — never written literally anywhere |
 | Issue tracker project key | `<e.g. BRS>` |
 | Issue key format | `<e.g. BRS-1234>` |
+| Template version this copy started from | `<e.g. 1.0.0>` — see the template's CHANGELOG |
+| Template commit this copy started from | `<short sha>` — from `git rev-parse --short HEAD`, run right after cloning |
 
 ## 2. Roles
 
@@ -131,7 +133,7 @@ everything downstream will trust it.
 
 ## 10. Setup checklist
 
-- [ ] Sections 1–9 above filled in, no `<...>` placeholders left
+- [ ] Sections 1–9 above filled in, no `<...>` placeholders left (including the template version and commit in section 1)
 - [ ] `config/projectProfile.ts` updated to match sections 1, 2 and 5
 - [ ] `.env` created from `.env.example` and populated
 - [ ] `.mcp.json` created from `.mcp.json.example`; Playwright MCP connected

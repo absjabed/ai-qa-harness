@@ -26,6 +26,15 @@ Or without git history:
 git clone --depth 1 <template-url> <app>-tests && rm -rf <app>-tests/.git && git -C <app>-tests init
 ```
 
+Then record what you started from — this is the only moment it is free, and it is what lets you tell
+later whether a difference is yours or just the template having moved on:
+
+```bash
+git rev-parse --short HEAD
+```
+
+Put that, and the template version from its `CHANGELOG.md`, into `PROJECT-PROFILE.md` section 1.
+
 Everything below happens inside that copy.
 
 ## 1. Install
@@ -220,7 +229,7 @@ The generator looks up a scenario's module here; anything unregistered makes it 
 Walk the checklist in PROJECT-PROFILE.md section 10, then:
 
 ```bash
-npm run typecheck
+npm run check                 # typecheck + docs consistency
 npx playwright test tests/example.spec.ts
 ```
 

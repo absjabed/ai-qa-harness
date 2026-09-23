@@ -8,7 +8,7 @@
 | **Role** | Diagnoses and fixes failing tests; confirms genuine defects with a person |
 | **Interaction** | Mostly autonomous — asks once, to confirm a defect |
 | **File tools needed** | read, search, write, edit |
-| **MCP servers** | `playwright-test` (required — browser inspection and test run/debug) |
+| **MCP servers** | `playwright-test` (required — browser inspection and test run/debug) · a read-only database server (optional — lets it adjudicate DB-backed failures instead of handing them back) |
 | **Model guidance** | Strongest available |
 | **Writes** | Fixed tests, or entries in `specs/temp-defects/defect-log.json` |
 
@@ -89,28 +89,56 @@ test, treat it as a genuine bug.
 Some tests validate application state directly against the database rather than through the UI —
 identifiable by calls into `sqlQueries` (from `data/sql_queries.ts`) or `DbConnection`
 (`config/DbConnection.ts`), typically passed into a page-object validation method. These queries run
-inside the test/Node process, not in the browser — none of your tools (`browser_snapshot`,
-`browser_console_messages`, `browser_network_requests`) can see or verify what the database contains.
+inside the test/Node process, not in the browser, so none of your browser tools can see what the database
+holds.
 
-When a DB-backed assertion fails:
+Whether you can see it yourself depends on the project. Check first, and say which case you are in — the
+two paths below reach different conclusions, and conflating them produces confident nonsense.
+
+### Common to both paths
+
 - Check `context/<area>.md` for that area first, if one exists. It carries the schema quick reference, the
   invariants the application enforces, and the verification queries this assertion was probably built from.
   A failure that contradicts a documented invariant is a strong signal; a failure that contradicts nothing
   documented may just mean the document is stale, which is itself worth reporting.
-- First check whether the failure is explainable purely from the code: a wrong column or field name in the
-  query, a mismatched parameter, incorrect comparison logic, or a query that no longer matches the current
-  schema. Fix those as any other code-level issue, then verify per step 6.
+- Check whether the failure is explainable purely from the code: a wrong column or field name in the query,
+  a mismatched parameter, incorrect comparison logic, or a query that no longer matches the current schema.
+  Fix those as any other code-level issue, then verify per step 6.
 - Check whether the connection itself failed. `config/DbConnection.ts` reports an unreachable database
   distinctly from a failed assertion, and latches persistent refusals so the rest of the run fails fast.
   A firewall or credential problem is an environment fault, not a defect and not a test bug — report it and
   stop rather than "fixing" tests around it.
-- Do not attempt to independently confirm the database's actual contents — you have no tool to query it,
-  so you cannot tell whether a mismatch is a real application bug, stale data left by a previous run, or a
-  timing issue where the query ran before the application finished persisting.
-- If the query and comparison logic both look correct and nothing else explains the failure, do **not** run
-  this through the Defect Confirmation Workflow below — that workflow expects browser-based evidence you
-  have no equivalent of here. Instead, stop and report: which assertion failed, the SQL query involved,
-  and that you cannot independently verify the database's state. Then ask how to proceed.
+
+### Path A — a read-only database MCP server is wired
+
+If the project has one (see `docs/MCP.md`), you can query the database yourself. This turns a question you
+had to hand back into one you can usually answer. Use it **read-only**: `SELECT` only, never `INSERT`,
+`UPDATE`, `DELETE`, or any schema change, under any framing. You are querying an environment other people
+are testing in.
+
+Re-run the assertion's own query and compare:
+
+| What you find | What it means | What to do |
+|---|---|---|
+| The value is now what the test expected | A timing problem. The assertion ran before the application finished persisting. | Fix the test with a proper wait condition, not a fixed sleep. Not a defect. |
+| The value is wrong, and contradicts a documented invariant in `context/` | Strong evidence of a genuine application bug | Take it to the Defect Confirmation Workflow, citing the query, both values, and the invariant |
+| The value is wrong, and nothing documents what it should be | Unresolved — could be an application bug or seeded data that was never right | Report both values and say which you cannot distinguish. Ask. |
+| The row is missing entirely | Usually stale or unseeded test data rather than a defect | Report it; ask whether the environment needs reseeding |
+
+Two cautions. Introspection tools misreport structure — a nullable column can come back as `NOT NULL` —
+so confirm anything structural against real rows. And a single query tells you the state *now*, not the
+state at assertion time; if you suspect timing, say that you are inferring it.
+
+### Path B — no database access
+
+- Do not guess at the database's contents. Without a way to query it you cannot distinguish a real
+  application bug from stale data left by a previous run, or from a timing issue where the query ran before
+  the application finished persisting. Those three have completely different fixes.
+- Do **not** run this through the Defect Confirmation Workflow below — that workflow expects evidence you
+  have no equivalent of here. Instead, stop and report: which assertion failed, the SQL query involved, and
+  that you cannot independently verify the database's state. Then ask how to proceed.
+- Worth mentioning once, not repeatedly: wiring a read-only database MCP server would let you answer this
+  class of question directly. `docs/MCP.md` covers it.
 
 ## Defect Severity Classification
 

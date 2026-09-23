@@ -61,6 +61,28 @@ with a direct query before writing it into a context document. Full reasoning in
 
 ---
 
+### `docs/`
+
+**What** The documentation set. `index.html` is the handbook — a self-contained page covering setup, the
+agents, the components and the workflows. Alongside it, this file, `AGENTS.md`, `WORKFLOWS.md` and
+`MCP.md` carry the deeper per-topic reference.
+
+**How to use** `npm run docs` opens the handbook. The markdown files are read in place, and are also what
+the agents read when they need a convention rather than an instruction.
+
+**What to expect** These restate things the code owns, so they drift. `npm run check:docs` catches the
+mechanical cases — agent rosters, section totals, directory coverage, broken links, vendor neutrality.
+Prose still needs a reader.
+
+---
+
+### `scripts/`
+
+**What** Small maintenance scripts, not part of the test suite. `open-docs.js` backs `npm run docs`;
+`check-docs.js` backs `npm run check:docs`.
+
+---
+
 ### `scripts/open-docs.js`
 
 **What** `npm run docs`. Opens the handbook in the default browser, cross-platform.

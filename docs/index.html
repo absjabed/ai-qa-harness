@@ -722,6 +722,13 @@ td code { white-space: nowrap; }
 
 # or, without git history:
 git clone --depth 1 &lt;template-url&gt; &lt;app&gt;-tests &amp;&amp; rm -rf &lt;app&gt;-tests/.git &amp;&amp; git -C &lt;app&gt;-tests init</code></pre>
+        <p style="margin-top:10px">Then record what you started from, while it is still free — it is what
+        lets you tell later whether a difference is yours or just the template having moved on:</p>
+        <pre style="margin-top:8px"><code>git rev-parse --short HEAD</code></pre>
+        <p style="margin-top:10px">Put that, and the template version from its <code>CHANGELOG.md</code>,
+        into <code>PROJECT-PROFILE.md</code> section 1. The changelog marks each entry
+        <b>Adopt</b>, <b>Optional</b> or <b>New copies only</b>, so you can tell what is worth pulling into
+        an existing copy.</p>
         <p style="margin-top:10px">Improvements you make while working on a project come back upstream
         <b>only if they are application-agnostic</b> — a sharper agent prompt, a new <code>BasePage</code>
         helper, a better error message. Anything that names your application stays in your copy. That line
@@ -1150,6 +1157,7 @@ npx playwright test tests/example.spec.ts</code></pre>
         <div class="pills">
           <span class="pill on-accent">opus</span>
           <span class="pill on-warn">requires Playwright Test MCP</span>
+          <span class="pill">database MCP optional</span>
           <span class="pill">3 attempts per test</span>
           <span class="pill">writes specs/temp-defects/defect-log.json</span>
         </div>
@@ -1180,20 +1188,34 @@ npx playwright test tests/example.spec.ts</code></pre>
           <li>A documented permission boundary — it checks the navigation plans first</li>
         </ul>
 
-        <h4>The database blind spot</h4>
-        <p>DB queries run in the Node process, not the browser. None of the healer's tools can see what the
-        database contains. So it first looks for a code-level explanation — wrong column, mismatched
-        parameter, stale schema — and distinguishes an unreachable database (an environment fault, reported
-        and stopped on, never "fixed" around) from a failed assertion.</p>
-        <p>If query and comparison both look correct, it does <b>not</b> run the normal defect workflow —
-        that expects browser evidence it has no equivalent of here. It stops and tells you which assertion
-        failed, the query involved, and that it cannot verify the database's state.</p>
-        <div class="note">
-          <p><strong>This is the one place the harness deliberately declines to reach a conclusion.</strong>
-          You run the query by hand and decide: matching result means a timing bug in the test; different
-          and wrong means an application bug; different and stale means reseed.</p>
+        <h4>Database-backed failures — it depends on access</h4>
+        <p>DB queries run in the Node process, not the browser, so no browser tool can see what the
+        database holds. Whether the healer can see it itself depends on whether the project wired a
+        read-only database MCP server. The two paths reach different conclusions, so it says which one it
+        is in.</p>
+        <p><b>With database access</b>, it re-runs the assertion's own query — read-only, <code>SELECT</code>
+        only — and reads the result:</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>What it finds</th><th>Conclusion</th></tr></thead>
+            <tbody>
+              <tr><td>The value is now what the test expected</td><td>Timing. The assertion ran before the app finished persisting — fix with a wait, not a defect</td></tr>
+              <tr><td>Wrong, and contradicts an invariant in <code>context/</code></td><td>Strong evidence of a real bug → defect workflow</td></tr>
+              <tr><td>Wrong, and nothing documents what it should be</td><td>Unresolved. Reports both values and says what it cannot distinguish</td></tr>
+              <tr><td>The row is missing entirely</td><td>Usually stale or unseeded data — asks about reseeding</td></tr>
+            </tbody>
+          </table>
         </div>
-
+        <p><b>Without database access</b>, it declines to guess. It cannot distinguish an application bug
+        from stale data or a timing problem, and those have completely different fixes — so it stops and
+        reports which assertion failed, the query involved, and that it cannot verify the database's state.</p>
+        <div class="note">
+          <p><strong>This is the one place the harness deliberately declines to reach a conclusion</strong>
+          — and the one place wiring the optional database MCP server changes what an agent can do rather
+          than just how fast it does it. Two cautions even with access: introspection tools misreport
+          structure, so confirm anything structural against real rows; and one query shows the state
+          <em>now</em>, not at assertion time.</p>
+        </div>
         <h4>Defect Confirmation Workflow</h4>
         <p>The single exception to "don't ask questions". It presents the test, the violated expected-result
         line, observed behavior, evidence ruling out a test-side cause, and a severity classified against
@@ -1678,10 +1700,20 @@ npx playwright test tests/example.spec.ts</code></pre>
             <tr><td><code>npm run test:api</code></td><td>The <code>api</code> project only, no browser</td></tr>
             <tr><td><code>npm run db:check</code></td><td>Database connectivity</td></tr>
             <tr><td><code>npm run typecheck</code></td><td><code>tsc --noEmit</code></td></tr>
+            <tr><td><code>npm run check:docs</code></td><td>Assert the docs still match the repository</td></tr>
+            <tr><td><code>npm run check</code></td><td>Both of the above — what CI runs on every push</td></tr>
             <tr><td><code>npm run report</code></td><td>Open the last HTML report</td></tr>
             <tr><td><code>npm run setup</code></td><td><code>playwright install</code></td></tr>
           </tbody>
         </table>
+      </div>
+
+      <div class="note">
+        <p><strong>Run <code>npm run check</code> before pushing.</strong> The documentation restates
+        things the code owns — how many agents there are, which directories exist, what the profile's
+        sections are — and those claims go stale silently. The check asserts the mechanical ones: agent
+        rosters, section totals, directory coverage, broken links, vendor neutrality, and that secrets
+        stayed untracked. CI runs it on every push. Prose still needs a reader.</p>
       </div>
 
       <h3>Tag filtering</h3>

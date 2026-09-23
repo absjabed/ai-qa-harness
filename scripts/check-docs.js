@@ -139,7 +139,11 @@ for (const file of trackedFiles().filter((f) => f.endsWith('.md'))) {
 // ---------------------------------------------------------------- vendor neutrality
 
 const BANNED = /(?!)/; // term list removed
-for (const file of trackedFiles().filter((f) => !f.endsWith('package-lock.json'))) {
+// This file necessarily contains every banned term — it is the list. Exempting it is not a loophole:
+// nothing else is exempt, and a term added to BANNED is still enforced everywhere else.
+const NEUTRALITY_EXEMPT = ['package-lock.json', 'scripts/check-docs.js'];
+
+for (const file of trackedFiles().filter((f) => !NEUTRALITY_EXEMPT.some((e) => f.endsWith(e)))) {
     const text = read(file);
     const hit = text.match(BANNED);
     check(

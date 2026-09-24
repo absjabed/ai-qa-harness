@@ -27,6 +27,45 @@ it up.
 
 ---
 
+## 1.1.1 — 2026-09-24
+
+Setup fixes found while walking the setup path end to end, and a supported way to copy the harness into
+a project's QA repository without taking the whole template.
+
+**Adopt**
+
+- **The context-builder's wrapper now carries the database-tools note** the healer's already had. Claude
+  Code's `tools:` allow-list withheld a wired database server's tools from it, so it silently skipped schema
+  introspection. If your copy wires a database, add that server's read-only tool names to both
+  `.claude/commands/playwright-context-builder.md` and `.claude/commands/playwright-test-healer.md`.
+- **Setup step 2 says so.** The need to name the tools was recorded only inside the healer wrapper, so
+  someone following `SETUP.md` would wire the database and see nothing change. Now covered in `SETUP.md`,
+  `docs/MCP.md`, `agents/README.md` and the handbook, with a troubleshooting entry.
+
+- **`check:docs` knows the template from a copy**, by the `name` in `package.json`. In a copy it no longer
+  runs the vendor-neutrality check — which failed any copy the moment it named its own application — or
+  directory coverage. Take the new `scripts/check-docs.js`, and make sure your copy's package name is not
+  `ai-qa-harness`.
+- **`check:docs` asserts `.gitignore` keeps out `.env` and `.mcp.json`**, and runs in a copy that has not
+  been through `git init` yet.
+
+**New copies only**
+
+- **`npm run export -- <dir>`** copies the harness into a project's QA repository: every tracked file except
+  `README.md`, `CHANGELOG.md` and the script itself, dotfiles included. It names the package, writes a starter
+  README, records the template version and commit, and verifies the copy. Never overwrites. `SETUP.md` step 0
+  now leads with it, and lists what a hand copy must not miss.
+
+**Optional**
+
+- **What to prepare before running the context-builder** — a checklist in `SETUP.md` step 3 and the
+  handbook: what must be in place, what is worth gathering, what to decide. Includes one thing easy to miss:
+  the role keys in profile section 2 must exist before it runs, since it logs in as each role listed there.
+  And one security note: the agent reads passwords from `.env` to log in, so use dedicated test accounts.
+- **`docs/AGENTS.md` gains a context-builder section** — the reference previously covered only four of the
+  five agents.
+- Two places said fewer agents need a browser than do; three of the five do.
+
 ## 1.1.0 — 2026-09-24
 
 Closes the gaps in how the harness covers the software testing life cycle, and makes traceability from

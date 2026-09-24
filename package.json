@@ -1,11 +1,12 @@
 {
   "name": "ai-qa-harness",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "AI-driven Playwright test harness. Configure per project via PROJECT-PROFILE.md.",
   "private": true,
   "scripts": {
     "test": "playwright test",
     "docs": "node scripts/open-docs.js",
+    "export": "node scripts/export-harness.js",
     "test:headed": "playwright test --headed",
     "test:debug": "playwright test --debug",
     "test:ui": "playwright test --ui",

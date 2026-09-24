@@ -720,15 +720,24 @@ td code { white-space: nowrap; }
         <p><strong>First, get a copy.</strong> This repository is a template, not a project. You copy it,
         point the copy at your application, and that copy becomes your project's test suite — the template
         itself never gains application-specific content.</p>
-        <pre style="margin-top:10px"><code>gh repo create &lt;org&gt;/&lt;app&gt;-tests --private --template &lt;org&gt;/ai-qa-harness --clone
-
-# or, without git history:
-git clone --depth 1 &lt;template-url&gt; &lt;app&gt;-tests &amp;&amp; rm -rf &lt;app&gt;-tests/.git &amp;&amp; git -C &lt;app&gt;-tests init</code></pre>
-        <p style="margin-top:10px">Then record what you started from, while it is still free — it is what
-        lets you tell later whether a difference is yours or just the template having moved on:</p>
-        <pre style="margin-top:8px"><code>git rev-parse --short HEAD</code></pre>
-        <p style="margin-top:10px">Put that, and the template version from its <code>CHANGELOG.md</code>,
-        into <code>PROJECT-PROFILE.md</code> section 1. The changelog marks each entry
+        <p style="margin-top:10px"><b>Recommended: export it</b> into the project's QA repository — an empty
+        folder or a fresh clone. From the template, no install needed:</p>
+        <pre style="margin-top:8px"><code>npm run export -- ../&lt;app&gt;-qa</code></pre>
+        <p style="margin-top:10px">It copies every file the harness needs, dotfiles included, and leaves
+        behind the three that describe the template — <code>README.md</code>, <code>CHANGELOG.md</code> and
+        the export script. It names the package after the folder, writes a starter README, records the
+        template version and commit in <code>PROJECT-PROFILE.md</code> section 1, and runs
+        <code>check:docs</code> against the copy. It never overwrites: if the target already has any of its
+        files, it lists them and writes nothing.</p>
+        <p style="margin-top:10px"><b>Copying by hand?</b> Take every file <code>git ls-files</code> lists
+        except those three — none of the rest is optional. The one never to miss is
+        <b><code>.gitignore</code></b>: without it, <code>.env</code> and its passwords are committed on the
+        first push. Then do what the export would: rename <code>name</code> in <code>package.json</code>
+        (while it reads <code>ai-qa-harness</code>, <code>check:docs</code> treats the copy as the template
+        and fails on your application's name), and record the template version and commit in profile
+        section 1. <code>SETUP.md</code> step 0 has the full list, and the GitHub-template route.</p>
+        <p style="margin-top:10px">Recording the version and commit is what lets you tell later whether a
+        difference is yours or just the template having moved on. The template's changelog marks each entry
         <b>Adopt</b>, <b>Optional</b> or <b>New copies only</b>, so you can tell what is worth pulling into
         an existing copy.</p>
         <p style="margin-top:10px">Improvements you make while working on a project come back upstream
@@ -761,8 +770,8 @@ cp .mcp.json.example .mcp.json</code></pre>
             the role key uppercased, split on the camelCase boundary: <code>caseWorker</code> →
             <code>CASE_WORKER_EMAIL</code>. Set the <code>roles</code> array in
             <code>config/projectProfile.ts</code> to match.</p>
-            <p>In <code>.mcp.json</code>, the Playwright entry is required — the generator and healer
-            cannot work without a browser. The database entry is optional and removes the single biggest
+            <p>In <code>.mcp.json</code>, the Playwright entry is required — the context-builder,
+            generator and healer cannot work without a browser. The database entry is optional and removes the single biggest
             source of friction here: with it, agents read your schema instead of asking you for every
             query.</p>
             <div class="note warn">
@@ -770,6 +779,22 @@ cp .mcp.json.example .mcp.json</code></pre>
               is one confused instruction away from changing data other people's tests depend on, and
               there is no undo. Read-only removes the possibility rather than relying on judgment. Never
               point it at production.</p>
+            </div>
+            <div class="note">
+              <p><strong>Wired a database server? Name its tools too.</strong> In Claude Code the
+              <code>tools:</code> line in an agent's wrapper is an allow-list, and a connected server's
+              tools are withheld from any agent that does not name them. Two agents use the database, so
+              append its tool names to the <code>tools:</code> line of both
+              <code>.claude/commands/playwright-context-builder.md</code> (to introspect the schema) and
+              <code>.claude/commands/playwright-test-healer.md</code> (to judge a failing database-backed
+              assertion).</p>
+              <p style="margin-top:8px">Names take the form <code>mcp__&lt;server&gt;__&lt;tool&gt;</code> —
+              <code>mcp__database__&lt;tool&gt;</code> with the example's server key. <code>/mcp</code> in an
+              interactive Claude Code session lists what your server exposes. Name only read-only tools, so
+              read-only holds even if the account turns out not to be.</p>
+              <p style="margin-top:8px">Skip it and <b>nothing errors</b> — both agents quietly behave as
+              though no database existed. This is frontmatter wiring, not instructions, so it is the one
+              wrapper edit that is expected.</p>
             </div>
             <h4 style="font-size:14px;margin:18px 0 6px">If you are not using Claude Code</h4>
             <p>The harness does not require it. The test suite uses no AI at all, the knowledge layer is
@@ -803,6 +828,44 @@ cp .mcp.json.example .mcp.json</code></pre>
             <p>With only a URL and credentials it can still map modules, navigation and permissions by
             walking the application — that alone is most of the value. Everything else widens what it can
             establish.</p>
+            <h4 style="font-size:14px;margin:18px 0 6px">Before you run it</h4>
+            <p>It asks about most of this at its first checkpoint, but a run started without it stalls there
+            or comes back thin.</p>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th></th><th>What to have ready</th></tr></thead>
+                <tbody>
+                  <tr><td><b>Must have</b></td><td>
+                    The application reachable from where the agent runs — VPN or allow-listed IP if needed,
+                    and not mid-deploy.<br>
+                    <code>BASE_URL</code> and a working <code>&lt;ROLE&gt;_EMAIL</code>/<code>_PASSWORD</code>
+                    pair per role in <code>.env</code> — log in by hand as each first.<br>
+                    The role keys in <code>config/projectProfile.ts</code> <em>and</em> the Role key column of
+                    profile section 2, with the baseline role named. It logs in as each role listed there and
+                    drafts the rest of the row, but cannot guess which accounts exist.<br>
+                    The Playwright MCP server connected (<code>/mcp</code>), browsers installed.</td></tr>
+                  <tr><td><b>Worth gathering</b></td><td>
+                    A read-only QA database account, wired in <code>.mcp.json</code> with its tools named in
+                    the wrapper (step 2).<br>
+                    Local paths to the application source, an OpenAPI or Swagger file, schema scripts,
+                    integration contracts, exported requirement or wiki pages — it asks for each and checks it
+                    can read it.<br>
+                    Who to ask about which area.</td></tr>
+                  <tr><td><b>Decide</b></td><td>
+                    Which environment — QA or staging, never production. It roams read-only, but the
+                    environment is shared, so tell the people testing in it.<br>
+                    What it should stay out of — anything out of scope, or where even opening a screen has an
+                    effect. Tell it at the first checkpoint.<br>
+                    That you will be there: it stops at every checkpoint and waits.</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="note warn">
+              <p><strong>Use dedicated test accounts.</strong> To log in, the agent reads each password from
+              <code>.env</code> and types it into the browser, so the value passes through the AI
+              conversation. Use QA-only accounts that exist for testing — never a person's own account, and
+              never one that also works in production.</p>
+            </div>
             <p>Skipping is allowed: write the profile and flow plans by hand instead. Same work, no first
             draft.</p>
           </div>
@@ -982,6 +1045,12 @@ npx playwright test tests/example.spec.ts</code></pre>
         learning the product. It asks what documentation and access exist, logs in as each role and walks
         the application, reads whatever you point it at, and writes down what it found — including, and
         this is the part that matters, what it could not establish.</p>
+
+        <h4>What it needs first</h4>
+        <p>The application reachable, a working credential pair per role in <code>.env</code>, the role
+        keys in the profile, and the Playwright MCP server connected. Database access and local sources are
+        optional extras; with a database, its tools must be named in this agent's wrapper. Setup step 3 has
+        the full list — including why these should be dedicated test accounts.</p>
 
         <h4>When to run it</h4>
         <p>At setup, before filling in the profile by hand — it drafts most of that for you. Then again
@@ -1240,6 +1309,9 @@ npx playwright test tests/example.spec.ts</code></pre>
           than just how fast it does it. Two cautions even with access: introspection tools misreport
           structure, so confirm anything structural against real rows; and one query shows the state
           <em>now</em>, not at assertion time.</p>
+          <p style="margin-top:8px">In Claude Code, "wired" means named too: the database's tools must be on
+          the healer wrapper's <code>tools:</code> line, or it behaves as though there were none. Setup step
+          2 covers it.</p>
         </div>
         <h4>It never changes a TCID</h4>
         <p>A fix may reword a title's summary; the <code>&lt;STORY-KEY&gt;-TC&lt;NNN&gt;</code> prefix stays
@@ -1564,9 +1636,10 @@ npx playwright test tests/example.spec.ts</code></pre>
       <div class="comp">
         <div class="comp-head"><code class="comp-name">.mcp.json</code><span class="comp-tag you">you fill this in</span></div>
         <p class="comp-plain">How agents reach the browser and, optionally, the database.</p>
-        <p>The Playwright entry is required — two of the five agents cannot work without a browser. The
+        <p>The Playwright entry is required — three of the five agents cannot work without a browser. The
         database entry is optional and is the single biggest reduction in friction available: with it,
-        agents read your schema instead of asking you for every query. Use a read-only account against QA.</p>
+        agents read your schema instead of asking you for every query. Use a read-only account against QA —
+        and in Claude Code, name its tools in the context-builder and healer wrappers (setup step 2).</p>
         <p class="you-do"><b>You touch it:</b> once at setup, from <code>.mcp.json.example</code>. It is
         gitignored — it usually carries a connection string.</p>
       </div>
@@ -1891,6 +1964,16 @@ npx playwright test tests/example.spec.ts</code></pre>
           <thead><tr><th>Message</th><th>Cause</th><th>Fix</th></tr></thead>
           <tbody>
             <tr>
+              <td><code>… contains a term from the originating project</code></td>
+              <td>A copy still named <code>ai-qa-harness</code> in <code>package.json</code>, so the template's neutrality check runs against your application's name</td>
+              <td>Rename <code>name</code> in <code>package.json</code>. <code>npm run export</code> does this for you.</td>
+            </tr>
+            <tr>
+              <td><code>.gitignore does not ignore .env</code></td>
+              <td><code>.gitignore</code> left out of a hand-made copy, or edited</td>
+              <td>Restore it before committing anything — otherwise the first push publishes your credentials.</td>
+            </tr>
+            <tr>
               <td><code>Required environment variable BASE_URL is not set.</code></td>
               <td><code>.env</code> missing or unpopulated</td>
               <td>Copy <code>.env.example</code>. The refusal is deliberate — a default URL would silently test the wrong system.</td>
@@ -1968,6 +2051,7 @@ npx playwright test tests/example.spec.ts</code></pre>
             <tr><td><code>npm run report:cycle</code></td><td>Test-cycle closure report; <code>-- --strict</code> to gate on exit criteria</td></tr>
             <tr><td><code>npm run report</code></td><td>Open the last HTML report</td></tr>
             <tr><td><code>npm run setup</code></td><td><code>playwright install</code></td></tr>
+            <tr><td><code>npm run export -- &lt;dir&gt;</code></td><td>Template only: copy the harness into a project's QA repository</td></tr>
           </tbody>
         </table>
       </div>

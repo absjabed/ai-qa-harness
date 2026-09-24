@@ -25,12 +25,46 @@ function check(label, condition, detail) {
     failures.push(`${label}\n    ${detail}`);
 }
 
-/** Tracked files, so generated and ignored content never affects the result. */
+/** Never scanned when walking the tree: generated, installed, or gitignored for carrying secrets. */
+const WALK_SKIP = /^(node_modules|\.git|test-results|playwright-report|reports|blob-report|allure-\w+|dist|specs\/temp-defects)(\/|$)|^\.env(?!\.example$)|^\.mcp\.json$/;
+
+let inGit = true;
+let tracked;
+
+/**
+ * Tracked files, so generated and ignored content never affects the result. A copy fresh from
+ * `npm run export` has not been through `git init` yet, so there is nothing tracked — walk the tree
+ * instead, skipping what .gitignore would.
+ */
 function trackedFiles() {
-    return execFileSync('git', ['ls-files'], { cwd: root, encoding: 'utf8' })
-        .split('\n')
-        .filter(Boolean);
+    if (tracked) return tracked;
+    try {
+        tracked = execFileSync('git', ['ls-files'], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] })
+            .split('\n')
+            .filter(Boolean);
+        if (tracked.length) return tracked;
+    } catch {
+        // not a git repository
+    }
+    inGit = false;
+    const walk = (dir) =>
+        fs.readdirSync(path.join(root, dir), { withFileTypes: true }).flatMap((e) => {
+            const p = dir ? `${dir}/${e.name}` : e.name;
+            if (WALK_SKIP.test(p)) return [];
+            return e.isDirectory() ? walk(p) : [p];
+        });
+    tracked = walk('');
+    return tracked;
 }
+
+/**
+ * The template and a project copy need different checks. Vendor neutrality and full documentation
+ * coverage protect the template; a copy is meant to name its application, adds directories of its own,
+ * and has its own README. `npm run export` renames the package, and SETUP.md step 0 asks the same of a
+ * copy made any other way.
+ */
+const TEMPLATE_NAME = 'ai-qa-harness';
+const isTemplate = JSON.parse(read('package.json')).name === TEMPLATE_NAME;
 
 /**
  * Counting number-words in prose does not work: "three of the five agents" and "all three agents" are
@@ -43,8 +77,10 @@ const NUMBER_WORDS = {
     two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12,
 };
 
-/** Files that enumerate the agents by name, and must therefore mention all of them. */
-const AGENT_ROSTERS = ['README.md', 'docs/AGENTS.md', 'docs/index.html', 'agents/README.md'];
+/** Files that enumerate the agents by name, and must therefore mention all of them. A copy's README is its own. */
+const AGENT_ROSTERS = ['README.md', 'docs/AGENTS.md', 'docs/index.html', 'agents/README.md'].filter(
+    (f) => isTemplate || f !== 'README.md'
+);
 
 /** Phrases that genuinely assert a total, with the file they live in. */
 function checkStatedTotal(file, pattern, actual, label) {
@@ -101,6 +137,7 @@ check('PROJECT-PROFILE.md has no numbered sections', sectionCount > 0, 'expected
 // Every agent must appear wherever agents are listed by name — this is what catches "added an agent,
 // forgot to document it", which is the failure that actually happens.
 for (const roster of AGENT_ROSTERS) {
+    if (!isTemplate && !exists(roster)) continue;
     for (const agent of agentFiles.map((f) => f.replace(/\.md$/, ''))) {
         check(`${roster} does not mention ${agent}`, read(roster).includes(agent), 'it enumerates the agents by name');
     }
@@ -130,18 +167,20 @@ for (const file of trackedFiles().filter((f) => /\.(md|html|ts)$/.test(f) && f !
 
 // ---------------------------------------------------------------- directory coverage
 
-const componentsDoc = read('docs/COMPONENTS.md');
-const readme = read('README.md');
-
+// Template only: a copy adds directories of its own, and COMPONENTS.md describes the template's.
 const topDirs = [...new Set(trackedFiles().map((f) => f.split('/')[0]).filter((d) => d.includes('.') === false))];
 
-for (const dir of topDirs) {
-    check(
-        `docs/COMPONENTS.md never mentions ${dir}/`,
-        componentsDoc.includes(`${dir}/`),
-        'it claims to cover every file in the harness'
-    );
-    check(`README.md layout omits ${dir}/`, readme.includes(`${dir}/`), 'the layout block should list it');
+if (isTemplate) {
+    const componentsDoc = read('docs/COMPONENTS.md');
+    const readme = read('README.md');
+    for (const dir of topDirs) {
+        check(
+            `docs/COMPONENTS.md never mentions ${dir}/`,
+            componentsDoc.includes(`${dir}/`),
+            'it claims to cover every file in the harness'
+        );
+        check(`README.md layout omits ${dir}/`, readme.includes(`${dir}/`), 'the layout block should list it');
+    }
 }
 
 // ---------------------------------------------------------------- markdown links
@@ -160,21 +199,30 @@ const BANNED = /(?!)/; // term list removed
 // nothing else is exempt, and a term added to BANNED is still enforced everywhere else.
 const NEUTRALITY_EXEMPT = ['package-lock.json', 'scripts/check-docs.js'];
 
-for (const file of trackedFiles().filter((f) => !NEUTRALITY_EXEMPT.some((e) => f.endsWith(e)))) {
-    const text = read(file);
-    const hit = text.match(BANNED);
-    check(
-        `${file} contains a term from the originating project`,
-        !hit,
-        `found "${hit ? hit[0] : ''}" — this template must name no client, product or domain`
-    );
+// Template only: a project copy is supposed to name its application.
+if (isTemplate) {
+    for (const file of trackedFiles().filter((f) => !NEUTRALITY_EXEMPT.some((e) => f.endsWith(e)))) {
+        const text = read(file);
+        const hit = text.match(BANNED);
+        check(
+            `${file} contains a term from the originating project`,
+            !hit,
+            `found "${hit ? hit[0] : ''}" — this template must name no client, product or domain. ` +
+                `If this is a project copy, not the template, rename "name" in package.json (SETUP.md step 0).`
+        );
+    }
 }
 
 // ---------------------------------------------------------------- secrets
 
+// .gitignore is the file a hand-made copy most often misses, and without it .env is committed on the first push.
+const gitignore = exists('.gitignore') ? read('.gitignore').split(/\r?\n/).map((l) => l.trim()) : [];
 for (const secret of ['.env', '.mcp.json']) {
-    check(`${secret} is tracked in git`, !trackedFiles().includes(secret), 'it carries credentials and must stay ignored');
-    if (exists(secret)) notes.push(`${secret} exists locally (correctly untracked)`);
+    check(`.gitignore does not ignore ${secret}`, gitignore.includes(secret), 'it carries credentials and must never be committed');
+    if (inGit) {
+        check(`${secret} is tracked in git`, !trackedFiles().includes(secret), 'it carries credentials and must stay ignored');
+    }
+    if (exists(secret)) notes.push(`${secret} exists locally${inGit ? ' (correctly untracked)' : ''}`);
 }
 
 // ---------------------------------------------------------------- generator target folder
@@ -190,7 +238,8 @@ check(
 if (notes.length) notes.forEach((n) => console.log(`note: ${n}`));
 
 if (failures.length === 0) {
-    console.log(`check:docs passed — ${agentFiles.length} agents, ${sectionCount} profile sections, ${topDirs.length} directories.`);
+    const mode = isTemplate ? 'template' : 'project copy';
+    console.log(`check:docs passed (${mode}) — ${agentFiles.length} agents, ${sectionCount} profile sections, ${topDirs.length} directories.`);
     process.exit(0);
 }
 

@@ -44,12 +44,16 @@ This repository is a template, not a project. Nothing in it is specific to any a
 point it at yours, and the copy becomes that project's test suite.
 
 ```bash
-# GitHub template repository (Settings → General → Template repository)
-gh repo create <org>/<app>-tests --private --template <org>/ai-qa-harness --clone
+# recommended: copy the harness into the project's QA repository
+npm run export -- ../<app>-qa
 
-# or a plain copy, no git history
-git clone --depth 1 <this-repo-url> <app>-tests && rm -rf <app>-tests/.git && git -C <app>-tests init
+# or the whole repository, via GitHub's template feature
+gh repo create <you>/<app>-tests --private --template <you>/ai-qa-harness --clone
 ```
+
+The export copies exactly the files a project needs — dotfiles included — leaves the template-only ones
+behind, names the package, and records which template version and commit the copy came from. Copying by
+hand works too; [SETUP.md](SETUP.md) step 0 lists what not to miss.
 
 Then work through **[SETUP.md](SETUP.md)** — about an hour, and the copy is testing your application.
 
@@ -175,6 +179,7 @@ docs/
   index.html                     the handbook - `npm run docs` opens it
 scripts/
   open-docs.js                   opens the handbook cross-platform
+  export-harness.js              copies the harness into a project's QA repo
   check-docs.js                  asserts the docs still match the repo
   check-trace.ts                 enforces I8 - TCIDs present, planned, unique
   cycle-report.ts                STLC test-cycle closure report
@@ -192,6 +197,7 @@ PROJECT-PROFILE.md               the one file you fill in per project
 ```bash
 npm install && npx playwright install
 npm run docs                  # open the handbook
+npm run export -- <dir>       # copy the harness into a project's QA repo
 npm test                      # everything
 npm run test:regression       # --grep "@Regression"
 npm run test:headed

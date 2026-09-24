@@ -16,26 +16,58 @@ in `PROJECT-PROFILE.md` instead.
 This repository is a template. Work in a copy, never in the template itself — the template stays free of
 application-specific content so the next project can start clean.
 
-```bash
-gh repo create <org>/<app>-tests --private --template <org>/ai-qa-harness --clone
-```
+### Recommended: export into the project's QA repository
 
-Or without git history:
+From a checkout of the template — no `npm install` needed for this step:
 
 ```bash
-git clone --depth 1 <template-url> <app>-tests && rm -rf <app>-tests/.git && git -C <app>-tests init
+npm run export -- ../<app>-qa
 ```
 
-Then record what you started from — this is the only moment it is free, and it is what lets you tell
-later whether a difference is yours or just the template having moved on:
+The target can be an empty folder or a fresh clone of the QA repository. The export:
+
+- copies every file the harness needs — including the dotfiles a hand-made copy tends to miss, `.gitignore`
+  above all — and leaves behind the three that describe the template: `README.md`, `CHANGELOG.md` and the
+  export script itself
+- names the package after the target folder, and writes a starter `README.md` if the target has none
+- records the template version and commit in `PROJECT-PROFILE.md` section 1
+- runs `check:docs` against the copy, so anything missing shows up now rather than in CI
+
+It never overwrites. If any file it would write already exists in the target, it lists them and writes
+nothing. It also refuses to run from a template with uncommitted changes, because the commit it records
+would not describe what was copied.
+
+### Copying by hand instead
+
+Take every tracked file (`git ls-files` lists them) except `README.md`, `CHANGELOG.md` and
+`scripts/export-harness.js`. None of the rest is optional — the suite, the agents, the checks and the docs
+refer to each other, and `check:docs` fails on a link into a file that was left out. The ones most often
+missed:
+
+- **`.gitignore`** — without it, `.env` and its passwords are committed on the first push
+- `.gitattributes`, `.env.example`, `.mcp.json.example`
+- `.claude/` and `.github/`
+- `tests/stories/.gitkeep` — the generator cannot create that folder itself
+
+Then do by hand what the export does:
+
+1. **Rename `name` in `package.json`.** While it is `ai-qa-harness`, `check:docs` treats the copy as the
+   template and fails the moment your application's name appears in a file.
+2. **Record where the copy came from**, in `PROJECT-PROFILE.md` section 1: the template version from its
+   `CHANGELOG.md`, and its commit from `git rev-parse --short HEAD` run in the template. This is the only
+   moment it is free, and it is what lets you tell later whether a difference is yours or just the
+   template having moved on.
+
+### Or the whole repository, as a GitHub template
 
 ```bash
-git rev-parse --short HEAD
+gh repo create <you>/<app>-tests --private --template <you>/ai-qa-harness --clone
 ```
 
-Put that, and the template version from its `CHANGELOG.md`, into `PROJECT-PROFILE.md` section 1.
+This brings the template's README and changelog along. Rename `name` in `package.json` and record the
+version and commit, exactly as for a hand copy.
 
-Everything below happens inside that copy.
+Everything below happens inside the copy.
 
 ## 1. Install
 
@@ -86,6 +118,23 @@ removes the single biggest source of friction in this harness: with it, agents r
 asking you for every query. Use a **read-only** account against a QA database, never production.
 [docs/MCP.md](docs/MCP.md) has the reasoning and the caveats.
 
+**Wired a database server? Name its tools too.** In Claude Code the `tools:` line in an agent's wrapper is
+an allow-list: a connected server's tools are withheld from any agent that does not name them. Two agents
+use the database, so append its tool names to the `tools:` line of both:
+
+- `.claude/commands/playwright-context-builder.md` — to introspect the schema
+- `.claude/commands/playwright-test-healer.md` — to judge a failing database-backed assertion
+
+The names take the form `mcp__<server>__<tool>` — with the server keyed `database`, as in the example,
+`mcp__database__<tool>`. Running `/mcp` in an interactive Claude Code session lists the exact tools your
+server exposes. List only read-only ones; if the server also offers a write or execute tool, leave it out,
+so read-only holds even if the account turns out not to be.
+
+Skip this and nothing errors. The context-builder quietly skips schema introspection and the healer declines
+to judge database-backed failures, both behaving as though no database existed. This is frontmatter
+wiring, not instructions, so it is the one wrapper edit that is expected. Other tools with an allow-list
+need the same — see [`agents/README.md`](agents/README.md).
+
 ### If you are not using Claude Code
 
 The harness does not require it. Three of its four layers are vendor-neutral already:
@@ -123,6 +172,47 @@ will:
 - read whatever local sources you pointed it at, and introspect the database if one is wired
 - write `context/BASELINE.md`, and draft `PROJECT-PROFILE.md` sections 2–4, the navigation-flow plans, and
   the module tag table
+
+### Before you run it
+
+It asks about most of this at its first checkpoint, but a run started without it stalls there or comes back
+thin.
+
+**Must be in place** — without these it cannot walk the application:
+
+- **The application reachable** from the machine the agent runs on — VPN, allow-listed IP, whatever your QA
+  environment needs — and not mid-deploy.
+- **Working credentials in `.env`** — `BASE_URL`, and one `<ROLE>_EMAIL`/`<ROLE>_PASSWORD` pair per role.
+  Log in by hand as each one first; a locked or expired account wastes the run.
+- **The role keys** — in the `roles` array of `config/projectProfile.ts` *and* the *Role key* column of
+  `PROJECT-PROFILE.md` section 2, with the baseline role named. It logs in as each role listed there. It
+  drafts the rest of each row, but it cannot guess which accounts exist.
+- **The Playwright MCP server connected** — confirm with `/mcp` in Claude Code before starting.
+- **Browsers installed** — `npx playwright install`, from step 1.
+
+**Use dedicated test accounts.** To log in, the agent reads each password from `.env` and types it into the
+browser, so the value passes through the AI conversation. Use QA-only accounts that exist for testing —
+never a person's own account, and never one that also works in production.
+
+**Gather if you have them** — each one widens what it can establish; none is required:
+
+- **Database access** — a read-only QA account, wired in `.mcp.json`, with its tool names added to the
+  wrapper (step 2).
+- **Local paths** to the application source, an OpenAPI or Swagger file, schema scripts, integration
+  contracts, and exported requirement or wiki pages. It asks for each path and checks it can read it.
+- **Who to ask about what** — it records contacts in the baseline so the other agents know who settles a
+  question.
+
+**Decide before starting:**
+
+- **Which environment** — QA or staging, never production. It roams read-only, but the environment is
+  shared; let the people testing in it know.
+- **What to stay out of** — any area that is out of scope, or where even opening a screen has an effect.
+  Tell it at the first checkpoint.
+- **Time to stay with it.** It stops at every checkpoint and waits for you; it is not a job to start and
+  walk away from.
+
+### Running it
 
 It works in checkpoints and asks before writing anything. Read [context/README.md](context/README.md)
 first if you want to know what it is aiming to produce.
@@ -274,6 +364,13 @@ confidently.
 
 ## Common setup problems
 
+**`check:docs` says a file "contains a term from the originating project"** — the copy still has the
+template's package name, so the template's neutrality check is running against your application's name.
+Rename `name` in `package.json` (step 0).
+
+**`.gitignore does not ignore .env`** — `.gitignore` was left out of a hand-made copy, or edited. Restore it
+before committing anything.
+
 **`Required environment variable BASE_URL is not set`** — `.env` missing or unpopulated. That error is
 deliberate: the harness refuses to run against a default URL rather than silently test the wrong system.
 
@@ -292,6 +389,9 @@ fails fast instead of spending a full connect timeout per test.
 
 **The generator says `generator_setup_page` is unavailable** — the Playwright MCP server is not connected.
 Fix that rather than letting it proceed; an agent that cannot drive the browser produces nothing usable.
+
+**The database is wired, but the context-builder skipped introspection or the healer says it has no database
+access** — its tool names are missing from that agent's `tools:` line. See step 2.
 
 **An agent says a section is still a placeholder** — it found `<...>` in `PROJECT-PROFILE.md`. Fill that
 section in; the agents refuse to invent your application's vocabulary, which is the point.

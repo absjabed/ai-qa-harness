@@ -68,6 +68,20 @@ The point of database access is not that agents query the schema on every run. I
 person, or `playwright-context-builder` — explores it once and writes down the ten facts that matter in
 `context/`. That document is then the durable knowledge; the MCP server is how it got written.
 
+### In Claude Code, name its tools
+
+A wrapper's `tools:` line is an allow-list, and the canonical definitions cannot name the database tools
+because the server is your choice. So after wiring it, append its tool names to the `tools:` line of both
+agents that use it — `.claude/commands/playwright-context-builder.md` and
+`.claude/commands/playwright-test-healer.md`.
+
+Names take the form `mcp__<server>__<tool>`; `/mcp` in an interactive session lists what your server
+exposes. Name only the read-only tools — leaving a write or execute tool off the list keeps read-only true
+even if the account turns out not to be.
+
+Skip it and nothing errors: both agents simply behave as though no database existed. That silence is why it
+is worth checking.
+
 ---
 
 ## Verifying

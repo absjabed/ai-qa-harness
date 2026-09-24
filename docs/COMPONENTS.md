@@ -74,6 +74,12 @@ the agents read when they need a convention rather than an instruction.
 mechanical cases — agent rosters, section totals, directory coverage, broken links, vendor neutrality.
 Prose still needs a reader.
 
+**Template or copy** `check:docs` knows which it is running in from the `name` in `package.json`. In the
+template it checks everything. In a project copy it skips vendor neutrality and directory coverage — a copy
+is supposed to name its application and grow directories of its own — and keeps the rest: agent/wrapper
+pairing, thin wrappers, section and invariant totals, links, and that `.gitignore` keeps `.env` and
+`.mcp.json` out of git.
+
 ---
 
 ### `scripts/`
@@ -83,6 +89,7 @@ Prose still needs a reader.
 | Script | Backs | Does |
 |---|---|---|
 | `open-docs.js` | `npm run docs` | Opens the handbook |
+| `export-harness.js` | `npm run export -- <dir>` | Copies the harness into a project's QA repository |
 | `check-docs.js` | `npm run check:docs` | Asserts the docs still match the repository |
 | `check-trace.ts` | `npm run check:trace` | Enforces I8 — TCIDs present, planned, unique, not retired |
 | `cycle-report.ts` | `npm run report:cycle` | Writes the test-cycle closure report |
@@ -123,13 +130,31 @@ unmet, for use as a gate — by default it only reports, because closing a cycle
 
 ---
 
+### `scripts/export-harness.js`
+
+**What** `npm run export -- <dir>` — copies the harness into a project's QA repository. Template only; it
+is not copied, since a copy has nothing to export.
+
+**Copies** Every tracked file except `README.md`, `CHANGELOG.md` and itself — dotfiles included. A
+hand-made copy most often misses `.gitignore`, and without it `.env` is committed on the first push.
+
+**Also** Names the package after the target folder, writes a starter README if the target has none,
+records the template version and commit in PROJECT-PROFILE.md section 1, and runs `check:docs` against the
+copy.
+
+**What to expect** It never overwrites — any existing file it would write stops it before it writes
+anything. It refuses a template with uncommitted changes unless given `--allow-dirty`, which records the
+commit as `<sha>-dirty`.
+
+---
+
 ### `scripts/open-docs.js`
 
 **What** `npm run docs`. Opens the handbook in the default browser, cross-platform.
 
 **Why a script rather than a URL** The handbook is a local file by decision, not omission: GitHub Pages
 does not inherit repository privacy, so publishing it would make the docs public even with the repo
-private. The README records the full reasoning.
+private. The template's README records the full reasoning.
 
 ---
 
@@ -537,6 +562,7 @@ helpers from `tests/common/`, and keeping two implementations in sync is a bug w
 | `npm run report` | Open the last HTML report |
 | `npm run report:cycle` | Write the test-cycle closure report (`--strict` to gate on exit criteria) |
 | `npm run docs` | Open the handbook |
+| `npm run export -- <dir>` | Copy the harness into a project's QA repository (template only) |
 | `npm run setup` | `playwright install` |
 
 Tag filtering:

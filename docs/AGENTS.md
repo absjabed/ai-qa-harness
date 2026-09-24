@@ -50,6 +50,51 @@ where a guess would produce work that looks right and is wrong.
 
 ---
 
+## `/playwright-context-builder`
+
+Establishes what the harness knows about the application. Runs at setup, and again when the application
+gains a module or a role, changes navigation or permissions, or database access first becomes available.
+
+| | |
+|---|---|
+| **Model** | opus, `effort: xhigh` |
+| **Tools** | Read, search and write over the repo; the Playwright browser tools — plus the database's tools, if you name them |
+| **Browser** | Required. It walks the application as each role, read-only. |
+| **Input** | Answers to its inventory questions: what sources exist, where they are, who to ask |
+| **Output** | `context/BASELINE.md`, `context/<area>.md`, drafts of PROJECT-PROFILE §2–4, navigation plans, module tags |
+
+### Before you run it
+
+- **Must have:** the application reachable from where the agent runs; `BASE_URL` and a working credential
+  pair per role in `.env`; the role keys in `config/projectProfile.ts` and PROJECT-PROFILE §2, with the
+  baseline role named; the Playwright MCP server connected.
+- **Use dedicated QA test accounts.** It reads passwords from `.env` to type them into the browser, so they
+  pass through the AI conversation.
+- **Worth gathering:** a read-only database account with its tools named in the wrapper; local paths to
+  source, API docs, schema scripts, contracts and requirement docs; who to ask about what.
+- **Decide:** which environment (never production), what it should stay out of, and that you will be there
+  to answer its checkpoints.
+
+`SETUP.md` step 3 has the full list.
+
+### How it gathers
+
+Inventory what is reachable → roam the application as each role → read the supplied sources → introspect
+the database, if wired → distil into the documents above, each with its provenance and date. It checkpoints
+after the inventory and after the roam.
+
+### What it will not do
+
+- Write anything to the application or the database — no forms, no records, no settings.
+- Infer a business rule from a screen label, or fill a permission cell by symmetry.
+- State a database constraint it has not confirmed against real rows.
+- Overwrite what a person corrected without showing the difference first.
+
+Its **known unknowns** section is a deliverable. A recorded gap makes the other agents ask; a plausible
+guess makes them confidently wrong.
+
+---
+
 ## `/playwright-test-planner`
 
 Turns a story into a reviewed test plan.
@@ -261,7 +306,8 @@ problem, so it stops and reports which assertion failed and the query involved. 
 harness deliberately declines to reach a conclusion.
 
 In Claude Code, the database tools must also be named in the healer wrapper's `tools:` line — the allow-list
-withholds them otherwise.
+withholds them otherwise, and the healer then behaves as though no database existed. The context-builder's
+wrapper needs the same; `SETUP.md` step 2 has the details.
 
 ### It never changes a TCID
 

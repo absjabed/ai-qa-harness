@@ -63,6 +63,11 @@ MCP is an open protocol. The servers are the same; only the config file differs 
 Code, `.vscode/mcp.json` for VS Code, `mcp.json` for Cursor, and so on. Copy the server entries from
 `.mcp.json.example` into whatever shape your tool expects.
 
+If your tool restricts agents to an allow-list, a database server's tools have to be on the list for
+`playwright-context-builder` and `playwright-test-healer` — the only two that use it. The canonical
+definitions cannot name those tools, because the server is project-chosen. List only its read-only tools.
+The Claude wrappers for both agents carry a note saying so.
+
 ## Tool-name translation
 
 The canonical definitions never name a file tool, so this only affects wrapper frontmatter.

@@ -157,7 +157,7 @@ agents refuse to invent your application's vocabulary rather than guess at it.
 
 ### `config/projectProfile.ts`
 
-**What** Machine-readable mirror of PROJECT-PROFILE.md sections 1, 2 and 5, for the TypeScript side.
+**What** Machine-readable mirror of PROJECT-PROFILE.md sections 1, 2, 5 and 10, for the TypeScript side.
 
 **Exports**
 
@@ -165,7 +165,11 @@ agents refuse to invent your application's vocabulary rather than guess at it.
 |---|---|
 | `roles` | `as const` tuple of role keys. Drives `Role`, and `auth_data.ts` derives its credential set from it. |
 | `Role` | Union type of the role keys, so a typo in a role name is a compile error. |
-| `projectProfile` | The resolved profile object. |
+| `ExitCriteria` | The shape of the exit-criteria thresholds. |
+| `projectProfile` | The resolved profile object — including `storyKeyPattern`, which `check:trace` validates every story key against, and `exitCriteria`, which `report:cycle` evaluates. |
+
+**Tighten `storyKeyPattern`** to your tracker once you know it — the default accepts any `ABC-123` shape, which
+lets a typo'd project prefix through.
 
 **How to extend** Adding a role is one edit here (`roles`), one pair of variables in `.env`, and one row in
 PROJECT-PROFILE.md section 2. `data/auth_data.ts` needs no change — it derives from `roles`.

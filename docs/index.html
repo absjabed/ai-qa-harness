@@ -1513,6 +1513,10 @@ npx playwright test tests/example.spec.ts</code></pre>
       <ol class="walk">
         <li><div>Playwright starts, reads <code>playwright.config.ts</code>, which loads <code>.env</code>
         and decides which browsers to run in.</div></li>
+        <li><div>Before any test runs, <code>lib/globalSetup.ts</code> checks the application answers at
+        <code>BASE_URL</code> — and the database, if in scope — and seeds test data if
+        <code>SEED_TEST_DATA=true</code>. If the environment is down, the run stops here with one clear
+        message, rather than every test failing for a reason that has nothing to do with it.</div></li>
         <li><div>The spec file imports <code>test</code> from <code>lib/BaseTest.ts</code>. It asks for the
         page objects it needs by name — <code>{ loginPage, dashboardPage }</code> — and gets them
         constructed and ready.</div></li>
@@ -1528,6 +1532,9 @@ npx playwright test tests/example.spec.ts</code></pre>
         <li><div>If the test checks the database, the page object fetches the query from
         <code>data/sql_queries.ts</code> and runs it through <code>config/DbConnection.ts</code>, then
         compares that against what the screen showed.</div></li>
+        <li><div>The test's title begins with its TCID — <code>PROJ-1234-TC004 Validate that…</code> — so its
+        result, and any defect raised against it, leads back to the plan row and the acceptance criterion it
+        verifies.</div></li>
         <li><div>The tags on the test — <code>@Regression</code>, <code>@Priority1</code>, a module tag —
         decide whether it ran at all under a filtered <code>--grep</code>.</div></li>
       </ol>
@@ -1571,7 +1578,8 @@ npx playwright test tests/example.spec.ts</code></pre>
         <p class="comp-plain">A briefing document about your application, written for the AI agents.</p>
         <p>Eleven sections: what the app is, who can log into it, what its business entities are called, what
         its feature areas are, whether it has a database and an API, how your team rates defect severity,
-        and where test files go.</p>
+        where test files go, what the agents can and cannot reach, the test strategy — scope, entry and exit
+        criteria — and a setup checklist. Section 1 also fixes the issue-key format every story must carry.</p>
         <p class="you-do"><b>You touch it:</b> once at setup, then whenever the application gains a role, a
         module, or a new domain term. Every agent reads it before doing anything.</p>
       </div>
@@ -1579,9 +1587,12 @@ npx playwright test tests/example.spec.ts</code></pre>
       <div class="comp">
         <div class="comp-head"><code class="comp-name">config/projectProfile.ts</code><span class="comp-tag you">you fill this in</span></div>
         <p class="comp-plain">The same briefing, in a form the code can read.</p>
-        <p>Chiefly the list of role names. Because it is a typed list, a misspelled role is caught when the
-        project compiles rather than when a test runs at midnight.</p>
-        <p class="you-do"><b>You touch it:</b> at setup, and whenever you add a role.</p>
+        <p>Three things. The list of role names — typed, so a misspelled role is caught when the project
+        compiles rather than when a test runs at midnight. The pattern every story key must match, which
+        <code>npm run check:trace</code> validates TCIDs against. And the exit-criteria thresholds from profile
+        section 10, which <code>npm run report:cycle</code> evaluates.</p>
+        <p class="you-do"><b>You touch it:</b> at setup, whenever you add a role, and whenever your exit
+        criteria change.</p>
       </div>
 
       <div class="comp">
@@ -1668,8 +1679,9 @@ npx playwright test tests/example.spec.ts</code></pre>
         <p class="comp-plain">The things every screen needs, written once.</p>
         <p>Navigating to a page, waiting for something to appear properly (rather than sleeping for a fixed
         number of seconds and hoping), reading a table column into a list, comparing what the screen shows
-        against what the database returned, and narrowing a selector that would otherwise match several
-        elements.</p>
+        against what the database returned, narrowing a selector that would otherwise match several elements,
+        and checking a page for accessibility violations — optional, and a pass means "no obvious barriers",
+        not "accessible".</p>
         <p class="you-do"><b>You touch it:</b> when you find yourself writing the same helper on a third
         page object — but only if it genuinely applies to any screen.</p>
       </div>

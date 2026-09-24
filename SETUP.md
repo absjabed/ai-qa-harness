@@ -140,7 +140,7 @@ same work, done without a first draft.
 
 ## 4. Review and finish the project profile
 
-Open **`PROJECT-PROFILE.md`** and go through all ten sections, correcting what step 3 drafted and filling
+Open **`PROJECT-PROFILE.md`** and go through all eleven sections, correcting what step 3 drafted and filling
 what it could not know.
 
 The sections that matter most:
@@ -152,8 +152,13 @@ The sections that matter most:
 - **Section 7 (Severity rubric)** — replace the examples with your own quality plan's wording. The healer
   classifies every confirmed defect against it.
 - **Section 9 (Knowledge sources)** — what the agents can and cannot reach. Keep it honest.
+- **Section 10 (Test strategy)** — which test types are in scope, and the entry and exit criteria a cycle is
+  judged against. `npm run report:cycle` evaluates the exit criteria, so set thresholds your team will
+  actually hold to.
+- **Section 1's issue key format** — every story must arrive with its key (I8), and the agents validate
+  against this. Also tighten `storyKeyPattern` in `config/projectProfile.ts` to match.
 
-Then check `config/projectProfile.ts` matches sections 1, 2 and 5.
+Then check `config/projectProfile.ts` matches sections 1, 2, 5 and 10.
 
 ## 5. Point the two shipped page objects at the real application
 
@@ -192,6 +197,11 @@ Then:
 npm run db:check
 ```
 
+**Test data in a known state.** If the suite depends on seeded data, fill in `data/seed.ts` —
+`resetTestData()` then `seedTestData()`, using `seed…` and `reset…` keys in `sql_queries.ts` — and set
+`SEED_TEST_DATA=true`. It runs once before every run. Worth doing early: it is what lets tests stop depending
+on whatever happens to be in the environment.
+
 ## 7. Review the navigation flows
 
 Step 3 drafts `specs/UserFlowsUserRolePermissions/<role>NavigationFlow.plan.md` per role, plus the
@@ -226,12 +236,16 @@ The generator looks up a scenario's module here; anything unregistered makes it 
 
 ## 10. Verify
 
-Walk the checklist in PROJECT-PROFILE.md section 10, then:
+Walk the checklist in PROJECT-PROFILE.md section 11, then:
 
 ```bash
-npm run check                 # typecheck + docs consistency
+npm run check                 # typecheck + docs consistency + traceability
 npx playwright test tests/example.spec.ts
 ```
+
+Before any run, `lib/globalSetup.ts` checks the application answers at `BASE_URL` — and the database, if in
+scope. If the environment is down you get one clear "entry criteria not met" message instead of a report
+full of failures that are nothing to do with the tests.
 
 Once `example.spec.ts` passes end to end, the harness is wired. Keep it as a smoke check or delete it —
 it is a reference, not coverage.
@@ -240,12 +254,14 @@ it is a reference, not coverage.
 
 ## Then: the first real test
 
-1. Paste a story into a conversation and run `/playwright-test-planner`. Work through its checkpoints —
-   it will ask about scope, about the invariants, and about scenario titles before writing anything.
+1. Paste a story — **with its issue key** — into a conversation and run `/playwright-test-planner`. Work
+   through its checkpoints; it will ask about scope, the invariants, and scenario titles before writing
+   anything, and it will stop and ask if the key is missing.
 2. Review `specs/<KEY>.plan.md`.
 3. Run `/playwright-test-generator` against it. It drives the real browser first, then asks you to confirm
    the target file path, then writes the spec plus any page objects it needed.
 4. Run the suite. If something fails, `/playwright-test-healer`.
+5. At the end of the cycle, `npm run report:cycle` — see `docs/WORKFLOWS.md` workflow 8.
 
 ## Keeping the knowledge current
 

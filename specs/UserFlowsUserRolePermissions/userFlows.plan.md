@@ -22,7 +22,7 @@ re-deriving that.>`
 
 All scenarios reference `data/testData.ts` keys (never a literal business identifier), credentials
 from `data/auth_data.ts`, Page Factory fixtures from `lib/BaseTest.ts`, no hardcoded assertion
-values, and `appConfig` for the base URL — per the Test Authoring Invariants (I1–I7).
+values, and `appConfig` for the base URL — per the Test Authoring Invariants (I1–I8).
 
 Implemented in `<tests/...spec.ts>`.
 

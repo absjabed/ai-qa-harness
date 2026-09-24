@@ -106,9 +106,26 @@ for (const roster of AGENT_ROSTERS) {
     }
 }
 
-// The one phrasing that states a section total, in the two places that state it.
-for (const file of ['SETUP.md', 'docs/index.html']) {
+// Two phrasings state a section total: "all eleven sections" and "Eleven sections: application, ...".
+for (const file of ['SETUP.md', 'docs/index.html', 'docs/COMPONENTS.md']) {
     checkStatedTotal(file, /all (\w+) sections/gi, sectionCount, 'numbered sections in PROJECT-PROFILE.md');
+    checkStatedTotal(file, /\b(\w+) sections:/gi, sectionCount, 'numbered sections in PROJECT-PROFILE.md');
+}
+
+// ---------------------------------------------------------------- invariant count
+
+// "I1–I8" is cited across the agents and the docs. Adding an invariant without updating every citation
+// leaves agents told to follow a range that stops short of the newest rule. CHANGELOG is exempt: an
+// entry describes the version it was written for.
+const invariantCount = [...read('TEST-AUTHORING-INVARIANTS.md').matchAll(/^\*\*I(\d+) —/gm)].length;
+for (const file of trackedFiles().filter((f) => /\.(md|html|ts)$/.test(f) && f !== 'CHANGELOG.md')) {
+    for (const [range, last] of read(file).matchAll(/\bI1[–-]I?(\d+)\b/g)) {
+        check(
+            `${file} cites "${range}"`,
+            Number(last) === invariantCount,
+            `TEST-AUTHORING-INVARIANTS.md defines I1–I${invariantCount}.`
+        );
+    }
 }
 
 // ---------------------------------------------------------------- directory coverage

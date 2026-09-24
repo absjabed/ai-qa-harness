@@ -1,4 +1,4 @@
-# Test Authoring Invariants (I1–I7)
+# Test Authoring Invariants (I1–I8)
 
 The single source of truth for how tests in this repo are written. `playwright-test-planner`,
 `playwright-test-generator`, and `playwright-test-healer` all read this file and reference these by
@@ -71,3 +71,28 @@ leaving it ambiguous.
 
 An ambiguous locator that happens to work during a live exploratory drive is exactly what produces a
 flaky test weeks later. Scope it at authoring time, not after a healer pass finds it.
+
+**I8 — Traceability.**
+Every test case belongs to a ticket, and its identity survives every step from plan to defect.
+
+- **The story key is mandatory.** It is the ticket's issue key (a Jira key, for example), in the format set
+  in `PROJECT-PROFILE.md` section 1. No story key → ask for it explicitly and wait. Never invent one, never
+  plan against a placeholder, never fall back to a feature name.
+- **TCIDs are `<STORY-KEY>-TC<NNN>`** — the story key, then `TC` and a three-digit number, e.g.
+  `PROJ-1234-TC004`. Numbered sequentially within the story from `001`.
+- **TCIDs are assigned only in the plan** (`specs/<STORY-KEY>.plan.md`). Nothing else mints one.
+- **TCIDs are immutable.** Never renumber, never reuse. A case that is dropped keeps its ID and is marked
+  `Retired` in the plan; the number is not handed to anything else. A case added later takes the next unused
+  number.
+- **Every automated test title starts with its TCID**, then the summary from the plan:
+  `test('PROJ-1234-TC004 Validate that an expired reset link is rejected', ...)`. One TCID, one test. A test
+  lives in `tests/stories/<release>/<STORY-KEY>.spec.ts`, and every TCID in that file belongs to that story.
+  Module-wise specs that predate any plan (`tests/<module>.spec.ts`) may carry none; they are reported as
+  untraced rather than rejected — and are invisible to acceptance-criteria coverage until they gain one.
+- **A fix never changes a TCID.** A healer edit may reword a title's summary; the TCID prefix stays exactly
+  as it was.
+- **Defects carry the TCID and the story key**, so a failing test leads back through its test case to the
+  acceptance criterion it breaks.
+
+`npm run check:trace` enforces the mechanical parts of this: well-formed and unique TCIDs, every story test
+titled with one, every one present in its story's plan.

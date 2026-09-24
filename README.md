@@ -69,9 +69,25 @@ application stays in your copy. That is the line that keeps this template reusab
 | [docs/MCP.md](docs/MCP.md) | Wiring the browser and database MCP servers, and why read-only matters |
 | [context/README.md](context/README.md) | What project knowledge goes in `context/`, and in what shape |
 | [PROJECT-PROFILE.md](PROJECT-PROFILE.md) | The file you fill in per project |
-| [TEST-AUTHORING-INVARIANTS.md](TEST-AUTHORING-INVARIANTS.md) | I1–I7, the conventions every test follows |
+| [TEST-AUTHORING-INVARIANTS.md](TEST-AUTHORING-INVARIANTS.md) | I1–I8, the conventions every test follows |
 | [agents/README.md](agents/README.md) | Using these agents with a tool other than Claude Code |
 | [CHANGELOG.md](CHANGELOG.md) | What changed between template versions, and whether a copy should adopt it |
+
+## Coverage of the testing lifecycle
+
+| STLC phase | Where it lives |
+|---|---|
+| Requirement analysis | `playwright-context-builder`; the planner's first checkpoint; each plan's AC traceability table |
+| Test planning | `PROJECT-PROFILE.md` section 10 — scope, entry and exit criteria |
+| Test case design | `playwright-test-planner` — ISTQB techniques, Given/When/Then, one TCID per case |
+| Environment setup | `.env`, `.mcp.json`, and the readiness check in `lib/globalSetup.ts`; `data/seed.ts` |
+| Execution | Playwright; `playwright-test-generator` automates, `playwright-test-healer` triages; manual results in `specs/execution/` |
+| Defect management | healer → defect log → `playwright-defect-raiser` → tracker CSV; retest confirms the fix |
+| Cycle closure | `npm run report:cycle` — metrics, AC coverage and exit criteria |
+
+Traceability holds it together: every test case is `<STORY-KEY>-TC<NNN>`, that ID starts every test's title,
+and every defect carries it — so a failure leads back to the acceptance criterion it breaks. The handbook's
+*Lifecycle* section covers each phase and what is still out of scope.
 
 ## What the AI layer does
 
@@ -102,7 +118,7 @@ first pass; `context/README.md` explains what belongs there and why distilled be
 
 ## Conventions
 
-`TEST-AUTHORING-INVARIANTS.md` holds invariants I1–I7 — one file, cited by number from the three
+`TEST-AUTHORING-INVARIANTS.md` holds invariants I1–I8 — one file, cited by number from the three
 authoring agents so a convention has a single place to change.
 
 | | Invariant |
@@ -122,7 +138,7 @@ agents/                          the five agent definitions - canonical, vendor-
   README.md                      porting them to another tool
 .claude/
   commands/                      thin Claude Code wrappers - one line each, no instructions
-TEST-AUTHORING-INVARIANTS.md     I1-I7, the single source of truth
+TEST-AUTHORING-INVARIANTS.md     I1-I8, the single source of truth
 context/
   README.md                      what project knowledge goes here, and in what shape
   BASELINE.md                    what is known about the app - and what is not
@@ -136,8 +152,10 @@ data/
   auth_data.ts                   credentials, resolved from .env per role
   testData.ts                    domain values, boundaries, adversarial inputs
   sql_queries.ts                 every query the suite uses
+  seed.ts                        reset + seed test data into a known state
 lib/
-  BaseTest.ts                    the Page Factory - one fixture per page object
+  BaseTest.ts                    the Page Factory - one fixture per page object, plus `cleanup`
+  globalSetup.ts                 entry-criteria check before every run; optional seeding
   api/ApiClient.ts               optional API client
 pages/
   BasePage.ts                    shared navigation, waiting, table-reading, DB comparison
@@ -148,8 +166,9 @@ specs/
   RegressionTags/                the tag registry the generator reads
   ScenarioGenerationPatterns/    page-wise / role-wise replication rules
   UserFlowsUserRolePermissions/  per-role navigation and permission plans
+  execution/                     manual test results, per TCID
 tests/
-  example.spec.ts                reference spec demonstrating I1-I7
+  example.spec.ts                reference spec demonstrating I1-I8
   seed.spec.ts                   the generator's live-drive starting point
   common/                        test-side helpers
 docs/
@@ -157,7 +176,12 @@ docs/
 scripts/
   open-docs.js                   opens the handbook cross-platform
   check-docs.js                  asserts the docs still match the repo
-.github/workflows/               typecheck + docs check on every push
+  check-trace.ts                 enforces I8 - TCIDs present, planned, unique
+  cycle-report.ts                STLC test-cycle closure report
+  lib/trace.ts                   the parser the two above share
+.github/workflows/
+  checks.yml                     typecheck + docs + traceability on every push
+  regression.yml                 suite + closure report - opt-in, needs a live environment
 PROJECT-PROFILE.md               the one file you fill in per project
 .env.example                     copy to .env
 .mcp.json.example                copy to .mcp.json - browser + optional database access
@@ -176,8 +200,10 @@ npm run test:api              # the api project only
 npm run db:check              # database connectivity
 npm run typecheck             # tsc --noEmit
 npm run check:docs            # docs still match the repo
-npm run check                 # both of the above
+npm run check:trace           # every test traceable to its test case (I8)
+npm run check                 # all three of the above
 npm run report                # open the last HTML report
+npm run report:cycle          # test-cycle closure report
 ```
 
 Filter by tag:

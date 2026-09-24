@@ -1,4 +1,5 @@
 import { Page, Locator, expect } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
 import { appConfig } from '@config/testConfig';
 
 /**
@@ -72,5 +73,27 @@ export default abstract class BasePage {
      */
     firstOf(locator: Locator): Locator {
         return locator.first();
+    }
+
+    /**
+     * Assert the current page has no accessibility violations at the given WCAG levels.
+     *
+     * Automated checks find roughly a third of accessibility problems — missing labels, contrast, landmark
+     * and ARIA misuse — and none of the ones that need a person, such as whether focus order makes sense.
+     * Treat a pass as "no obvious barriers", not "accessible". Tag tests that call this `@A11y`.
+     *
+     * Scope it with `include` to the region a story changed, so a pre-existing violation elsewhere on the
+     * page does not fail an unrelated test; `exclude` for third-party widgets you cannot fix.
+     */
+    async expectNoAccessibilityViolations(options: { include?: string; exclude?: string[]; tags?: string[] } = {}): Promise<void> {
+        let builder = new AxeBuilder({ page: this.page }).withTags(options.tags ?? ['wcag2a', 'wcag2aa']);
+        if (options.include) builder = builder.include(options.include);
+        for (const selector of options.exclude ?? []) builder = builder.exclude(selector);
+
+        const { violations } = await builder.analyze();
+        const summary = violations
+            .map((v) => `  ${v.id} [${v.impact}] ${v.help} — ${v.nodes.length} element(s)\n    ${v.helpUrl}`)
+            .join('\n');
+        expect(violations, `Accessibility violations:\n${summary}`).toEqual([]);
     }
 }

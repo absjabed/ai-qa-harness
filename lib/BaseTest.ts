@@ -22,7 +22,22 @@ import Logout from '../pages/common/Logout';
  * `playwright-test-generator` agent reads this file for the exact names in use, so a fixture that
  * does not follow the convention is one it will not find.
  */
+/**
+ * Per-test teardown. A test that creates data registers how to remove it, at the moment it creates it:
+ *
+ *     const id = await recordPage.create(recordData.newRecord);
+ *     cleanup.add('delete created record', () => recordPage.delete(id));
+ *
+ * Tasks run after the test in reverse order, whether it passed or failed, so a failing test does not leave
+ * data behind for the next one to trip over. A task that throws fails the test — leaked data is a real
+ * problem, not noise to swallow.
+ */
+export interface Cleanup {
+    add(label: string, task: () => Promise<void> | void): void;
+}
+
 type Fixtures = {
+    cleanup: Cleanup;
     loginPage: LoginPage;
     dashboardPage: DashboardPage;
     logout: Logout;
@@ -33,6 +48,23 @@ type Fixtures = {
 };
 
 export const test = base.extend<Fixtures>({
+    cleanup: async ({}, use: (r: Cleanup) => Promise<void>) => {
+        const tasks: { label: string; task: () => Promise<void> | void }[] = [];
+        await use({ add: (label, task) => tasks.push({ label, task }) });
+
+        const failures: string[] = [];
+        for (const { label, task } of tasks.reverse()) {
+            try {
+                await task();
+            } catch (error) {
+                failures.push(`${label}: ${(error as Error).message}`);
+            }
+        }
+        if (failures.length) {
+            throw new Error(`Cleanup left data behind:\n  ${failures.join('\n  ')}`);
+        }
+    },
+
     loginPage: async ({ page }: { page: Page }, use: (r: LoginPage) => Promise<void>) => {
         await use(new LoginPage(page));
     },

@@ -78,8 +78,48 @@ Prose still needs a reader.
 
 ### `scripts/`
 
-**What** Small maintenance scripts, not part of the test suite. `open-docs.js` backs `npm run docs`;
-`check-docs.js` backs `npm run check:docs`.
+**What** Maintenance and reporting scripts, not part of the test suite.
+
+| Script | Backs | Does |
+|---|---|---|
+| `open-docs.js` | `npm run docs` | Opens the handbook |
+| `check-docs.js` | `npm run check:docs` | Asserts the docs still match the repository |
+| `check-trace.ts` | `npm run check:trace` | Enforces I8 — TCIDs present, planned, unique, not retired |
+| `cycle-report.ts` | `npm run report:cycle` | Writes the test-cycle closure report |
+| `lib/trace.ts` | — | The one parser both of the above share, so they cannot disagree about what a TCID is |
+
+---
+
+### `scripts/check-trace.ts`
+
+**What** `npm run check:trace` — enforcement for I8, traceability. Part of `npm run check` and CI.
+
+**Checks** Plan files are named for a valid story key; plan TCIDs are well-formed, unique and belong to
+their story; every AC in a plan's traceability table links to real scenarios; every story spec has a plan;
+every test in `tests/stories/` has a TCID from its own story; every TCID anywhere is in a plan, used by
+exactly one test, and not retired.
+
+**Warns, but does not fail** An AC with no test case; a `test.fixme` with no `// Defect` comment; tests
+outside `tests/stories/` carrying no TCID — allowed, but invisible to AC coverage.
+
+**What to expect** Passes trivially on a fresh template, since there are no plans yet.
+
+---
+
+### `scripts/cycle-report.ts`
+
+**What** `npm run report:cycle` — the STLC test-cycle closure report, written to
+`reports/cycle-summary-<date>.md`.
+
+**Reads** Plans, the latest `test-results/results.json`, `specs/execution/manual-results.csv` and the defect
+log — all optional; it says plainly which were missing.
+
+**Reports** Every active test case and how it ended (Passed · Flaky · Failed · Blocked by a `fixme` ·
+Skipped · Not Run), pass rates by priority, acceptance-criteria coverage per story, open defects by
+severity, traceability gaps, and each exit criterion from PROJECT-PROFILE.md section 10 as met or not.
+
+**What to expect** It states facts; it does not decide. `--strict` exits non-zero when a criterion is
+unmet, for use as a gate — by default it only reports, because closing a cycle is a person's call.
 
 ---
 
@@ -97,8 +137,9 @@ private. The README records the full reasoning.
 
 ### `PROJECT-PROFILE.md`
 
-**What** The single source of project identity. Ten sections: application, roles, domain vocabulary,
-modules, data layer, API layer, severity rubric, file layout, knowledge sources, setup checklist.
+**What** The single source of project identity. Eleven sections: application, roles, domain vocabulary,
+modules, data layer, API layer, severity rubric, file layout, knowledge sources, test strategy (scope,
+entry and exit criteria), setup checklist.
 
 **Who reads it** All five agents, every run, before doing anything else. You, when onboarding.
 
@@ -151,7 +192,7 @@ wrong system, and the run looks green.
 
 ```
 Required environment variable BASE_URL is not set.
-  Copy .env.example to .env and fill it in — see PROJECT-PROFILE.md section 10.
+  Copy .env.example to .env and fill it in — see PROJECT-PROFILE.md section 11.
 ```
 
 ---
@@ -298,6 +339,20 @@ plausible and wrong. They ask you for the text, then add it under these conventi
 
 ---
 
+### `data/seed.ts`
+
+**What** Test data provisioning. `resetTestData()` then `seedTestData()`, run by `lib/globalSetup.ts` when
+`SEED_TEST_DATA=true`. Ships empty — what "known state" means is your application's business.
+
+**Conventions** Statements live in `data/sql_queries.ts` as `seed…` and `reset…` keys (I3). Both idempotent.
+Seed only what tests need, identified by `data/testData.ts` keys. `context/<area>.md` recipes are the natural
+source. Runs with the suite's credentials from `.env`, never the agents' read-only account.
+
+**Why it matters** Tests that depend on whatever data happens to be present cannot run in parallel, drift as
+other people use the environment, and fail in ways the healer can only call "stale data".
+
+---
+
 ## Fixture layer
 
 ### `lib/BaseTest.ts`
@@ -315,7 +370,29 @@ own signature.
 **Naming** camelCase of the class: `RecordListPage` → `recordListPage`. The generator reads this file for
 exact names, so a fixture that breaks the convention is one it won't find.
 
-**Ships with** `loginPage`, `dashboardPage`, `logout`, `apiClient`.
+**Ships with** `cleanup`, `loginPage`, `dashboardPage`, `logout`, `apiClient`.
+
+**`cleanup`** is per-test teardown. A test that creates data registers how to remove it at the moment it
+creates it — `cleanup.add('delete created record', () => recordPage.delete(id))`. Tasks run after the test
+in reverse order whether it passed or failed, and a task that throws fails the test: leaked data is what
+makes the next test fail for a reason nobody can find.
+
+---
+
+### `lib/globalSetup.ts`
+
+**What** Runs once before every test run: the automatic half of the entry criteria in PROJECT-PROFILE.md
+section 10.
+
+**Does** Confirms the application answers at `BASE_URL` (any HTTP response counts; a 5xx does not), and
+that the database is reachable if DB validation is in scope. Then, when `SEED_TEST_DATA=true`, runs
+`data/seed.ts` to put test data into a known state.
+
+**Why** A run against an environment that is down records every test as failed, for one reason, in a
+report that reads like a mass regression. One clear message before anything runs is worth more.
+
+**Escape hatch** `SKIP_READINESS_CHECK=true`, for an API-only run or a deliberate run against a failing
+environment. Does not fire on `--list`.
 
 ---
 
@@ -345,6 +422,7 @@ fixture, and the `api` project in `playwright.config.ts`.
 | `readColumn(rows, cellSelector)` | Read a table column as strings, for set-membership and before/after comparisons (I5). |
 | `expectMatchesDatabase(ui, db)` | Order-insensitive comparison. If ordering is what's under test, assert it explicitly instead. |
 | `firstOf(locator)` | Scope an ambiguous locator to one match (I7). |
+| `expectNoAccessibilityViolations(opts)` | Run axe against the page at WCAG A/AA. Scope with `include` to the region a story changed. Tag such tests `@A11y`. Automated checks find roughly a third of accessibility problems — a pass means "no obvious barriers", not "accessible". |
 
 **Rule of thumb** A helper here must be genuinely page-agnostic. The moment it needs to know about a
 specific screen, it belongs on that screen's page object.
@@ -400,13 +478,33 @@ You don't need them complete before the first test. Start with the baseline role
 
 ---
 
+### `specs/execution/`
+
+**What** `manual-results.csv` — the execution record for manual test cases, which have no runner. Columns:
+`TCID, Status, Executed By, Executed On, Environment, Notes`; Status is `Passed`, `Failed`, `Blocked` or
+`Not Run`.
+
+**How rows arrive** The planner seeds a `Not Run` row for every `Manual` scenario when it saves a plan; a
+tester updates them; `report:cycle` reads them alongside automated results. A manual case still `Not Run`
+at closure counts against the exit criteria exactly as an automated one would.
+
+---
+
+### `.github/workflows/`
+
+**What** `checks.yml` runs `typecheck`, `check:docs` and `check:trace` on every push — none of which need a
+live environment. `regression.yml` runs the suite and the closure report, **opt-in**: started by hand, with
+a commented-out schedule, so a fresh copy never shows a red badge for an environment it cannot reach.
+
+---
+
 ## Tests layer
 
 ### `tests/example.spec.ts`
 
-Reference spec, not coverage. Three tests demonstrating I1–I7 and the full tag convention. Fails until the
+Reference spec, not coverage. Three tests demonstrating I1–I8 and the full tag convention. Fails until the
 harness is pointed at a real application — which doubles as the end-to-end check in PROJECT-PROFILE.md
-section 10. Once it passes, the harness is wired. Keep it as a smoke check or delete it.
+section 11. Once it passes, the harness is wired. Keep it as a smoke check or delete it.
 
 ### `tests/seed.spec.ts`
 
@@ -429,7 +527,12 @@ helpers from `tests/common/`, and keeping two implementations in sync is a bug w
 | `npm run test:api` | The `api` project only |
 | `npm run db:check` | Database connectivity |
 | `npm run typecheck` | `tsc --noEmit` |
+| `npm run check:docs` | Docs still match the repository |
+| `npm run check:trace` | I8 traceability holds |
+| `npm run check` | All three of the above — what CI runs |
 | `npm run report` | Open the last HTML report |
+| `npm run report:cycle` | Write the test-cycle closure report (`--strict` to gate on exit criteria) |
+| `npm run docs` | Open the handbook |
 | `npm run setup` | `playwright install` |
 
 Tag filtering:

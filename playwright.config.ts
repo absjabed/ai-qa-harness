@@ -18,6 +18,10 @@ const headless = process.env.HEADLESS === 'true';
 export default defineConfig({
     testDir: './tests',
 
+    /* Entry criteria: the application (and database, if in scope) must be reachable before anything runs.
+       Also seeds test data when SEED_TEST_DATA=true. See lib/globalSetup.ts. */
+    globalSetup: './lib/globalSetup.ts',
+
     /* Maximum time one test can run for */
     timeout: 180 * 1000,
 

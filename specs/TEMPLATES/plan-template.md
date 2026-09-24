@@ -6,12 +6,21 @@
 
 ## Story
 
-**Key:** `<STORY-KEY>` (verbatim from the ticket — never invented)
+**Key:** `<STORY-KEY>` — the ticket's issue key, verbatim. Required: no key, no plan (I8)
 **Title:** `<Story title>`
 
 **Acceptance Criteria:**
 - **AC1** — `<...>`
 - **AC2** — `<...>`
+
+## Test case IDs
+
+`<STORY-KEY>-TC<NNN>`, three digits, sequential from `001` (I8). Assigned here and nowhere else.
+
+- **Immutable.** Never renumber, never reuse — tests, results and defects are all recorded against them.
+- **Revising this plan:** keep existing TCIDs, give new scenarios the next unused number, and mark a dropped
+  scenario `**Status:** Retired` instead of deleting it. The gap in the numbering is deliberate.
+- **In the spec**, the test title is the TCID followed by the summary below, verbatim.
 
 ## Scope Notes
 

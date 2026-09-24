@@ -5,7 +5,7 @@
 Confirms that direct-URL navigation into another role's area is denied and redirects the user back
 to their own landing page — a lightweight negative/security check that is not role-specific
 navigation but spans roles. All scenarios reference credentials from `data/auth_data.ts` and
-`appConfig` for the base URL, per invariants I1–I7.
+`appConfig` for the base URL, per invariants I1–I8.
 
 ## Role Permission Matrix
 

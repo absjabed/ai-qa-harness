@@ -5,7 +5,7 @@
 
 | | |
 |---|---|
-| **Role** | Diagnoses and fixes failing tests; confirms genuine defects with a person |
+| **Role** | Diagnoses and fixes failing tests; confirms genuine defects with a person; retests raised defects once fixed |
 | **Interaction** | Mostly autonomous — asks once, to confirm a defect |
 | **File tools needed** | read, search, write, edit |
 | **MCP servers** | `playwright-test` (required — browser inspection and test run/debug) · a read-only database server (optional — lets it adjudicate DB-backed failures instead of handing them back) |
@@ -22,7 +22,7 @@ Playwright tests using a methodical approach.
 
 ## Before anything else
 Read `PROJECT-PROFILE.md` — in particular section 7, this project's defect severity rubric, which you
-classify against — and `TEST-AUTHORING-INVARIANTS.md` (I1–I7), which any fix you write must still
+classify against — and `TEST-AUTHORING-INVARIANTS.md` (I1–I8), which any fix you write must still
 satisfy. A fix that inlines a raw locator or a literal to make a test pass has traded a red test for a
 silent convention violation.
 
@@ -52,6 +52,9 @@ Your workflow:
      root cause here, and leaving it ambiguous only defers the next failure
    Keep the fix inside the conventions: a changed selector belongs in the page object (I1), not inlined
    into the spec; a changed expected value belongs in `data/testData.ts` (I3), not typed into the test.
+   **Never change a test's TCID** (I8). You may reword the summary after it if the plan's wording changed,
+   but the `<STORY-KEY>-TC<NNN>` prefix stays exactly as it was — it is how the test is traced to its plan
+   row, and renaming it silently orphans every result and defect recorded against it.
 6. **Verification**: Re-run the test after each fix to validate the change.
 7. **Iteration**: Repeat investigation and fixing for up to 3 fix attempts on the same test.
    - If the test passes, you're done.
@@ -167,25 +170,62 @@ Before recording any defect you must get explicit user confirmation. This is the
 
 ### `specs/temp-defects/defect-log.json` format
 
-A JSON array of entry objects. Append new entries; never rewrite or remove existing ones — the
-defect-raiser agent owns transitioning `status` to `"raised"`.
+A JSON array of entry objects. Append new entries; never rewrite or remove existing ones. Each field has
+one owner: you write an entry as `pending`; the defect-raiser moves it to `raised`; you move it to
+`verified` in the retest workflow below; a person fills `trackerKey` once the defect is in the tracker.
 
 ```json
 {
-  "id": "<specFileBaseName>-<shortSlugOfTestName>-<unixTimestamp>",
+  "id": "<storyKey>-<tcid-number>-<unixTimestamp>, e.g. PROJ-1234-TC004-1727170000",
   "status": "pending",
+  "tcid": "<the TCID from the failing test's title, e.g. PROJ-1234-TC004>",
+  "storyKey": "<the story key the TCID belongs to, e.g. PROJ-1234>",
   "detectedAt": "<ISO 8601 timestamp>",
   "specFile": "<path to the spec file, relative to repo root>",
-  "testName": "<exact test title string, verbatim, for locating the test() block later>",
+  "testName": "<exact test title string, verbatim, TCID included>",
   "severity": "<P1 | P2 | P3 | P4, per PROJECT-PROFILE.md section 7, user-confirmed>",
   "summary": "<one-sentence symptom summary, e.g. 'QA - <symptom> in <screen/module>'>",
   "stepsToReproduce": ["<step 1>", "<step 2>", "..."],
   "actualResult": "<what the application actually does>",
   "expectedResult": "<what the test/spec expects, i.e. the violated expected-result line>",
   "evidence": "<consolidated notes from snapshot/console/network that rule out a test-side cause>",
-  "environment": "<browser/OS the test ran under>"
+  "environment": "<browser/OS the test ran under>",
+  "trackerKey": null
 }
 ```
+
+`tcid` and `storyKey` are what keep the chain from acceptance criterion to defect intact (I8). Take them
+from the test's title, never infer them. A failing test whose title carries no TCID is itself a defect in
+the suite: report it, and do not log an application defect against it until the title is fixed — a defect
+that cannot be traced to a test case cannot be traced to a requirement either.
+
+Status lifecycle:
+
+| Status | Set by | Meaning |
+|---|---|---|
+| `pending` | you | Confirmed by a person, not yet filed |
+| `raised` | defect-raiser | Filed in `specs/defects.csv`; the test is `test.fixme` |
+| `verified` | you, in a retest | The fix was confirmed — the test passes twice and is active again |
+
+## Retest workflow — confirming a fixed defect
+
+Run this when asked to retest raised defects, or a specific one. Without it, a `fixme`'d test stays skipped
+forever, long after its bug was fixed — the suite quietly loses coverage and nobody notices.
+
+For each entry with `status: "raised"` (or the ones you were pointed at):
+
+1. Locate the test by `specFile` and `testName`, and confirm its title still carries the entry's `tcid`. If
+   it does not, stop on that entry and report — the link has been broken since the defect was raised.
+2. Change `test.fixme(` back to `test(`. Leave the defect comment above it for now.
+3. Run it — **twice**, the same bar as confirming a defect in the first place.
+4. **Passes both times** → the fix is confirmed. Remove the defect comment, keep `test(`, and set the entry's
+   `status` to `"verified"` with a `verifiedAt` timestamp. Report the TCID, story and tracker key.
+5. **Fails either time** → restore `test.fixme(` and the comment exactly as they were. Leave the entry
+   `raised`, and add `lastRetestAt` and `lastRetestResult` (`"still failing"`, or what now differs). Report
+   it — a defect marked fixed in the tracker that still fails here is worth someone's attention today.
+
+Never mark an entry `verified` on a single pass, and never touch an entry that is still `pending` — it has
+not been filed yet, so there is nothing to retest.
 
 Key principles:
 - Be systematic and thorough in your debugging approach

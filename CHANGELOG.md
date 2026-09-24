@@ -27,6 +27,51 @@ it up.
 
 ---
 
+## 1.1.0 — 2026-09-24
+
+Closes the gaps in how the harness covers the software testing life cycle, and makes traceability from
+acceptance criterion to defect a rule rather than a hope.
+
+**Adopt**
+
+- **I8 — Traceability**, a new invariant. Every story needs its issue key (a Jira key, for example); the
+  planner stops and asks when one is missing, with no key-less fallback. TCIDs are
+  `<STORY-KEY>-TC<NNN>`, assigned only in the plan, never renumbered or reused — dropped cases are marked
+  `Retired`. Every story test's title starts with its TCID. Previously the generator named tests "after the
+  scenario" and its own example dropped the ID, which broke the chain at the test.
+- **`npm run check:trace`** enforces the mechanical parts, and now runs in CI.
+- **The healer retests fixed defects** — un-`fixme`s the test, runs it twice, and marks the log entry
+  `verified` or restores the `fixme`. Previously a fixed defect's test stayed skipped indefinitely.
+- **Defects carry `tcid` and `storyKey`**, in the log, the tracker CSV's labels and description, and the
+  `fixme` comment. An entry that cannot be traced is left `pending` rather than filed.
+- **The healer can adjudicate DB-backed failures** when a read-only database MCP server is wired.
+
+**Adopt, with care**
+
+- **A readiness check runs before every test run** (`lib/globalSetup.ts`): the application must answer at
+  `BASE_URL`, and the database must be reachable if DB validation is in scope. A copy with no database that
+  never set `DB_VALIDATION_ENABLED=false` will now stop at this check rather than failing test by test — set
+  it. `SKIP_READINESS_CHECK=true` bypasses it.
+- **`PROJECT-PROFILE.md` gains section 10, Test strategy** — test types in scope, entry and exit criteria.
+  The setup checklist moves from section 10 to section 11; update any reference to it.
+
+**Optional**
+
+- **`npm run report:cycle`** — the test-cycle closure report: outcomes, pass rates by priority,
+  acceptance-criteria coverage, open defects, traceability gaps, exit criteria evaluated. `--strict` gates.
+- **Manual execution log** at `specs/execution/manual-results.csv`, seeded by the planner.
+- **`data/seed.ts`** and the **`cleanup` fixture**, for putting test data into a known state and removing
+  what a test creates.
+- **Accessibility** — `BasePage.expectNoAccessibilityViolations()`, via `@axe-core/playwright`.
+- **`regression.yml`** — an opt-in workflow that runs the suite and the closure report.
+
+**Also**
+
+- The example issue key in `PROJECT-PROFILE.md` is now `PROJ`, a neutral placeholder.
+- The handbook gains a *Testing lifecycle* section.
+
+---
+
 ## 1.0.0 — 2026-09-23
 
 First released version of the template.

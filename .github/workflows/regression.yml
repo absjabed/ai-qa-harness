@@ -1,0 +1,73 @@
+name: regression
+
+# Runs the Playwright suite against a live environment, then produces the cycle-closure report.
+#
+# OPT-IN. It only runs when started by hand, so a fresh copy of the template never shows a red badge for
+# an environment it has not been configured to reach. To make it scheduled, uncomment `schedule` once:
+#   1. The environment under test is reachable from GitHub's runners (or you use a self-hosted runner).
+#   2. The repository secrets below are set: Settings → Secrets and variables → Actions.
+#
+# Secrets used — names match .env.example. Add one EMAIL/PASSWORD pair per role you test.
+#   APP_NAME, TRACKER_PROJECT_KEY, BASE_URL, ADMIN_EMAIL, ADMIN_PASSWORD
+#   DB_SERVER, DB_NAME, DB_USER, DB_PASSWORD   (only if DB validation is in scope)
+
+on:
+  workflow_dispatch:
+    inputs:
+      grep:
+        description: 'Which tests to run (a --grep pattern)'
+        default: '@Regression'
+  # schedule:
+  #   - cron: '0 2 * * 1-5'   # 02:00 UTC, weekdays
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      HEADLESS: 'true'
+      CI: 'true'
+      APP_NAME: ${{ secrets.APP_NAME }}
+      TRACKER_PROJECT_KEY: ${{ secrets.TRACKER_PROJECT_KEY }}
+      BASE_URL: ${{ secrets.BASE_URL }}
+      ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+      ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+      DB_VALIDATION_ENABLED: ${{ secrets.DB_SERVER != '' && 'true' || 'false' }}
+      DB_SERVER: ${{ secrets.DB_SERVER }}
+      DB_NAME: ${{ secrets.DB_NAME }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Install browser
+        run: npx playwright install --with-deps chromium
+
+      # The readiness check in lib/globalSetup.ts runs first and stops the job with one clear message if the
+      # environment is down — rather than recording every test as failed for a reason unrelated to them.
+      - name: Run suite
+        run: npx playwright test --project=chromium --grep "${{ github.event.inputs.grep || '@Regression' }}"
+
+      # Runs even when tests fail: a red run is exactly when the closure report matters most.
+      - name: Cycle-closure report
+        if: always()
+        run: npm run report:cycle
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regression-${{ github.run_number }}
+          path: |
+            playwright-report/
+            test-results/results.json
+            reports/
+          retention-days: 30

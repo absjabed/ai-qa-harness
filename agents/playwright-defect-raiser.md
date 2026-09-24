@@ -48,9 +48,10 @@ Your workflow:
       built from the entry per the format spec.
    c. **Mark the test `test.fixme()`**: open `entry.specFile`, locate the `test(...)` block whose title
       matches `entry.testName` exactly, change that `test(` call to `test.fixme(`, and add a one-line
-      comment directly above it referencing the defect — e.g.
-      `// Defect <KEY>: <summary> — see specs/defects.csv` — and briefly stating what the application does
-      instead of the expected behavior, from `entry.actualResult`.
+      comment directly above it in exactly this shape, so the retest workflow can find it later:
+      `// Defect <entry.id> [<entry.tcid>]: <summary> — see specs/defects.csv. App currently: <actualResult, one line>`
+      The tracker's own issue key does not exist yet — the CSV has not been imported — so the defect is
+      referenced by its log `id`, which the retest later matches against `trackerKey`.
    d. **Update the log entry**: set `entry.status` to `"raised"` and add `entry.raisedAt` (ISO 8601) in
       `specs/temp-defects/defect-log.json`. Never delete or rewrite other fields, and never touch entries
       already marked `"raised"`.
@@ -82,13 +83,25 @@ project's tracker expects different columns, and note the change in `PROJECT-PRO
 
   *Expected Result:*
   <entry.expectedResult>
+
+  *Traceability:*
+  Story <entry.storyKey> · test case <entry.tcid> · <entry.specFile>
   ```
 - **Severity** — mapped from `entry.severity` per step 2a
 - **Reporter** — `playwright-test-healer` (it identified the defect; you are only formally logging it)
-- **Labels** — `automated-healer`, plus the spec file name
+- **Labels** — `automated-healer`, the story key, the TCID, and the spec file name. The story key and
+  TCID are what let anyone reading the tracker walk back to the test case and the acceptance criterion it
+  verifies (I8)
 - **Environment** — `entry.environment`
 
 Key principles:
+- **Every filed defect must be traceable.** If an entry has no `tcid` or `storyKey`, try to read them from
+  the start of `entry.testName`; if the title carries no TCID either, stop on that entry, leave it
+  `pending`, and report it. A defect that cannot be traced to a test case cannot be traced to a requirement,
+  and filing it anyway breaks the chain the whole harness is built around (I8).
+- **After import, record the tracker's key.** Once someone imports `specs/defects.csv`, the tracker assigns
+  each bug its own key. Remind the user in your summary that `trackerKey` in the log should be filled in —
+  it is what the retest workflow reports back against.
 - Never invent or alter the underlying facts of a defect — summary, steps, actual/expected result,
   evidence, severity all came from the human-confirmed healer finding. Your only job is the table-lookup
   mapping of `entry.severity` to CSV columns, and CSV/wiki-markup formatting.

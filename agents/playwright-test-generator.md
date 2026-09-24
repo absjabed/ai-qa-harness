@@ -25,7 +25,7 @@ spec file.
 
 ## Before anything else
 Read `PROJECT-PROFILE.md` (the application, its roles, its domain vocabulary, its modules, its file
-layout), `TEST-AUTHORING-INVARIANTS.md` (I1–I7), and any `context/<area>.md` covering the area this
+layout), `TEST-AUTHORING-INVARIANTS.md` (I1–I8), and any `context/<area>.md` covering the area this
 scenario touches. A context document carries the verification queries and business rules for its area — if
 one exists, its queries are what a DB-backed step should use, rather than asking the user for SQL that has
 already been written down. Everything below refers to those by name and
@@ -33,11 +33,16 @@ number rather than restating them. If `PROJECT-PROFILE.md` still contains `<...>
 sections you need, stop and say which sections are unfilled — do not guess an application's vocabulary.
 
 ## Test Authoring Invariants
-Read `TEST-AUTHORING-INVARIANTS.md` and reference I1–I7 by number. Never restate them inline.
+Read `TEST-AUTHORING-INVARIANTS.md` and reference I1–I8 by number. Never restate them inline.
 
 ## For each test you generate
-- Obtain the test plan: suite name, scenario name, target file, seed file, and steps/verifications — note
-  any fixtures, page objects, or data keys the plan already names. If the invocation doesn't name a
+- Obtain the test plan: the scenario's **TCID** and summary, suite name, target file, seed file, and
+  steps/verifications — note any fixtures, page objects, or data keys the plan already names.
+- **The TCID comes from the plan, never from you (I8).** It is the `<STORY-KEY>-TC<NNN>` in the scenario's
+  heading in `specs/<STORY-KEY>.plan.md`. If you are asked to generate a scenario that has no plan row —
+  an ad hoc request, or a plan without TCIDs — do not assign a number yourself. Ask for the story's issue
+  key if it is missing, then ask the user to add the scenario to the plan (or run the planner) so it gets a
+  TCID there. Two places minting TCIDs is how numbering collides. If the invocation doesn't name a
   specific `specs/*.plan.md` and more than one story's plan file exists in `specs/`, don't guess which
   story it is — list the candidates and ask which one to generate from.
 - Before live-driving navigation, check `specs/UserFlowsUserRolePermissions/<role>NavigationFlow.plan.md`
@@ -81,8 +86,14 @@ Read `TEST-AUTHORING-INVARIANTS.md` and reference I1–I7 by number. Never resta
   already exists: `generator_write_test` cannot create parent folders.
 - Immediately invoke `generator_write_test`, translating the log's raw actions into this repo's pattern
   rather than passing them through verbatim:
-  - The file contains a single test, named after the scenario, inside a `test.describe` matching the
-    top-level test plan item. The file name is filesystem-friendly.
+  - **The test title is the TCID followed by the plan's summary, verbatim** —
+    `test('PROJ-1234-TC004 Validate that an expired reset link is rejected', ...)`. Not the summary alone,
+    and not a paraphrase: the TCID is what traces a failure back to its plan row and acceptance criterion
+    (I8). One test per TCID; if the plan's TCID already has a test anywhere in `tests/`, stop and say so
+    rather than writing a second.
+  - The test sits inside a `test.describe` matching the plan's module, in
+    `tests/stories/<release>/<STORY-KEY>.spec.ts` — the file named for the story key, holding only that
+    story's TCIDs. Several scenarios from the same story go into the same file.
   - Import `test` (default export) from `@lib/BaseTest` and `expect` from `@playwright/test` (I2);
     destructure only the fixtures actually used.
   - If the scenario requires an authenticated session, use a `test.beforeEach` calling `userLogin` (I4)
@@ -107,6 +118,8 @@ Read `TEST-AUTHORING-INVARIANTS.md` and reference I1–I7 by number. Never resta
     text is matched by `--grep` and produces false positives; see the Gotchas in `regression-tags.md`.
 
 ## Self-audit before writing (blocking)
+- The test title starts with the scenario's TCID, copied from the plan heading, followed by its summary (I8).
+  The TCID's story key matches the file name. No TCID was invented, and none is used by a second test.
 - The live MCP drive genuinely ran: `generator_setup_page` was called, and the retrieved
   `generator_read_log` shows a real action for every plan step and verification — not code assembled
   straight from plan text with no corresponding logged action. If any step lacks one, go back and
@@ -139,53 +152,66 @@ Read `TEST-AUTHORING-INVARIANTS.md` and reference I1–I7 by number. Never resta
   user was asked for a name (never invented) and the new row was added to the table.
 
    <example-generation>
-   For the following plan — illustrative domain; the pattern applies to whichever feature area the real
+   For the following plan row — illustrative domain; the pattern applies to whichever feature area the real
    plan scopes, not this specific one:
 
-   ```markdown file=specs/plan.md
-   ### 1. Adding New Todos
-   **Seed:** `tests/seed.spec.ts`
+   ```markdown file=specs/PROJ-1234.plan.md
+   ## Module: Todos
 
-   #### 1.1 Add Valid Todo
-   **Fixtures:** `todoPage`
-   **Steps:**
-   1. Click in the "What needs to be done?" input field
-   2. Type "Buy milk" and press Enter
-   **Expected:** The new todo "Buy milk" appears in the list
+   ### PROJ-1234-TC001 — Validate that a new todo appears in the list once added
+
+   **Test Type:** Automated
+   **Story:** PROJ-1234
+   **Module:** Todos
+   **Sub Module:** Add todo
+   **Test Steps:**
+   Given the user is on the todo list
+   When the user types a new todo and presses Enter (`todoPage.addTodo()`)
+   Then the todo is shown in the list (`todoPage.getTodoItem()`)
+
+   **Expected Result:** The new todo's text appears as the last item in the list, unchecked.
+   **Data:** `todoData.newItem`
    **Priority:** Priority 1
    ```
 
-   The following file is generated:
+   The following file is generated, at `tests/stories/1.2/PROJ-1234.spec.ts`:
 
-   ```ts file=add-valid-todo.spec.ts
-   // spec: specs/plan.md
+   ```ts file=tests/stories/1.2/PROJ-1234.spec.ts
+   // spec: specs/PROJ-1234.plan.md
    // seed: tests/seed.spec.ts
 
    import test from '@lib/BaseTest';
    import { expect } from '@playwright/test';
+   import { todoData } from '@data/testData';
 
-   test.describe('Adding New Todos', () => {
-     test('Add Valid Todo', { tag: ['@Regression', '@Priority1', '@Todos'] }, async ({ todoPage }) => {
-       await test.step('Click in the "What needs to be done?" input field', async () => {
-         await todoPage.focusNewTodoInput();
-       });
+   test.describe('Todos', () => {
+     test(
+       'PROJ-1234-TC001 Validate that a new todo appears in the list once added',
+       { tag: ['@Regression', '@Priority1', '@Todos'] },
+       async ({ todoPage }) => {
+         await test.step('Given the user is on the todo list', async () => {
+           await todoPage.open();
+         });
 
-       await test.step('Type "Buy milk" and press Enter', async () => {
-         await todoPage.addTodo('Buy milk');
-       });
+         await test.step('When the user types a new todo and presses Enter', async () => {
+           await todoPage.addTodo(todoData.newItem);
+         });
 
-       await test.step('The new todo "Buy milk" appears in the list', async () => {
-         await expect(todoPage.getTodoItem('Buy milk')).toBeVisible();
-       });
-     });
+         await test.step('Then the todo is shown in the list', async () => {
+           await expect(todoPage.getTodoItem(todoData.newItem)).toBeVisible();
+         });
+       }
+     );
    });
    ```
+
+   Three things to notice. The title is the TCID followed by the plan's summary, verbatim — that is what
+   lets a failure be traced back to its plan row and its acceptance criterion (I8). The file is named for
+   the story key, and every TCID in it belongs to that story. And the value typed comes from a
+   `data/testData.ts` key, not a literal (I3).
 
    If `todoPage` weren't yet wired into `lib/BaseTest.ts`, or `addTodo`/`getTodoItem` didn't exist on the
    page object, implement them: add the missing methods to the `TodoPage` file (or create it, if no page
    object existed yet for this feature) and wire the fixture into `lib/BaseTest.ts` — rather than falling
    back to raw `page.click(...)` / `page.fill(...)` or leaving a flagged comment.
-
-   Note the literal `'Buy milk'` in this illustration: in a real generated test that value comes from a
-   `data/testData.ts` key per I3. It is inline here only to keep the example self-contained.
    </example-generation>

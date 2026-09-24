@@ -13,6 +13,9 @@ End-to-end recipes. Each starts from a real situation and runs to a finished res
 
 Paste the story into the conversation. Key, title, description, acceptance criteria as plain text.
 
+**The key is required** — the ticket's issue key, e.g. `PROJ-1234`. Without one the planner stops and asks;
+it is the root of every TCID, test title and defect that follows (I8).
+
 ```
 /playwright-test-planner
 ```
@@ -191,7 +194,7 @@ Give them this order:
 
 1. `docs/index.html` — open in a browser, read the orientation and agent sections
 2. `SETUP.md` — even if the harness is already configured, it explains why each piece exists
-3. `TEST-AUTHORING-INVARIANTS.md` — seven rules, one page
+3. `TEST-AUTHORING-INVARIANTS.md` — eight rules, one page
 4. `tests/example.spec.ts` — the conventions in working code
 5. Their first task: add one page object by hand (workflow 3). Faster to understand the Page Factory by
    wiring one than by reading about it.
@@ -238,3 +241,73 @@ before merging anything upstream.
 ### Never copy back
 
 `.env`, in either direction. New project, new credentials.
+
+---
+
+## 8. Closing a test cycle
+
+The STLC's last phase. It needs the TCIDs to be intact end to end, which is why I8 exists.
+
+1. **Record manual results.** Update `specs/execution/manual-results.csv` — every `Manual` case the planner
+   seeded as `Not Run` needs its real outcome.
+2. **Run the suite** so `test-results/results.json` reflects the build being closed:
+
+   ```bash
+   npm run test:regression
+   ```
+
+3. **Retest anything reported fixed** (workflow 9) — a defect fixed in the tracker but still `fixme`'d here
+   counts as blocked coverage.
+4. **Produce the report:**
+
+   ```bash
+   npm run report:cycle
+   ```
+
+   It writes `reports/cycle-summary-<date>.md`: every test case's outcome, pass rates by priority,
+   acceptance-criteria coverage per story, open defects, traceability gaps, and each exit criterion from
+   `PROJECT-PROFILE.md` section 10 marked met or not.
+5. **Decide.** The report states facts; closing the cycle is a person's call. A criterion missed knowingly —
+   with a reason written down — is a legitimate outcome. One missed because nobody looked is not.
+
+`npm run report:cycle -- --strict` exits non-zero when any criterion is unmet, for use as a pipeline gate.
+
+---
+
+## 9. Retesting a fixed defect
+
+A `test.fixme` is only correct while its bug is open. Once it is fixed, the skipped test is lost coverage.
+
+1. When the tracker shows a defect fixed, make sure its log entry in `specs/temp-defects/defect-log.json`
+   has `trackerKey` filled in, so the retest reports back against the right ticket.
+2. Run the healer and ask it to retest raised defects — all of them, or one by TCID:
+
+   ```
+   /playwright-test-healer
+   ```
+
+3. For each, it un-`fixme`s the test and runs it twice. Passes both → active again, entry marked `verified`.
+   Fails either → `fixme` restored exactly, entry stays `raised`, retest recorded — worth telling whoever
+   marked the ticket fixed.
+
+---
+
+## 10. Putting test data into a known state
+
+Tests that rely on whatever happens to be in the environment drift, cannot run in parallel, and fail in ways
+the healer can only call "stale data".
+
+1. Add `seed…` and `reset…` keys to `data/sql_queries.ts` — `context/<area>.md` recipes are the natural
+   source. Make both idempotent.
+2. Call them from `data/seed.ts`: `resetTestData()` first, then `seedTestData()`.
+3. Set `SEED_TEST_DATA=true` in `.env`. `lib/globalSetup.ts` runs the pair once before every run.
+4. For data a single test creates, use the `cleanup` fixture instead, so it is removed even when the test
+   fails:
+
+   ```ts
+   test('PROJ-1234-TC006 Validate that a draft can be deleted', async ({ recordPage, cleanup }) => {
+       const id = await recordPage.createDraft(recordData.newDraft);
+       cleanup.add('delete draft', () => recordPage.delete(id));
+       // ...
+   });
+   ```

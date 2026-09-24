@@ -66,6 +66,11 @@ Turns a story into a reviewed test plan.
 
 Paste the story into the conversation, then run the command. No tracker API — the story arrives as text.
 
+**The story's issue key is mandatory** — the ticket's ID in the tracker, a Jira key for example. Without one
+the planner stops and asks, before doing anything else; with one that doesn't match the format in
+`PROJECT-PROFILE.md` section 1, it asks you to confirm. There is no key-less mode, because every TCID,
+test title and defect downstream is built on that key (I8).
+
 Pasted screenshots are supplementary: used for field names, layout, labels, and states the text omitted.
 It will not invent behavior a screenshot only implies without text or codebase confirmation.
 
@@ -85,7 +90,7 @@ It pauses at each, waits for explicit approval, and folds in corrections before 
 | # | It shows you | You give |
 |---|---|---|
 | 1 | Story key, title, AC, what screenshots added, flagged gaps | Approval or correction |
-| 2 | Conventions it will follow (cited as I1–I7) | Approval |
+| 2 | Conventions it will follow (cited as I1–I8) | Approval |
 | 3 | Existing page objects, fixtures, data keys it found | Approval or a scope cut |
 | 4 | Proposed scenario **titles only** | Approval or a trim |
 | 5 | Any new page object or fixture needed, and where it slots in | Approval |
@@ -126,6 +131,16 @@ The critique targets what the first pass didn't think to cover.
 - A "new page objects, fixtures and data keys required" table for anything it couldn't find.
 - Expected Results specific enough for a zero-context reader: the exact page, section, wording, or state
   change — not a label.
+
+### It owns the TCIDs
+
+The planner is the only agent that assigns test case IDs: `<STORY-KEY>-TC<NNN>`, sequential from `001`.
+They are immutable once saved. Revising a plan keeps every existing TCID, gives new scenarios the next unused
+numbers, and marks dropped ones `Retired` rather than deleting them — so a number is never reused for a
+different test, and every result and defect recorded against it stays meaningful.
+
+On saving, it also seeds a `Not Run` row in `specs/execution/manual-results.csv` for every `Manual`
+scenario, so manual cases are counted at cycle closure rather than forgotten.
 
 ### What it will not do
 
@@ -174,7 +189,11 @@ this feature yet, I'm going to create `RecordListPage.ts`" — and waits.
 
 ### What to expect in the output
 
-- One test per file, inside a `test.describe` matching the plan's top-level item.
+- **The title is the TCID followed by the plan's summary, verbatim:**
+  `test('PROJ-1234-TC004 Validate that an expired reset link is rejected', ...)`. That prefix is what traces
+  a failing test back to its plan row and its acceptance criterion (I8).
+- One test per TCID, in `tests/stories/<release>/<STORY-KEY>.spec.ts` — the file named for the story, holding
+  only that story's TCIDs, inside a `test.describe` matching the plan's module.
 - `import test from '@lib/BaseTest'` and `expect` from `@playwright/test` — the shape every spec uses.
 - Every plan step wrapped in its own `test.step('<step text>', ...)`.
 - `test.beforeEach` calling `userLogin` for anything authenticated.
@@ -184,7 +203,8 @@ this feature yet, I'm going to create `RecordListPage.ts`" — and waits.
 
 ### What it will not do
 
-Write a test for a step it never drove. Assume a file path. Invent a module tag — it asks, then writes the
+Mint a TCID — if a scenario has no plan row, it asks you to add one (or run the planner) instead. Write a
+test for a step it never drove. Assume a file path. Invent a module tag — it asks, then writes the
 row into `regression-tags.md` itself. Invent SQL. Write a role name into a `test.describe` title as a
 substitute for a tag (`--grep` matches full title strings, which produces false positives).
 
@@ -221,20 +241,43 @@ Up to 3 fix attempts per test. Then one of three things happens:
 - A documented permission boundary — it checks the navigation plans and cross-role matrix before calling a
   "Cannot do" restriction a defect
 
-### Database-backed assertions: the known blind spot
+### Database-backed assertions — it depends on access
 
-DB queries run in the Node process, not the browser. None of the healer's tools can see what the database
-actually contains.
+DB queries run in the Node process, not the browser, so no browser tool can see what the database holds.
+Either way it first looks for a code-level explanation — wrong column, mismatched parameter, stale schema —
+and treats an unreachable database as an environment fault, reported and stopped on, never "fixed" around.
 
-So when a DB-backed assertion fails, it first looks for a code-level explanation — wrong column, mismatched
-parameter, stale schema — and fixes that. It also distinguishes an unreachable database (an environment
-fault, reported and stopped on, not "fixed" around) from a failed assertion.
+**With a read-only database MCP server wired**, it re-runs the assertion's own query, `SELECT` only:
 
-If the query and comparison both look correct, it does **not** run the normal defect workflow — that
-workflow expects browser evidence it has no equivalent of here. It stops and tells you which assertion
-failed, the query involved, and that it cannot independently verify the database's state.
+| What it finds | Conclusion |
+|---|---|
+| The value is now what the test expected | Timing — fix with a wait, not a defect |
+| Wrong, and contradicts an invariant in `context/` | Strong evidence of a real bug → defect workflow |
+| Wrong, and nothing documents what it should be | Unresolved — reports both values |
+| The row is missing | Usually stale or unseeded data — asks about reseeding |
 
-This is the one place the harness deliberately declines to reach a conclusion.
+**Without one**, it declines to guess: it cannot tell an application bug from stale data or a timing
+problem, so it stops and reports which assertion failed and the query involved. This is the one place the
+harness deliberately declines to reach a conclusion.
+
+In Claude Code, the database tools must also be named in the healer wrapper's `tools:` line — the allow-list
+withholds them otherwise.
+
+### It never changes a TCID
+
+A fix may reword a title's summary if the plan's wording changed; the `<STORY-KEY>-TC<NNN>` prefix stays
+exactly as it was. Renaming it would silently orphan every result and defect recorded against it. A failing
+test whose title has no TCID is reported as a suite defect, not logged as an application one.
+
+### Retesting a fixed defect
+
+When asked to retest raised defects, it switches each `test.fixme(` back to `test(`, runs it twice, and:
+
+- **passes both times** → keeps it active, removes the defect comment, marks the log entry `verified`
+- **fails either time** → restores the `fixme` exactly, leaves the entry `raised`, records the retest
+
+Without this step a `fixme`'d test stays skipped forever, long after its bug was fixed, and the suite quietly
+loses coverage.
 
 ### Defect Confirmation Workflow
 
@@ -266,6 +309,14 @@ The mechanical last step. Does not investigate or judge.
 | **Input** | `specs/temp-defects/defect-log.json` |
 | **Output** | Rows in `specs/defects.csv`, plus tests marked `test.fixme()` |
 | **Interactive** | No. Runs unattended. |
+
+### Traceability it adds
+
+Every row it files carries the story key and TCID — in the labels, and in a *Traceability* line in the
+description — so anyone reading the tracker can walk back to the test case and the acceptance criterion it
+verifies. The `fixme` comment references the defect by its log `id`, since the tracker's own key doesn't
+exist until the CSV is imported; fill `trackerKey` in the log afterwards. An entry that can't be traced to a
+TCID is left `pending` and reported rather than filed.
 
 ### Per pending entry
 

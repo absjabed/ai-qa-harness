@@ -11,7 +11,7 @@ record detail → logout.>`
 
 All scenarios reference `data/testData.ts` keys, credentials from `data/auth_data.ts`, existing Page
 Factory fixtures from `lib/BaseTest.ts` (new page objects flagged explicitly), no hardcoded
-assertion values, and `appConfig` for the base URL — per invariants I1–I7.
+assertion values, and `appConfig` for the base URL — per invariants I1–I8.
 
 ## Permission Boundaries — `<Role>`
 

@@ -18,8 +18,8 @@ look them up by name.
 | Domain | `<e.g. billing / logistics / CRM / field service>` |
 | Primary environment under test | `<QA / UAT>` |
 | Base URL | Read from `BASE_URL` in `.env` — never written literally anywhere |
-| Issue tracker project key | `<e.g. BRS>` |
-| Issue key format | `<e.g. BRS-1234>` |
+| Issue tracker project key | `<e.g. PROJ>` |
+| Issue key format | `<e.g. PROJ-1234>` — **required on every story.** Agents validate story keys against it and ask when one is missing (I8) |
 | Template version this copy started from | `<e.g. 1.0.0>` — see the template's CHANGELOG |
 | Template commit this copy started from | `<short sha>` — from `git rev-parse --short HEAD`, run right after cloning |
 
@@ -131,9 +131,57 @@ Re-run it when the application gains a module or a role.
 the agents ask. A gap filled with a plausible guess is the most damaging thing in this repository, because
 everything downstream will trust it.
 
-## 10. Setup checklist
+## 10. Test strategy — scope, entry and exit criteria
 
-- [ ] Sections 1–9 above filled in, no `<...>` placeholders left (including the template version and commit in section 1)
+This is the STLC *test planning* artifact: what is tested, when a cycle may start, and when it may close.
+The planner agent designs test cases per story; this section is the strategy those cases serve.
+
+The thresholds below are mirrored in `config/projectProfile.ts` → `exitCriteria`, which is what
+`npm run report:cycle` evaluates. Keep the two in sync.
+
+### Test types in scope
+
+| Type | In scope? | How |
+|---|---|---|
+| Functional — UI | `<yes>` | Playwright specs via the page objects |
+| Functional — database | `<yes / no>` | DB-backed assertions (section 5) |
+| Functional — API | `<yes / no>` | `tests/api/` (section 6) |
+| Accessibility | `<yes / no>` | `BasePage.expectNoAccessibilityViolations()`, tagged `@A11y` |
+| Performance, load, security | `<no — use dedicated tools>` | Out of scope for this harness |
+| Manual | `<yes / no>` | Planner rows with Test Type `Manual`, executed and recorded in `specs/execution/manual-results.csv` |
+
+### Entry criteria
+
+A cycle may not start until these hold. The first two are checked automatically before every run by
+`lib/globalSetup.ts`; the rest are the team's call.
+
+- [ ] The application is reachable at `BASE_URL` *(automatic)*
+- [ ] The database is reachable, if DB validation is in scope *(automatic)*
+- [ ] Every story in the cycle has its issue key and acceptance criteria
+- [ ] Every story in the cycle has an approved plan in `specs/<STORY-KEY>.plan.md`
+- [ ] Test data is seeded and in a known state
+- [ ] `<the build or release under test is deployed to the environment>`
+
+### Exit criteria
+
+A cycle may close when these hold. `npm run report:cycle` evaluates each one and says which are met; the
+release decision stays with a person.
+
+| Criterion | Threshold |
+|---|---|
+| Priority 1 test cases passing | `100` % |
+| Priority 2 test cases passing | `95` % |
+| Acceptance criteria covered by at least one passing test case | `100` % |
+| Open defects at P1 — Critical | `0` |
+| Open defects at P2 — Major | `0` |
+| Test cases not executed | `0` |
+
+A threshold is a starting point, not a verdict. A cycle that misses one can still ship, if someone decides
+so knowingly — the report exists so that the decision is made with the numbers in front of it.
+
+## 11. Setup checklist
+
+- [ ] Sections 1–10 above filled in, no `<...>` placeholders left (including the template version and commit in section 1)
 - [ ] `config/projectProfile.ts` updated to match sections 1, 2 and 5
 - [ ] `.env` created from `.env.example` and populated
 - [ ] `.mcp.json` created from `.mcp.json.example`; Playwright MCP connected
@@ -145,4 +193,5 @@ everything downstream will trust it.
 - [ ] One navigation-flow plan per role in section 2, from the template
 - [ ] `specs/RegressionTags/regression-tags.md` table matches section 4
 - [ ] `npm run db:check` passes (or DB marked out of scope in section 5)
+- [ ] `config/projectProfile.ts` → `exitCriteria` matches section 10
 - [ ] `npx playwright test tests/example.spec.ts` passes end to end

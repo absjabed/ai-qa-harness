@@ -557,7 +557,8 @@ td code { white-space: nowrap; }
     <option value="#knowledge">How it learns your app</option>
     <option value="#setup">Setup — 10 steps</option>
     <option value="#agents">The five agents</option>
-    <option value="#invariants">Invariants I1–I7</option>
+    <option value="#lifecycle">Testing lifecycle</option>
+    <option value="#invariants">Invariants I1–I8</option>
     <option value="#components">Components</option>
     <option value="#workflows">Workflows</option>
     <option value="#troubleshooting">Troubleshooting</option>
@@ -585,7 +586,8 @@ td code { white-space: nowrap; }
 
       <div class="nav-group">Reference</div>
       <a href="#agents"><span class="ord">5</span> The agents</a>
-      <a href="#invariants"><span class="ord">I1–7</span> Invariants</a>
+      <a href="#lifecycle"><span class="ord">·</span> Testing lifecycle</a>
+      <a href="#invariants"><span class="ord">I1–8</span> Invariants</a>
       <a href="#components"><span class="ord">·</span> Components</a>
 
       <div class="nav-group">Day to day</div>
@@ -810,7 +812,7 @@ cp .mcp.json.example .mcp.json</code></pre>
           <span class="step-n">4</span>
           <div class="step-body">
             <h3>Review and finish the project profile</h3>
-            <p>Go through all ten sections of <code>PROJECT-PROFILE.md</code>, correcting what step 3
+            <p>Go through all eleven sections of <code>PROJECT-PROFILE.md</code>, correcting what step 3
             drafted and filling what it could not know.</p>
             <ul>
               <li><b>Section 2 (Roles)</b> — the planner uses this to decide which roles a story implicates.
@@ -821,6 +823,11 @@ cp .mcp.json.example .mcp.json</code></pre>
               classifies every confirmed defect against it.</li>
               <li><b>Section 9 (Knowledge sources)</b> — what the agents can and cannot reach. Keep it
               honest.</li>
+              <li><b>Section 10 (Test strategy)</b> — test types in scope, and the entry and exit criteria
+              <code>npm run report:cycle</code> judges a cycle against.</li>
+              <li><b>Section 1's issue key format</b> — every story must arrive with its key, and the agents
+              validate against it. Tighten <code>storyKeyPattern</code> in <code>config/projectProfile.ts</code>
+              to match.</li>
             </ul>
           </div>
         </li>
@@ -850,6 +857,9 @@ cp .mcp.json.example .mcp.json</code></pre>
             documents, their Verification sections hold queries written to be lifted straight into this
             file. Then:</p>
             <pre><code>npm run db:check</code></pre>
+            <p><b>Test data in a known state:</b> fill in <code>data/seed.ts</code> — reset, then seed, using
+            <code>seed…</code> and <code>reset…</code> keys — and set <code>SEED_TEST_DATA=true</code>. For data a
+            single test creates, the <code>cleanup</code> fixture removes it even when the test fails.</p>
           </div>
         </li>
 
@@ -901,9 +911,11 @@ cp .mcp.json.example .mcp.json</code></pre>
           <span class="step-n">10</span>
           <div class="step-body">
             <h3>Verify</h3>
-            <p>Walk the checklist in profile section 10, then:</p>
+            <p>Walk the checklist in profile section 11, then:</p>
             <pre><code>npm run typecheck
 npx playwright test tests/example.spec.ts</code></pre>
+            <p>Before any run, a readiness check confirms the application — and the database, if in scope — is
+            reachable, and stops with one clear "entry criteria not met" message if not.</p>
             <p>Once <code>example.spec.ts</code> passes end to end, the harness is wired. Keep it as a
             smoke check or delete it — it's a reference, not coverage.</p>
           </div>
@@ -918,7 +930,8 @@ npx playwright test tests/example.spec.ts</code></pre>
       <h2>Your first real test</h2>
 
       <ol>
-        <li><b>Paste the story</b> into the conversation, then run <code>/playwright-test-planner</code>.
+        <li><b>Paste the story, with its issue key,</b> into the conversation, then run
+        <code>/playwright-test-planner</code>. No key, and it stops to ask.
         Work its checkpoints. Out: <code>specs/&lt;KEY&gt;.plan.md</code> and <code>.plan.csv</code>.</li>
         <li><b>Read the plan's gap table</b> — "new page objects, fixtures and data keys required". If a
         data key is listed, add it to <code>data/testData.ts</code> yourself; the generator flags data keys
@@ -928,6 +941,7 @@ npx playwright test tests/example.spec.ts</code></pre>
         <li><b>Run</b> the spec.</li>
         <li><b>Heal</b> what fails with <code>/playwright-test-healer</code>.</li>
         <li><b>File</b> confirmed defects with <code>/playwright-defect-raiser</code>.</li>
+        <li><b>Close the cycle</b> with <code>npm run report:cycle</code>.</li>
       </ol>
 
       <div class="note">
@@ -1045,13 +1059,21 @@ npx playwright test tests/example.spec.ts</code></pre>
         command. No tracker API. Screenshots are supplementary: used for field names, layout and labels the
         text omitted, never to invent behavior they only imply.</p>
 
+        <h4>Story key and test case IDs</h4>
+        <p><b>The story's issue key is mandatory</b> — without one the planner stops and asks before doing
+        anything else; with one that doesn't match the configured format, it asks you to confirm. It is the
+        only agent that assigns TCIDs, <code>&lt;STORY-KEY&gt;-TC&lt;NNN&gt;</code>, and it keeps them stable:
+        revising a plan preserves every existing ID and marks dropped cases <code>Retired</code>. On saving, it
+        seeds a <code>Not Run</code> row in <code>specs/execution/manual-results.csv</code> for each manual
+        case, so none is forgotten at closure.</p>
+
         <h4>The seven checkpoints</h4>
         <div class="table-wrap">
           <table>
             <thead><tr><th>#</th><th>It shows you</th><th>You give</th></tr></thead>
             <tbody>
               <tr><td>1</td><td>Story key, title, AC as understood, flagged gaps</td><td>Approval / correction</td></tr>
-              <tr><td>2</td><td>Conventions it will follow (cited I1–I7)</td><td>Approval</td></tr>
+              <tr><td>2</td><td>Conventions it will follow (cited I1–I8)</td><td>Approval</td></tr>
               <tr><td>3</td><td>Existing page objects, fixtures, data keys found</td><td>Approval / scope cut</td></tr>
               <tr><td>4</td><td><b>Scenario titles only</b></td><td>Approval / trim</td></tr>
               <tr><td>5</td><td>New page object or fixture needed, and where it slots in</td><td>Approval</td></tr>
@@ -1128,7 +1150,9 @@ npx playwright test tests/example.spec.ts</code></pre>
 
         <h4>What to expect in the output</h4>
         <ul>
-          <li>One test per file, inside a <code>test.describe</code> matching the plan's top-level item</li>
+          <li><b>Title = TCID + the plan's summary, verbatim</b> —
+          <code>test('PROJ-1234-TC004 Validate that…', …)</code> — so a failure traces back to its plan row</li>
+          <li>One test per TCID, in <code>tests/stories/&lt;release&gt;/&lt;STORY-KEY&gt;.spec.ts</code></li>
           <li><code>import test from '@lib/BaseTest'</code>, <code>expect</code> from <code>@playwright/test</code></li>
           <li>Every plan step wrapped in its own <code>test.step(...)</code></li>
           <li><code>test.beforeEach</code> calling <code>userLogin</code> for anything authenticated</li>
@@ -1140,6 +1164,7 @@ npx playwright test tests/example.spec.ts</code></pre>
 
         <h4>What it will not do</h4>
         <ul>
+          <li>Mint a TCID — a scenario with no plan row goes back to the plan first</li>
           <li>Write a test for a step it never drove</li>
           <li>Assume a file path</li>
           <li>Invent a module tag — it asks, then writes the row into <code>regression-tags.md</code> itself</li>
@@ -1216,6 +1241,16 @@ npx playwright test tests/example.spec.ts</code></pre>
           structure, so confirm anything structural against real rows; and one query shows the state
           <em>now</em>, not at assertion time.</p>
         </div>
+        <h4>It never changes a TCID</h4>
+        <p>A fix may reword a title's summary; the <code>&lt;STORY-KEY&gt;-TC&lt;NNN&gt;</code> prefix stays
+        exactly as it was. A failing test with no TCID is reported as a suite defect, not logged against the
+        application.</p>
+
+        <h4>Retesting fixed defects</h4>
+        <p>Asked to retest, it switches each <code>test.fixme(</code> back to <code>test(</code> and runs it
+        twice. Passes both → active again, log entry marked <code>verified</code>. Fails either → the
+        <code>fixme</code> is restored exactly and the entry stays <code>raised</code>.</p>
+
         <h4>Defect Confirmation Workflow</h4>
         <p>The single exception to "don't ask questions". It presents the test, the violated expected-result
         line, observed behavior, evidence ruling out a test-side cause, and a severity classified against
@@ -1243,6 +1278,11 @@ npx playwright test tests/example.spec.ts</code></pre>
         formatted bug row and marks the failing test as a known issue so it stops breaking the build. It
         asks nothing and decides nothing — if an entry looks wrong, it stops and tells you rather than
         filing something approximate.</p>
+
+        <h4>Traceability it adds</h4>
+        <p>Every filed row carries the story key and TCID, in its labels and a <em>Traceability</em> line, so
+        the tracker leads back to the test case and its acceptance criterion. An entry it can't trace is left
+        <code>pending</code> and reported rather than filed.</p>
 
         <h4>Per pending entry</h4>
         <ol>
@@ -1276,10 +1316,129 @@ npx playwright test tests/example.spec.ts</code></pre>
       <p><a href="AGENTS.md">Full agent reference →</a></p>
     </section>
 
+    <!-- ================= LIFECYCLE ================= -->
+    <section id="lifecycle">
+      <p class="eyebrow">Reference</p>
+      <h2>How it covers the testing lifecycle</h2>
+      <p class="lede">The software testing life cycle runs from reading a requirement to closing a test cycle.
+      Each phase has a home in this harness — and one thread, the test case ID, runs through all of them so
+      that a failure at the end can always be traced back to the requirement at the start.</p>
+
+      <h3>Phase by phase</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Phase</th><th>What covers it</th><th>What it produces</th></tr></thead>
+          <tbody>
+            <tr><td><b>Requirement analysis</b></td><td><code>playwright-context-builder</code>; the planner's first checkpoint, which must flag ambiguous or missing acceptance criteria</td><td><code>context/BASELINE.md</code>; each plan's AC traceability table</td></tr>
+            <tr><td><b>Test planning</b></td><td><code>PROJECT-PROFILE.md</code> section 10 — the test types in scope, and the entry and exit criteria</td><td>A strategy every story's test design serves</td></tr>
+            <tr><td><b>Test case design</b></td><td><code>playwright-test-planner</code> — equivalence partitioning, boundary values, decision tables, state transitions, pairwise, error guessing</td><td><code>specs/&lt;KEY&gt;.plan.md</code> and <code>.plan.csv</code>, one TCID per case</td></tr>
+            <tr><td><b>Environment setup</b></td><td><code>.env</code>, <code>.mcp.json</code>, and the readiness check in <code>lib/globalSetup.ts</code>; <code>data/seed.ts</code> for a known data state</td><td>An environment verified reachable before any test runs</td></tr>
+            <tr><td><b>Test execution</b></td><td>Playwright, with <code>playwright-test-generator</code> automating each case against the live app and <code>playwright-test-healer</code> triaging failures; manual cases recorded in <code>specs/execution/</code></td><td><code>test-results/results.json</code>, <code>manual-results.csv</code></td></tr>
+            <tr><td><b>Defect management</b></td><td>Healer confirms with a person → <code>playwright-defect-raiser</code> files it → the healer retests once fixed</td><td><code>specs/defects.csv</code> for the tracker; a defect log with each defect's status</td></tr>
+            <tr><td><b>Cycle closure</b></td><td><code>npm run report:cycle</code></td><td>A summary with pass rates, acceptance-criteria coverage, open defects, and each exit criterion met or not</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>A note on naming: STLC <em>test planning</em> is strategy — what gets tested and when a cycle can
+      start or finish. The agent called <em>planner</em> does test <em>design</em>, one story at a time. The
+      strategy lives in the profile; the planner works within it.</p>
+
+      <h3>The thread: traceability</h3>
+      <p>Five things, joined by an ID that appears on both sides of each link:</p>
+      <ol class="pipeline">
+        <li class="pipe-step"><span class="pipe-n">AC</span><b>Acceptance criterion</b><span class="desc">One testable statement in the story — <code>AC2</code>.</span></li>
+        <li class="pipe-step"><span class="pipe-n">TC</span><b>Test case</b><span class="desc">A plan row — <code>PROJ-1234-TC004</code>. Linked to its AC in the plan's table.</span></li>
+        <li class="pipe-step"><span class="pipe-n">TEST</span><b>Automated test</b><span class="desc">Its title starts with the TCID.</span></li>
+        <li class="pipe-step"><span class="pipe-n">RESULT</span><b>Result</b><span class="desc">Playwright records it by title.</span></li>
+        <li class="pipe-step"><span class="pipe-n">DEFECT</span><b>Defect</b><span class="desc">Carries the TCID and story key.</span></li>
+      </ol>
+      <p>Walked forward, the chain answers <em>"is this requirement covered, and does it work?"</em> Walked
+      backward, it answers <em>"what does this bug actually break?"</em> — a failing test leads to its test
+      case, to the acceptance criterion, to the story. That backward walk is what turns a red test into a
+      sentence a product owner understands.</p>
+
+      <h3>The rules that keep it intact</h3>
+      <ul>
+        <li><b>Every story needs its issue key</b> — a Jira key, for example, in the format set in profile
+        section 1. The planner stops and asks when one is missing. There is no key-less mode.</li>
+        <li><b>TCIDs are <code>&lt;STORY-KEY&gt;-TC&lt;NNN&gt;</code></b>, assigned only by the planner,
+        sequential from <code>001</code>.</li>
+        <li><b>They never change.</b> A revised plan keeps every existing TCID, gives new cases the next unused
+        number, and marks dropped ones <code>Retired</code>. A number is never reused.</li>
+        <li><b>Every story test's title starts with its TCID:</b>
+        <code>test('PROJ-1234-TC004 Validate that an expired reset link is rejected', …)</code>. The generator
+        writes them that way; the healer never alters the prefix.</li>
+        <li><b>Every defect records its TCID and story key</b>, and a defect that can't be traced is not filed.</li>
+      </ul>
+      <p>This is invariant I8, and <code>npm run check:trace</code> enforces the mechanical parts on every push:
+      TCIDs well-formed and unique, every story test titled with one, every one present in its plan and not
+      retired.</p>
+
+      <h3>Entry and exit criteria</h3>
+      <p><b>Entry</b> — the application answers at <code>BASE_URL</code>, and the database if in scope.
+      <code>lib/globalSetup.ts</code> checks both before every run, so a down environment produces one clear
+      message instead of a report full of failures unrelated to the tests. The rest — stories keyed with AC,
+      plans approved, data seeded — are listed in profile section 10 for the team to confirm.</p>
+      <p><b>Exit</b> — thresholds in profile section 10, mirrored in <code>config/projectProfile.ts</code>:</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Criterion</th><th>Default</th></tr></thead>
+          <tbody>
+            <tr><td>Priority 1 test cases passing</td><td>100%</td></tr>
+            <tr><td>Priority 2 test cases passing</td><td>95%</td></tr>
+            <tr><td>Acceptance criteria with at least one passing test case</td><td>100%</td></tr>
+            <tr><td>Open P1 / P2 defects</td><td>0 / 0</td></tr>
+            <tr><td>Test cases never executed</td><td>0</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>A defect's life</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Status</th><th>Set by</th><th>Means</th></tr></thead>
+          <tbody>
+            <tr><td><code>pending</code></td><td>healer</td><td>Confirmed by a person, not yet filed</td></tr>
+            <tr><td><code>raised</code></td><td>defect-raiser</td><td>In <code>specs/defects.csv</code> for the tracker; the test is <code>test.fixme</code></td></tr>
+            <tr><td><code>verified</code></td><td>healer, on retest</td><td>Passed twice after the fix; the test is active again</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>The retest matters more than it looks. Without it a <code>fixme</code>'d test stays skipped long after
+      its bug was fixed, and the suite quietly loses coverage nobody notices is gone.</p>
+
+      <h3>Closing a cycle</h3>
+      <pre><code>npm run report:cycle</code></pre>
+      <p>Reads the plans, the latest run, the manual results and the defect log, and writes
+      <code>reports/cycle-summary-&lt;date&gt;.md</code>: every test case's outcome — Passed, Flaky, Failed,
+      Blocked by a known defect, Skipped, or Not Run — pass rates by priority, acceptance-criteria coverage
+      per story, open defects, traceability gaps, and each exit criterion marked met or not.</p>
+      <div class="note">
+        <p><strong>It reports; it does not decide.</strong> Closing a cycle is a person's call, and a criterion
+        missed knowingly — with the reason written down — is a legitimate outcome. <code>--strict</code> exits
+        non-zero when a criterion is unmet, for teams that want the report to gate a pipeline.</p>
+      </div>
+
+      <h3>What is still out of scope</h3>
+      <ul>
+        <li><b>Performance, load and security testing.</b> Use dedicated tools; this harness is functional
+        testing through the UI, database and API. Accessibility is covered, optionally, by
+        <code>BasePage.expectNoAccessibilityViolations()</code> — automated checks find roughly a third of
+        accessibility problems, so a pass means "no obvious barriers", not "accessible".</li>
+        <li><b>Tracker sync.</b> Defects leave as a CSV for import; nothing reads ticket status back. The
+        tracker's key is recorded in the defect log by hand.</li>
+        <li><b>Change-impact analysis.</b> Tags select what to run; nothing maps a code change to the tests it
+        affects.</li>
+        <li><b>Test data content.</b> The seeding mechanism exists; what to seed is yours to write.</li>
+        <li><b>Manual execution tooling.</b> Manual results are a CSV, not a test-management tool.</li>
+        <li><b>Real-world proof.</b> None of this has yet run end to end against a live application.</li>
+      </ul>
+    </section>
+
     <!-- ================= INVARIANTS ================= -->
     <section id="invariants">
       <p class="eyebrow">Reference</p>
-      <h2>Invariants I1–I7</h2>
+      <h2>Invariants I1–I8</h2>
       <p class="lede">The conventions every test follows. They live in one file,
       <code>TEST-AUTHORING-INVARIANTS.md</code>, cited by number from three agents — so a
       convention has exactly one place to change.</p>
@@ -1333,6 +1492,14 @@ npx playwright test tests/example.spec.ts</code></pre>
         to work during an exploratory drive is exactly what produces a flaky test weeks later — scope it at
         authoring time, not after a healer pass finds it.</p></div>
       </div>
+      <div class="inv">
+        <span class="inv-id">I8</span>
+        <div class="inv-body"><b>Traceability</b>
+        <p>Every story needs its issue key — ask when it is missing, never invent one. TCIDs are
+        <code>&lt;STORY-KEY&gt;-TC&lt;NNN&gt;</code>, assigned only in the plan and never renumbered or reused.
+        Every story test's title starts with its TCID; defects carry it too. <code>npm run check:trace</code>
+        enforces the mechanical parts.</p></div>
+      </div>
     </section>
 
     <!-- ================= COMPONENTS ================= -->
@@ -1369,7 +1536,7 @@ npx playwright test tests/example.spec.ts</code></pre>
         <p><strong>The through-line:</strong> a spec file says <em>what</em> is being checked, in business
         terms. Everything else — how to find an element, what a valid account number is, how to reach the
         database — lives somewhere a person can find without reading the test. That separation is what the
-        seven invariants exist to protect.</p>
+        eight invariants exist to protect.</p>
       </div>
 
       <h3>Knowledge — what the harness knows about your app</h3>
@@ -1402,7 +1569,7 @@ npx playwright test tests/example.spec.ts</code></pre>
       <div class="comp">
         <div class="comp-head"><code class="comp-name">PROJECT-PROFILE.md</code><span class="comp-tag you">you fill this in</span></div>
         <p class="comp-plain">A briefing document about your application, written for the AI agents.</p>
-        <p>Ten sections: what the app is, who can log into it, what its business entities are called, what
+        <p>Eleven sections: what the app is, who can log into it, what its business entities are called, what
         its feature areas are, whether it has a database and an API, how your team rates defect severity,
         and where test files go.</p>
         <p class="you-do"><b>You touch it:</b> once at setup, then whenever the application gains a role, a
@@ -1527,6 +1694,60 @@ npx playwright test tests/example.spec.ts</code></pre>
         <p class="you-do"><b>You touch it:</b> when a widget appears on more than one screen.</p>
       </div>
 
+      <h3>Lifecycle tooling — entry, data, traceability, closure</h3>
+
+      <div class="comp">
+        <div class="comp-head"><code class="comp-name">lib/globalSetup.ts</code><span class="comp-tag">runs automatically</span></div>
+        <p class="comp-plain">The entry check: is the environment actually there?</p>
+        <p>Before every run it confirms the application answers at <code>BASE_URL</code> and the database is
+        reachable if in scope. A down environment otherwise produces a report where everything failed for one
+        reason, which reads like a mass regression.</p>
+        <p class="you-do"><b>You touch it:</b> rarely. <code>SKIP_READINESS_CHECK=true</code> bypasses it for an
+        API-only run.</p>
+      </div>
+
+      <div class="comp">
+        <div class="comp-head"><code class="comp-name">data/seed.ts</code> · <code class="comp-name">cleanup</code><span class="comp-tag you">you fill this in</span></div>
+        <p class="comp-plain">Putting test data into a known state, and taking it out again.</p>
+        <p><code>seed.ts</code> resets and seeds before a run when <code>SEED_TEST_DATA=true</code>. The
+        <code>cleanup</code> fixture lets a single test register how to remove what it created — run after the
+        test, pass or fail.</p>
+        <p class="you-do"><b>You touch it:</b> once you know what data your tests depend on.</p>
+      </div>
+
+      <div class="comp">
+        <div class="comp-head"><code class="comp-name">scripts/check-trace.ts</code><span class="comp-tag">runs in CI</span></div>
+        <p class="comp-plain">The guard on the traceability thread.</p>
+        <p>Fails when a story test has no TCID, uses one from another story, uses one no plan assigned, reuses
+        one, or tests a retired case. Warns when an acceptance criterion has no test case at all.</p>
+        <p class="you-do"><b>You touch it:</b> never — you run <code>npm run check</code>.</p>
+      </div>
+
+      <div class="comp">
+        <div class="comp-head"><code class="comp-name">scripts/cycle-report.ts</code><span class="comp-tag">you run it</span></div>
+        <p class="comp-plain">The end-of-cycle summary.</p>
+        <p>Turns the plans, the latest run, the manual results and the defect log into one report with every
+        exit criterion evaluated. <code>npm run report:cycle</code>.</p>
+        <p class="you-do"><b>You touch it:</b> at the end of each cycle.</p>
+      </div>
+
+      <div class="comp">
+        <div class="comp-head"><code class="comp-name">specs/execution/</code><span class="comp-tag you">you fill this in</span></div>
+        <p class="comp-plain">Where manual test results go.</p>
+        <p>Manual cases have no runner, so their outcomes live in <code>manual-results.csv</code>. The planner
+        seeds a <code>Not Run</code> row for each; testers update them; the report counts them.</p>
+        <p class="you-do"><b>You touch it:</b> every time you execute a manual case.</p>
+      </div>
+
+      <div class="comp">
+        <div class="comp-head"><code class="comp-name">.github/workflows/</code><span class="comp-tag">reference</span></div>
+        <p class="comp-plain">What runs automatically, and what waits to be switched on.</p>
+        <p><code>checks.yml</code> runs typecheck, docs and traceability checks on every push.
+        <code>regression.yml</code> runs the suite and the closure report — opt-in, since it needs a live
+        environment and repository secrets.</p>
+        <p class="you-do"><b>You touch it:</b> to schedule regression, once the environment is reachable from CI.</p>
+      </div>
+
       <h3>Specs — plans, conventions and tests</h3>
 
       <div class="comp">
@@ -1563,7 +1784,7 @@ npx playwright test tests/example.spec.ts</code></pre>
       <div class="comp">
         <div class="comp-head"><code class="comp-name">tests/example.spec.ts</code> · <code class="comp-name">tests/seed.spec.ts</code><span class="comp-tag">reference</span></div>
         <p class="comp-plain">A worked example, and a starting point for the generator.</p>
-        <p>The example demonstrates all seven conventions in working code — the fastest way to understand
+        <p>The example demonstrates the authoring conventions in working code — the fastest way to understand
         them is to read it alongside the invariants. It fails until you point the harness at a real
         application, which makes it a useful check that setup is finished. The seed file is where the
         generator's browser session begins; its body stays empty.</p>
@@ -1623,13 +1844,27 @@ npx playwright test tests/example.spec.ts</code></pre>
       <ol>
         <li>This page — orientation and agents</li>
         <li><code>SETUP.md</code>, even if the harness is already configured — it explains why each piece exists</li>
-        <li><code>TEST-AUTHORING-INVARIANTS.md</code> — seven rules, one page</li>
+        <li><code>TEST-AUTHORING-INVARIANTS.md</code> — eight rules, one page</li>
         <li><code>tests/example.spec.ts</code> — the conventions in working code</li>
         <li>First task: add one page object by hand. Faster to understand the Page Factory by wiring one
         than by reading about it.</li>
       </ol>
       <p>Skip the agents until after that. Someone who doesn't know the conventions can't review agent
       output — and reviewing agent output is most of the job.</p>
+
+      <h3>Closing a test cycle</h3>
+      <ol>
+        <li>Update <code>specs/execution/manual-results.csv</code> with every manual case's real outcome.</li>
+        <li>Run the suite so the latest results reflect the build being closed.</li>
+        <li>Retest anything reported fixed, so fixed bugs don't count as blocked coverage.</li>
+        <li><code>npm run report:cycle</code>, then decide — with the numbers in front of you.</li>
+      </ol>
+
+      <h3>Retesting a fixed defect</h3>
+      <p>When the tracker shows a defect fixed, fill <code>trackerKey</code> in its defect-log entry and ask
+      <code>/playwright-test-healer</code> to retest. It un-<code>fixme</code>s the test, runs it twice, and
+      either marks the entry <code>verified</code> or restores the <code>fixme</code> and reports that the fix
+      didn't hold.</p>
     </section>
 
     <!-- ================= TROUBLESHOOTING ================= -->
@@ -1674,6 +1909,21 @@ npx playwright test tests/example.spec.ts</code></pre>
               <td>Fill that section. The agents refuse to invent your vocabulary, which is the point.</td>
             </tr>
             <tr>
+              <td><code>Entry criteria not met: the application is not reachable…</code></td>
+              <td>The environment is down, <code>BASE_URL</code> is wrong, or this machine can't reach it</td>
+              <td>Fix the environment. For an internal certificate authority, set <code>NODE_EXTRA_CA_CERTS</code> — don't disable TLS checks.</td>
+            </tr>
+            <tr>
+              <td><code>check:trace</code>: a test "has no TCID"</td>
+              <td>A story test's title doesn't start with <code>&lt;STORY-KEY&gt;-TC&lt;NNN&gt;</code></td>
+              <td>Prefix it with the TCID from its plan row. If it has no plan row, add one — only the plan assigns TCIDs.</td>
+            </tr>
+            <tr>
+              <td>The planner stops and asks for a story key</td>
+              <td>The story arrived without its issue key</td>
+              <td>Paste the key. Every TCID, test title and defect is built on it, so there is no key-less mode.</td>
+            </tr>
+            <tr>
               <td><code>--grep</code> matches tests that don't belong to that module</td>
               <td>A role or module name written into a <code>test.describe</code> <b>title</b></td>
               <td>Grep matches full title strings, not just tags. Move it into <code>{ tag: [...] }</code>.</td>
@@ -1701,7 +1951,9 @@ npx playwright test tests/example.spec.ts</code></pre>
             <tr><td><code>npm run db:check</code></td><td>Database connectivity</td></tr>
             <tr><td><code>npm run typecheck</code></td><td><code>tsc --noEmit</code></td></tr>
             <tr><td><code>npm run check:docs</code></td><td>Assert the docs still match the repository</td></tr>
-            <tr><td><code>npm run check</code></td><td>Both of the above — what CI runs on every push</td></tr>
+            <tr><td><code>npm run check:trace</code></td><td>Every story test traceable to its test case (I8)</td></tr>
+            <tr><td><code>npm run check</code></td><td>All three of the above — what CI runs on every push</td></tr>
+            <tr><td><code>npm run report:cycle</code></td><td>Test-cycle closure report; <code>-- --strict</code> to gate on exit criteria</td></tr>
             <tr><td><code>npm run report</code></td><td>Open the last HTML report</td></tr>
             <tr><td><code>npm run setup</code></td><td><code>playwright install</code></td></tr>
           </tbody>

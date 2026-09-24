@@ -85,7 +85,7 @@ Judge per scenario:
 
 ## 6. Self-audit additions for replicated plans
 
-On top of the standard I1–I7 and AC-traceability checks:
+On top of the standard I1–I8 and AC-traceability checks:
 
 - Every page module that should mirror the core template does, at the same scenario count. Flag any
   page with fewer and explain why, per §5.

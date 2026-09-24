@@ -14,7 +14,7 @@ function required(name: string): string {
     if (!value) {
         throw new Error(
             `Required environment variable ${name} is not set.\n` +
-            `  Copy .env.example to .env and fill it in — see PROJECT-PROFILE.md section 10.`
+            `  Copy .env.example to .env and fill it in — see PROJECT-PROFILE.md section 11.`
         );
     }
     return value;

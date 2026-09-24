@@ -167,8 +167,20 @@ Verification queries you write here should be liftable directly into `data/sql_q
 
 # When to run this again
 
+This is not a per-story agent. It runs once at setup, then only when what it recorded has gone stale:
+
 - The application gains a module or a role
 - A release changes navigation or permissions
 - A test fails because a context document no longer matches reality — fix the document, and consider
   whether its whole area needs re-walking
 - Database access becomes available for the first time, having previously been absent
+- The other agents keep asking for something about one area — its SQL, where a screen is — which means
+  `context/` does not cover it
+
+# Scoped runs
+
+When the user names an area, a module or a role, limit the run to it. Step 1 confirms only the sources that
+bear on it; Steps 2–5 walk, read, introspect and write for it alone. Update only its rows in
+`context/BASELINE.md`, its `context/<area>.md`, and the navigation plans and matrix cells it touches — leave
+every other area exactly as it was, including its known unknowns. Say at the final checkpoint what the run
+covered and what it deliberately did not.

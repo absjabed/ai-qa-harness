@@ -311,3 +311,29 @@ the healer can only call "stale data".
        // ...
    });
    ```
+
+---
+
+## 11. Refreshing what the harness knows
+
+`/playwright-context-builder` runs once at setup. It is not part of the per-story loop — workflow 1 never
+calls it; the planner and generator read what it wrote.
+
+Re-run it when:
+
+- the application gains a module or a role
+- a release changes navigation or permissions
+- database access becomes available, having previously been absent
+- the other agents keep asking about one area — its SQL, where a screen is — which means `context/` does
+  not cover it
+
+Steps:
+
+1. Run `/playwright-context-builder` and name what changed — *"the Reports module is new"*, *"re-walk the
+   read-only role after the permissions change"*. Named, it runs for that alone.
+2. Answer its checkpoints. It reads the existing baseline and shows differences before overwriting anything
+   a person corrected.
+3. Review what it changed in `context/`, the navigation plans and the module tags, as you would any draft.
+
+Small drift does not need the agent. When one test fails because a `context/` document no longer matches
+the application, fix the document in the same change as the test.

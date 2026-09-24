@@ -355,8 +355,24 @@ it is a reference, not coverage.
 
 ## Keeping the knowledge current
 
-Re-run `/playwright-context-builder` when the application gains a module or a role, when a release changes
-navigation or permissions, or when database access becomes available having previously been absent.
+`/playwright-context-builder` is **not** run for each story or testing task. It runs once here at setup;
+from then on, day-to-day work is the planner → generator → suite → healer → defect-raiser loop, and those
+agents read what it wrote.
+
+Re-run it only when that knowledge goes stale:
+
+- the application gains a module or a role
+- a release changes navigation or permissions
+- database access becomes available, having previously been absent
+- the other agents keep asking for something about one area — its SQL, where a screen is — which means
+  `context/` does not cover it
+
+Name the area, module or role and it runs for that alone, leaving the rest of the baseline untouched. A
+re-run is an update, not a fresh start: it reads the existing `context/BASELINE.md`, keeps what people
+corrected, and shows differences before overwriting anything.
+
+Usually the QA lead or the harness owner runs it, not every tester — it needs the test accounts, database
+access, and someone present to answer its checkpoints.
 
 When a test fails because a `context/` document no longer matches reality, fix the document in the same
 change as the test. Context that has drifted is worse than no context, because an agent will act on it

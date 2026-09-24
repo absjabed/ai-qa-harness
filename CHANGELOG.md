@@ -27,6 +27,22 @@ it up.
 
 ---
 
+## 1.1.2 — 2026-09-24
+
+When to run the context-builder, stated plainly.
+
+**Adopt**
+
+- **Scoped runs** — `agents/playwright-context-builder.md` gains a section: name an area, module or role and
+  it runs for that alone, updating only that part of the baseline. `SETUP.md` already told people to run it
+  "for that area"; the agent had not been told how.
+
+**Optional**
+
+- **Cadence documented** — once at setup, not per story; again only when its knowledge goes stale, including
+  when the other agents keep asking about one area. New workflow 11 in `docs/WORKFLOWS.md`; the handbook,
+  `SETUP.md` and `docs/AGENTS.md` updated to match.
+
 ## 1.1.1 — 2026-09-24
 
 Setup fixes found while walking the setup path end to end, and a supported way to copy the harness into

@@ -52,8 +52,10 @@ where a guess would produce work that looks right and is wrong.
 
 ## `/playwright-context-builder`
 
-Establishes what the harness knows about the application. Runs at setup, and again when the application
-gains a module or a role, changes navigation or permissions, or database access first becomes available.
+Establishes what the harness knows about the application. **Not a per-story agent**: it runs once at
+setup, and again only when the application gains a module or a role, changes navigation or permissions,
+database access first becomes available, or the other agents keep asking about an area `context/` does not
+cover. Name an area, module or role to run it for that alone. Usually the QA lead runs it, not every tester.
 
 | | |
 |---|---|

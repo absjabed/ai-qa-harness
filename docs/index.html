@@ -1053,9 +1053,27 @@ npx playwright test tests/example.spec.ts</code></pre>
         the full list — including why these should be dedicated test accounts.</p>
 
         <h4>When to run it</h4>
-        <p>At setup, before filling in the profile by hand — it drafts most of that for you. Then again
-        when the application gains a module or a role, when a release changes navigation or permissions, or
-        when database access becomes available having previously been absent.</p>
+        <p><b>Not for every story.</b> It runs once at setup, before filling in the profile by hand — it
+        drafts most of that for you. Day-to-day testing never calls it: each story goes planner → generator
+        → suite → healer → defect-raiser, and those agents read what it wrote.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>When</th><th>What runs</th></tr></thead>
+            <tbody>
+              <tr><td>Project setup — once</td><td><code>/playwright-context-builder</code></td></tr>
+              <tr><td>Every story or testing task</td><td>planner → generator → run the suite → healer, if something fails → defect-raiser</td></tr>
+              <tr><td>Occasionally, when knowledge goes stale</td><td><code>/playwright-context-builder</code> again — usually for one area</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Run it again when the application gains a module or a role, when a release changes navigation or
+        permissions, when database access becomes available having previously been absent — or when the
+        other agents keep asking about one area, its SQL or where a screen is, which means
+        <code>context/</code> does not cover it.</p>
+        <p>Name the area, module or role and it runs for that alone, leaving the rest of the baseline
+        untouched. A re-run is an update, not a fresh start: it keeps what people corrected and shows
+        differences before overwriting anything. Usually the QA lead or harness owner runs it, not every
+        tester.</p>
 
         <h4>What it produces</h4>
         <div class="table-wrap">
@@ -1924,6 +1942,20 @@ npx playwright test tests/example.spec.ts</code></pre>
 }</code></pre>
       <p>The generator follows this exact shape, so a hand-written page object and a generated one are
       indistinguishable in review. That's the point.</p>
+
+      <h3>Refreshing what the harness knows</h3>
+      <p>The context-builder is a setup agent, not a per-story one. Re-run it when the application gains a
+      module or a role, a release changes navigation or permissions, database access first becomes
+      available, or the other agents keep asking about an area <code>context/</code> does not cover.</p>
+      <ol>
+        <li>Run <code>/playwright-context-builder</code> and name what changed — <i>"the Reports module is
+        new"</i>, <i>"re-walk the read-only role"</i>. Named, it runs for that alone.</li>
+        <li>Answer its checkpoints. It reads the existing baseline and shows differences before overwriting
+        anything a person corrected.</li>
+        <li>Review what it changed, as you would any draft.</li>
+      </ol>
+      <p>Small drift does not need the agent: when one test fails because a <code>context/</code> document
+      no longer matches the app, fix the document in the same change as the test.</p>
 
       <h3>Onboarding someone new</h3>
       <ol>

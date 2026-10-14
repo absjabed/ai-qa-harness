@@ -631,8 +631,9 @@ td code { white-space: nowrap; }
         <li class="pipe-step"><span class="pipe-n">00</span><b>context-builder</b><span class="desc">Learns the application once, so the rest have something to work from.</span></li>
         <li class="pipe-step"><span class="pipe-n">01</span><b>planner</b><span class="desc">A story — fetched by its key, or pasted — becomes a reviewed plan + CSV.</span></li>
         <li class="pipe-step"><span class="pipe-n">02</span><b>generator</b><span class="desc">Drives the real browser, then writes the spec and any page objects.</span></li>
-        <li class="pipe-step"><span class="pipe-n">03</span><b>healer</b><span class="desc">Fixes failures, or confirms a genuine bug with you.</span></li>
-        <li class="pipe-step"><span class="pipe-n">04</span><b>defect-raiser</b><span class="desc">Files the bug — in the tracker, or as a CSV row — and marks the test <code>fixme</code>.</span></li>
+        <li class="pipe-step"><span class="pipe-n">03</span><b>reviewer</b><span class="desc">Checks every spec against its plan — and the plan against the ticket, when you agree — in a fresh context.</span></li>
+        <li class="pipe-step"><span class="pipe-n">04</span><b>healer</b><span class="desc">Fixes failures — never by changing what a test expects on its own — or confirms a genuine bug with you.</span></li>
+        <li class="pipe-step"><span class="pipe-n">05</span><b>defect-raiser</b><span class="desc">Files the bug — in the tracker, or as a CSV row — and marks the test <code>fixme</code>.</span></li>
       </ol>
 
       <h3>What makes this different from asking an LLM to write tests</h3>
@@ -1511,7 +1512,7 @@ Run it? [Y/n]: y</code></pre>
             <thead><tr><th>When</th><th>What runs</th></tr></thead>
             <tbody>
               <tr><td>Project setup — once</td><td><code>/playwright-context-builder</code></td></tr>
-              <tr><td>Every story or testing task</td><td>planner → generator → run the suite → healer, if something fails → defect-raiser</td></tr>
+              <tr><td>Every story or testing task</td><td>planner (plan review, if you agree) → generator (test review, always) → run the suite → healer, if something fails → defect-raiser</td></tr>
               <tr><td>Occasionally, when knowledge goes stale</td><td><code>/playwright-context-builder</code> again — usually for one area</td></tr>
             </tbody>
           </table>
@@ -1796,7 +1797,8 @@ Run it? [Y/n]: y</code></pre>
 
         <p class="agent-plain"><b>The role it plays:</b> the engineer who triages a red build. It runs the
         failures, reproduces them, and works out whether the test is wrong or the application is. Most
-        failures are the test's fault — a moved button, a race, stale data — and it fixes those itself. When
+        failures are the test's fault — a moved button, a race, stale data — and it fixes those itself, but
+        never by changing what a test expects unless the plan backs the change or you approve it. When
         it believes the application is genuinely broken it stops, shows you the evidence, and asks you to
         confirm before anything is recorded as a defect.</p>
 
@@ -2120,7 +2122,13 @@ Run it? [Y/n]: y</code></pre>
         affects.</li>
         <li><b>Test data content.</b> The seeding mechanism exists; what to seed is yours to write.</li>
         <li><b>Manual execution tooling.</b> Manual results are a CSV, not a test-management tool.</li>
-        <li><b>Real-world proof.</b> None of this has yet run end to end against a live application.</li>
+        <li><b>Signing off a story in Jira.</b> Nothing posts a story's test result to the story or moves its
+        status; that stays with people, under the team's own workflow. Bugs are created, commented and moved —
+        always asking first.</li>
+        <li><b>Attachments where the tools cannot upload.</b> The defect-raiser attaches screenshots only if the
+        Jira tools offer an upload; otherwise it tells you which files to attach by hand.</li>
+        <li><b>Real-world proof.</b> None of this has yet run end to end against a live application — the
+        reviewer included.</li>
       </ul>
     </section>
 
@@ -2562,14 +2570,15 @@ Run it? [Y/n]: y</code></pre>
       <p>Decide first whether the <b>application</b> changed or the <b>environment</b> did. They look
       identical from a red test and have completely different fixes.</p>
       <pre><code>npm run db:check</code></pre>
-      <p>Unreachable → environment. Fix that before touching any test. Then run the healer and expect one
-      of four outcomes:</p>
+      <p>Unreachable → environment. Fix that before touching any test. Then run the healer on that test's
+      story or spec — <code>/playwright-test-healer ACME-1234</code> — and expect one of five outcomes:</p>
       <div class="table-wrap">
         <table>
           <thead><tr><th>Outcome</th><th>Means</th></tr></thead>
           <tbody>
             <tr><td>Fixed in ≤3 attempts</td><td>Selector drift, timing, or an ambiguous locator</td></tr>
             <tr><td>Asks you to confirm a defect</td><td>App behavior genuinely contradicts an expected-result line</td></tr>
+            <tr><td>Asks before changing what the test expects</td><td>The test misread its plan, or the plan is out of date — shows you the plan line and the change</td></tr>
             <tr><td>"Cannot verify database state"</td><td>A DB-backed assertion it can't adjudicate — you run the query</td></tr>
             <tr><td>Stops after 3, lists suspicions</td><td>Doesn't meet bug criteria and isn't an obvious test fix</td></tr>
           </tbody>

@@ -451,8 +451,8 @@ A problem outside any planned case has no TCID: plan a scenario for it, or file 
 ### What to expect
 
 It announces each diagnosis before editing, then edits without waiting — "selector for the Save button
-changed from `#save-btn` to `[data-testid=save]`, updating the locator accordingly". Fixes stay inside the
-conventions: a changed selector goes in the page object, not inlined into the spec; a changed expected
+changed from `#save-btn` to `[data-testid=save]`, updating the locator accordingly" — except a change to what
+the test expects, which waits for the plan or for you (above). Fixes stay inside the conventions: a changed selector goes in the page object, not inlined into the spec; a changed expected
 value goes in `testData.ts`, not typed into the test.
 
 ---

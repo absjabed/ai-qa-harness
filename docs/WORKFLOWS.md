@@ -114,15 +114,16 @@ but this is faster.
 Then:
 
 ```
-/playwright-test-healer
+/playwright-test-healer ACME-1234
 ```
 
-Expect one of four outcomes:
+Name the story, spec or TCID that fails. Expect one of five outcomes:
 
 | Outcome | What it means |
 |---|---|
 | Fixed in ≤3 attempts | Selector drift, timing, or an ambiguous locator |
 | Stopped, asks to confirm a defect | Application behavior genuinely contradicts an expected-result line |
+| Stopped, asks before changing what the test expects | The test misread its plan, or the plan is out of date — it shows the plan line and the change |
 | Stopped, "cannot verify database state" | A DB-backed assertion it can't adjudicate — see below |
 | Stopped after 3, summarizes suspicions | Doesn't meet the bug criteria and isn't an obvious test fix |
 

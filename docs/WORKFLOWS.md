@@ -11,7 +11,9 @@ End-to-end recipes. Each starts from a real situation and runs to a finished res
 
 ### Step 1 — Plan
 
-Paste the story into the conversation. Key, title, description, acceptance criteria as plain text.
+With the tracker server wired, give the planner the story's key and it fetches the ticket itself, then
+asks you to confirm what it read is complete. Without one, paste the story into the conversation — key,
+title, description, acceptance criteria as plain text.
 
 **The key is required** — the ticket's issue key, e.g. `PROJ-1234`. Without one the planner stops and asks;
 it is the root of every TCID, test title and defect that follows (I8).
@@ -66,7 +68,10 @@ Three attempts per test. If it finds a genuine bug it stops and asks you to conf
 /playwright-defect-raiser
 ```
 
-Only after the healer has recorded something. Runs unattended.
+Only after the healer has recorded something. With the tracker server wired it shows the batch of bugs
+and asks once before creating them — searching first, so a bug already filed for that TCID is reused rather
+than duplicated. Without one it runs unattended and appends rows to `specs/defects.csv` for you to import;
+fill each `trackerKey` in the defect log afterwards.
 
 ---
 
@@ -152,7 +157,7 @@ async expectRecordStatusMatchesDatabase(identifier: string): Promise<void> {
     const db = new DbConnection();
     try {
         const result = await db.executeQuery(sqlQueries.getRecordByIdentifier(identifier));
-        const fromDb = result.recordset[0]?.Status;
+        const fromDb = result.rows[0]?.Status;
         const fromUi = await this.statusBadge.innerText();
         expect(fromUi.trim()).toBe(String(fromDb));
     } finally {
@@ -278,9 +283,10 @@ The STLC's last phase. It needs the TCIDs to be intact end to end, which is why 
 
 A `test.fixme` is only correct while its bug is open. Once it is fixed, the skipped test is lost coverage.
 
-1. When the tracker shows a defect fixed, make sure its log entry in `specs/temp-defects/defect-log.json`
-   has `trackerKey` filled in, so the retest reports back against the right ticket.
-2. Run the healer and ask it to retest raised defects — all of them, or one by TCID:
+1. Make sure each raised entry in `specs/temp-defects/defect-log.json` has its `trackerKey` — filled in for
+   you in tracker mode, by hand after a CSV import.
+2. Run the healer and ask it to retest raised defects — all of them, or one by TCID. With the tracker server
+   wired it finds the fixed ones itself, from the bugs' status:
 
    ```
    /playwright-test-healer
@@ -288,7 +294,8 @@ A `test.fixme` is only correct while its bug is open. Once it is fixed, the skip
 
 3. For each, it un-`fixme`s the test and runs it twice. Passes both → active again, entry marked `verified`.
    Fails either → `fixme` restored exactly, entry stays `raised`, retest recorded — worth telling whoever
-   marked the ticket fixed.
+   marked the ticket fixed. With a tracker it offers to comment the result on the bug, asking first; it
+   never closes or reopens the bug itself.
 
 ---
 

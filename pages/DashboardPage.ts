@@ -57,7 +57,7 @@ export default class DashboardPage extends BasePage {
         const db = new DbConnection();
         try {
             const result = await db.executeQuery(sqlQueries.getAllGroups);
-            const fromDb: string[] = result.recordset.map((row: { Name: string }) => row.Name);
+            const fromDb: string[] = result.rows.map((row) => row.Name);
             const fromUi = await this.groupTiles.allInnerTexts();
             await this.expectMatchesDatabase(fromUi.map((t) => t.trim()), fromDb);
         } finally {

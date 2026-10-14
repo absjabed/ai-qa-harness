@@ -25,7 +25,80 @@ marked:
 application-agnostic. Anything naming your application stays in your copy. Add an entry here when you push
 it up.
 
+## Releasing (template maintainers)
+
+Every release is a git tag, `v<version>`, so a copy can say exactly what it started from.
+
+1. Add the entry at the top of this file and set `version` in `package.json` to match — `npm run check:docs`
+   fails until the two agree.
+2. `npm run check`.
+3. Commit, then tag and push both:
+
+   ```bash
+   git tag -a v1.2.0 -m "1.2.0"
+   git push origin main v1.2.0
+   ```
+
+4. Copies come from a tag: `git checkout v1.2.0`, then `npm run export -- <dir>`. Exporting from anywhere
+   else works, but the copy records the version as *unreleased*.
+
+Copies have no automatic update path, by decision: a copy diverges once configured, so adopting an upstream
+change is a person reading the entries above their recorded version and porting what is marked **Adopt**.
+
 ---
+
+## 1.2.0 — 2026-10-14
+
+PostgreSQL support, Jira over MCP, agents that never handle a password, permission guard rails, and release
+tags. Also a correction to 1.1.1.
+
+**Adopt**
+
+- **Correction: 1.1.1's "name the database tools or the agents cannot see them" was wrong.** The wrappers are
+  Claude Code *commands*, and commands do not support a `tools:` field — it was silently ignored, so it never
+  restricted anything and naming tools there did nothing. Nothing was ever withheld. The wrappers now use
+  `allowed-tools`, which commands do support; it *pre-approves* the listed tools so they run without a
+  prompt, and restricts nothing. `name:` and `color:`, also ignored by commands, are gone. Take the new
+  `.claude/commands/*.md`, and drop any tool names you added to `tools:` lines after 1.1.1.
+- **Guard rails in `.claude/settings.json`**, the restrictions the wrappers never actually provided. Denied:
+  reading `.env` and `.mcp.json`; the database server's write tools; Jira edits, status changes, deletes,
+  admin tools and the server's generic `execute`. Asked every time: creating, linking, commenting on or
+  attaching to a Jira issue. Allowed without a prompt: the read-only database and Jira tools.
+  `.claude/settings.local.json` is now gitignored for personal overrides.
+- **Agents never handle a password.** New `tests/seeds/<role>.spec.ts`, one per role: each logs in inside the
+  test runner, and agents start from the signed-in page it leaves. The context-builder and generator now
+  always name a seed instead of logging in by hand or reading `.env` — which the guard rails deny. Add one
+  seed per role in your copy; `npm run check:docs` fails while a role has none. Before running the
+  context-builder, the login must work: `npx playwright test tests/seeds/` (SETUP.md step 3).
+- **Role seeds are kept out of the "seed" fallback.** Playwright, given no seed, picks the first test file
+  with "seed" in its name; the role seeds are named `<role>.spec.ts` so that fallback stays the signed-out
+  `tests/seed.spec.ts`.
+
+**Optional**
+
+- **PostgreSQL.** `DB_ENGINE=postgres` in `.env`; SQL Server stays the default. `config/DbConnection.ts`
+  now sits on one adapter per engine in `config/db/`, each loading its driver only when used, each with its
+  own plain-language failure advice — `pg_hba.conf` and managed-server firewalls, TLS mismatches, missing
+  databases. Parameters are written `@name` on both engines. Queries return `{ rows, rowCount }`;
+  `recordset` remains as the same array, so existing page objects keep working. New `.env` keys:
+  `DB_ENGINE`, `DB_ENCRYPT`, `DB_TRUST_SERVER_CERTIFICATE`; `DB_PORT` and `DB_SCHEMA_PREFIX` now default
+  per engine. Tested against a real PostgreSQL 16: queries, parameters, row counts, the refusal latch,
+  and each failure message.
+- **Database MCP server example**: `@executeautomation/database-server`, which serves PostgreSQL and SQL
+  Server, version-pinned. It has no read-only mode — the account and the deny rules are the guard.
+- **Jira over MCP** — Atlassian's remote server, `https://mcp.atlassian.com/v2/mcp?tools=all`, under the
+  key `tracker`. The planner fetches a story from its key and asks you to confirm it is complete. The
+  defect-raiser creates the bugs — searching first for an open one with the same TCID, showing the batch,
+  and asking once — links them to the story, and fills `trackerKey`; without a tracker it writes the CSV as
+  before. The healer finds which raised bugs are fixed from their status, and offers to comment the retest
+  result. No agent edits, moves or closes an issue.
+- **Release tags.** `v1.0.0` to `v1.1.2` tagged retroactively on the last commit at each version; releases
+  are tagged from now on. `npm run export` records whether the copy came from a release tag, and
+  `check:docs` fails when `package.json` and this file disagree on the version. See *Releasing* above.
+
+**Not yet verified**: the tracker integration and the guard rails are written to Atlassian's and Claude
+Code's documentation, but have not been exercised against a live Jira site.
+
 
 ## 1.1.2 — 2026-09-24
 

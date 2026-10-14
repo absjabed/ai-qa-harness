@@ -1,4 +1,5 @@
 import { projectProfile } from './projectProfile';
+import type { DbEngine } from './db/types';
 
 /**
  * Consolidated test configuration.
@@ -25,6 +26,26 @@ function optional(name: string, fallback = ''): string {
     return process.env[name] || fallback;
 }
 
+/** `mssql` (SQL Server) unless `.env` says otherwise. Validated when a connection is first opened. */
+const dbEngine = optional('DB_ENGINE', 'mssql').toLowerCase() as DbEngine;
+
+/** Engine-neutral database settings. Each adapter in `config/db/` maps these onto its own driver. */
+export interface DbSettings {
+    engine: DbEngine;
+    server: string;
+    port: number;
+    database: string;
+    user: string;
+    password: string;
+    /** Encrypt the connection. On by default; turn off only for a local server without TLS. */
+    encrypt: boolean;
+    /**
+     * Accept the server's certificate without verifying it. On by default, because QA servers commonly
+     * run self-signed certificates; turn it off where the certificate is real and should be checked.
+     */
+    trustServerCertificate: boolean;
+}
+
 export const appConfig = {
     appName: projectProfile.appName,
 
@@ -39,26 +60,17 @@ export const appConfig = {
     browser: optional('BROWSER', 'chromium'),
     headless: process.env.HEADLESS === 'true',
 
-    /**
-     * Database configuration. Shaped for `mssql`; if the project uses a different engine, change
-     * this shape and `config/DbConnection.ts` together.
-     */
+    /** Database connection settings — `DB_ENGINE` picks SQL Server or PostgreSQL. See `config/DbConnection.ts`. */
     db: {
+        engine: dbEngine,
         server: optional('DB_SERVER'),
-        port: parseInt(optional('DB_PORT', '1433'), 10),
+        port: parseInt(optional('DB_PORT', dbEngine === 'postgres' ? '5432' : '1433'), 10),
         database: optional('DB_NAME'),
-        authentication: {
-            type: 'default',
-            options: {
-                userName: optional('DB_USER'),
-                password: optional('DB_PASSWORD'),
-            },
-        },
-        options: {
-            encrypt: true,
-            trustServerCertificate: true,
-        },
-    },
+        user: optional('DB_USER'),
+        password: optional('DB_PASSWORD'),
+        encrypt: optional('DB_ENCRYPT', 'true') !== 'false',
+        trustServerCertificate: optional('DB_TRUST_SERVER_CERTIFICATE', 'true') !== 'false',
+    } as DbSettings,
 
     /** Cheap read-only query used by `npm run db:check` to prove connectivity. */
     dbSmokeQuery: optional('DB_SMOKE_QUERY', 'SELECT 1 AS ok'),

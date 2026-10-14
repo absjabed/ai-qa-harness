@@ -179,3 +179,8 @@ export function allSpecFiles(): string[] {
 
 /** Reference and scaffold specs that exist to teach, not to test a requirement. */
 export const REFERENCE_SPECS = new Set(['tests/example.spec.ts', 'tests/seed.spec.ts']);
+
+/** True for specs that are scaffolding rather than coverage — references, and the per-role login seeds. */
+export function isReferenceSpec(relPath: string): boolean {
+    return REFERENCE_SPECS.has(relPath) || relPath.startsWith('tests/seeds/');
+}

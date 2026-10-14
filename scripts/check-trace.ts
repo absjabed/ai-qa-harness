@@ -10,7 +10,7 @@
 
 import { projectProfile } from '../config/projectProfile';
 import {
-    allSpecFiles, parsePlan, parseTests, planFiles, rel, REFERENCE_SPECS, storyKeyOf, storySpecFiles, TCID,
+    allSpecFiles, isReferenceSpec, parsePlan, parseTests, planFiles, rel, storyKeyOf, storySpecFiles, TCID,
 } from './lib/trace';
 
 const errors: string[] = [];
@@ -69,7 +69,7 @@ const seenTcid = new Map<string, string>();
 let untraced = 0;
 
 for (const file of allSpecFiles()) {
-    if (REFERENCE_SPECS.has(rel(file))) continue;
+    if (isReferenceSpec(rel(file))) continue;
     for (const t of parseTests(file)) {
         const at = `${t.file}:${t.line}`;
         if (!t.tcid) {

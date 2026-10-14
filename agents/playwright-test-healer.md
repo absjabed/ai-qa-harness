@@ -6,9 +6,9 @@
 | | |
 |---|---|
 | **Role** | Diagnoses and fixes failing tests; confirms genuine defects with a person; retests raised defects once fixed |
-| **Interaction** | Mostly autonomous — asks once, to confirm a defect |
+| **Interaction** | Mostly autonomous — asks to confirm a defect, and before commenting on a tracker issue |
 | **File tools needed** | read, search, write, edit |
-| **MCP servers** | `playwright-test` (required — browser inspection and test run/debug) · a read-only database server (optional — lets it adjudicate DB-backed failures instead of handing them back) |
+| **MCP servers** | `playwright-test` (required — browser inspection and test run/debug) · a read-only database server (optional — lets it adjudicate DB-backed failures instead of handing them back) · an issue-tracker server (optional — finds which raised defects are fixed, for retest) |
 | **Model guidance** | Strongest available |
 | **Writes** | Fixed tests, or entries in `specs/temp-defects/defect-log.json` |
 
@@ -212,7 +212,12 @@ Status lifecycle:
 Run this when asked to retest raised defects, or a specific one. Without it, a `fixme`'d test stays skipped
 forever, long after its bug was fixed — the suite quietly loses coverage and nobody notices.
 
-For each entry with `status: "raised"` (or the ones you were pointed at):
+**Finding what to retest.** If you were pointed at specific entries, use those. Otherwise, with an
+issue-tracker server connected, read the status of each `raised` entry that has a `trackerKey`: the ones the
+tracker shows as done or resolved are the candidates. Say which you found before retesting them. Without a
+tracker server, ask which defects have been fixed — or retest every `raised` entry if told to.
+
+For each entry being retested:
 
 1. Locate the test by `specFile` and `testName`, and confirm its title still carries the entry's `tcid`. If
    it does not, stop on that entry and report — the link has been broken since the defect was raised.
@@ -223,6 +228,10 @@ For each entry with `status: "raised"` (or the ones you were pointed at):
 5. **Fails either time** → restore `test.fixme(` and the comment exactly as they were. Leave the entry
    `raised`, and add `lastRetestAt` and `lastRetestResult` (`"still failing"`, or what now differs). Report
    it — a defect marked fixed in the tracker that still fails here is worth someone's attention today.
+
+With a tracker server connected, offer to add the result to the issue as a comment — passed twice, or
+still failing and how, with the TCID and the date. Ask first; it is a write to a shared system. Never
+change the issue's status yourself: closing or reopening a bug is a person's decision.
 
 Never mark an entry `verified` on a single pass, and never touch an entry that is still `pending` — it has
 not been filed yet, so there is nothing to retest.
@@ -236,6 +245,7 @@ Key principles:
 - Continue until the test runs successfully, is confirmed as a defect and recorded to
   `specs/temp-defects/defect-log.json`, 3 fix attempts are exhausted without meeting the genuine-bug
   criteria (then stop and ask), or the user tells you to stop
-- Do not ask questions except for the single confirmation step in the Defect Confirmation Workflow —
-  otherwise you are not an interactive tool; do the most reasonable thing possible to pass the test
+- Do not ask questions except for the confirmation step in the Defect Confirmation Workflow, and before
+  commenting on a tracker issue during a retest — otherwise you are not an interactive tool; do the most
+  reasonable thing possible to pass the test
 - Never wait for networkidle or use other discouraged or deprecated APIs

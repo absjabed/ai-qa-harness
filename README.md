@@ -86,7 +86,7 @@ application stays in your copy. That is the line that keeps this template reusab
 | Test case design | `playwright-test-planner` — ISTQB techniques, Given/When/Then, one TCID per case |
 | Environment setup | `.env`, `.mcp.json`, and the readiness check in `lib/globalSetup.ts`; `data/seed.ts` |
 | Execution | Playwright; `playwright-test-generator` automates, `playwright-test-healer` triages; manual results in `specs/execution/` |
-| Defect management | healer → defect log → `playwright-defect-raiser` → tracker CSV; retest confirms the fix |
+| Defect management | healer → defect log → `playwright-defect-raiser` → a bug in the tracker (or a CSV to import); retest confirms the fix |
 | Cycle closure | `npm run report:cycle` — metrics, AC coverage and exit criteria |
 
 Traceability holds it together: every test case is `<STORY-KEY>-TC<NNN>`, that ID starts every test's title,
@@ -100,10 +100,10 @@ Five agents, defined in `agents/` and run as slash commands via the `.claude/` w
 | Agent | Input | Output |
 |---|---|---|
 | `playwright-context-builder` | The application, plus whatever access exists | `context/BASELINE.md`, context docs, drafts of the profile and flow plans |
-| `playwright-test-planner` | A story pasted into the conversation | `specs/<KEY>.plan.md` + `specs/<KEY>.plan.csv` |
+| `playwright-test-planner` | A story key — fetched from the tracker if wired, otherwise the story pasted in | `specs/<KEY>.plan.md` + `specs/<KEY>.plan.csv` |
 | `playwright-test-generator` | An approved plan | A spec file, plus any page objects and fixtures it needed |
 | `playwright-test-healer` | Failing tests | Fixed tests, or a confirmed defect in `specs/temp-defects/defect-log.json` |
-| `playwright-defect-raiser` | That defect log | Rows in `specs/defects.csv` + the tests marked `test.fixme()` |
+| `playwright-defect-raiser` | That defect log | Bugs created in the tracker, or rows in `specs/defects.csv` + the tests marked `test.fixme()` |
 
 Two things distinguish this from asking an LLM to write tests:
 
@@ -142,6 +142,7 @@ agents/                          the five agent definitions - canonical, vendor-
   README.md                      porting them to another tool
 .claude/
   commands/                      thin Claude Code wrappers - one line each, no instructions
+  settings.json                  guard rails: no .env reads, no DB writes, ask before tracker writes
 TEST-AUTHORING-INVARIANTS.md     I1-I8, the single source of truth
 context/
   README.md                      what project knowledge goes here, and in what shape
@@ -150,7 +151,8 @@ context/
 config/
   projectProfile.ts              machine-readable mirror of PROJECT-PROFILE.md
   testConfig.ts                  env-driven config; throws on missing required vars
-  DbConnection.ts                SQL Server pool, with fail-fast on persistent refusals
+  DbConnection.ts                SQL Server or PostgreSQL, with fail-fast on persistent refusals
+  db/                            one adapter per engine, and the contract between them
   testDbConnection.ts            `npm run db:check`
 data/
   auth_data.ts                   credentials, resolved from .env per role
@@ -173,7 +175,8 @@ specs/
   execution/                     manual test results, per TCID
 tests/
   example.spec.ts                reference spec demonstrating I1-I8
-  seed.spec.ts                   the generator's live-drive starting point
+  seed.spec.ts                   live-drive starting point for a signed-out scenario
+  seeds/                         one login per role - agents start here, never touching a password
   common/                        test-side helpers
 docs/
   index.html                     the handbook - `npm run docs` opens it
@@ -240,11 +243,16 @@ has the rest.
 - Node.js 18+
 - An agentic coding tool. Claude Code works out of the box; any MCP-capable tool works with a one-line wrapper per agent
 - The Playwright test MCP server (`npx playwright run-test-mcp-server`, ships with `@playwright/test`) — for the context-builder, generator and healer
-- Optionally a read-only database MCP server — see [docs/MCP.md](docs/MCP.md)
-- SQL Server access, if DB validation is in scope (`PROJECT-PROFILE.md` section 5)
+- Optionally a read-only database MCP server, and an issue-tracker MCP server for Jira — see [docs/MCP.md](docs/MCP.md)
+- SQL Server or PostgreSQL access, if DB validation is in scope (`PROJECT-PROFILE.md` section 5)
 
 ## Security
 
 `.env` holds every credential and is gitignored. `data/auth_data.ts` resolves them at runtime and throws
 if a role is unconfigured — it never contains a password. Nothing in the repo should ever hold a real
 credential; if you find one, treat it as an incident, not a cleanup task.
+
+Agents never see a password: when one needs to be logged in it starts from its role's seed in
+`tests/seeds/`, which logs in inside the test runner. `.claude/settings.json` denies agents reading `.env`
+and `.mcp.json`, denies the database server's write tools, and makes every write to the tracker ask a
+person first.

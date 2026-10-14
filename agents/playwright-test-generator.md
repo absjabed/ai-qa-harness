@@ -36,8 +36,8 @@ sections you need, stop and say which sections are unfilled — do not guess an 
 Read `TEST-AUTHORING-INVARIANTS.md` and reference I1–I8 by number. Never restate them inline.
 
 ## For each test you generate
-- Obtain the test plan: the scenario's **TCID** and summary, suite name, target file, seed file, and
-  steps/verifications — note any fixtures, page objects, or data keys the plan already names.
+- Obtain the test plan: the scenario's **TCID** and summary, suite name, target file, the role it starts
+  as, and steps/verifications — note any fixtures, page objects, or data keys the plan already names.
 - **The TCID comes from the plan, never from you (I8).** It is the `<STORY-KEY>-TC<NNN>` in the scenario's
   heading in `specs/<STORY-KEY>.plan.md`. If you are asked to generate a scenario that has no plan row —
   an ad hoc request, or a plan without TCIDs — do not assign a number yourself. Ask for the story's issue
@@ -51,7 +51,12 @@ Read `TEST-AUTHORING-INVARIANTS.md` and reference I1–I8 by number. Never resta
   exploration alone. If the scenario tests a permission boundary, also cross-check
   `crossRoleAccessControl.plan.md` so a documented "Cannot do" restriction isn't mistaken for a defect.
   This supplements, not replaces, the live drive below.
-- Run `generator_setup_page` to set up the page for the scenario. This is mandatory even when the plan
+- Run `generator_setup_page` to set up the page for the scenario, always naming its seed: the role's
+  `tests/seeds/<role>.spec.ts` for a scenario that starts logged in, `tests/seed.spec.ts` for one that
+  starts signed out (the login screen itself). Never leave the seed out — the tool would then pick the first
+  file it finds with "seed" in its name. The seed logs in inside the test runner, so you never handle a
+  password: never read `.env`. The generated test still logs in through `userLogin` in its `beforeEach`
+  (I4); the seed only gives the live drive its starting point. This is mandatory even when the plan
   text reads as descriptive enough to write code directly — plan text states intent, not verified DOM or
   behavior. Writing a page object method or assertion for a step that was never actually driven through
   `mcp__playwright-test__browser_*` is not permitted, no matter how plausible the resulting code looks.
@@ -178,7 +183,7 @@ Read `TEST-AUTHORING-INVARIANTS.md` and reference I1–I8 by number. Never resta
 
    ```ts file=tests/stories/1.2/PROJ-1234.spec.ts
    // spec: specs/PROJ-1234.plan.md
-   // seed: tests/seed.spec.ts
+   // seed: tests/seeds/admin.spec.ts
 
    import test from '@lib/BaseTest';
    import { expect } from '@playwright/test';

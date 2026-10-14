@@ -1,10 +1,11 @@
-# MCP servers — how agents reach the browser and the database
+# MCP servers — how agents reach the browser, the database and the tracker
 
-Three of the five agents cannot work without a browser, and all of them work considerably better with read
-access to the database. Both arrive through MCP servers configured in `.mcp.json`.
+Three of the five agents cannot work without a browser, and several work considerably better with read
+access to the database and the issue tracker. All three arrive through MCP servers configured in
+`.mcp.json`.
 
 Copy `.mcp.json.example` to `.mcp.json` and fill it in. `.mcp.json` is gitignored, because a database entry
-usually carries a connection string.
+carries a password — and `.claude/settings.json` denies agents reading it.
 
 That file is Claude Code's format. MCP is an open protocol, so the same servers work in any MCP-capable
 tool — only the config file's location and shape differ. [`agents/README.md`](../agents/README.md) lists
@@ -42,6 +43,26 @@ This is the single biggest reduction in setup friction available. The agents' re
 correct — a query written without schema visibility is plausible and wrong — but it is a refusal born of
 blindness, and this removes the blindness.
 
+### The example server
+
+`.mcp.json.example` uses `@executeautomation/database-server`, which speaks both engines the harness
+supports — PostgreSQL (`--postgresql --host … --database …`) and SQL Server (`--sqlserver --server …
+--database …`). The version is pinned, because `npx -y` would otherwise fetch whatever was published most
+recently every time the server starts.
+
+| Tool | Writes? | In `.claude/settings.json` |
+|---|---|---|
+| `read_query`, `list_tables`, `describe_table` | No | allowed |
+| `write_query`, `create_table`, `alter_table`, `drop_table` | Yes | **denied** |
+| `append_insight` | Yes, to its own memo | **denied** |
+| `export_query`, `list_insights` | No | neither — prompts if used |
+
+It has **no read-only mode**. The deny rules stop an agent calling its write tools, but the account is what
+makes read-only true: a `read_query` carrying an `UPDATE` would otherwise be up to the server to refuse.
+
+Any other MCP server for your engine works too. Rename its tools in the `.claude/settings.json` rules — the
+rules are only as good as the names in them.
+
 ### Use a read-only account
 
 Give the MCP server credentials that can `SELECT` and nothing else, against a QA database.
@@ -68,27 +89,63 @@ The point of database access is not that agents query the schema on every run. I
 person, or `playwright-context-builder` — explores it once and writes down the ten facts that matter in
 `context/`. That document is then the durable knowledge; the MCP server is how it got written.
 
-### In Claude Code, name its tools
+## `tracker` — optional
 
-A wrapper's `tools:` line is an allow-list, and the canonical definitions cannot name the database tools
-because the server is your choice. So after wiring it, append its tool names to the `tools:` line of both
-agents that use it — `.claude/commands/playwright-context-builder.md` and
-`.claude/commands/playwright-test-healer.md`.
+| | |
+|---|---|
+| Used by | `playwright-test-planner` to fetch a story by its key · `playwright-defect-raiser` to create bugs · `playwright-test-healer` to see which bugs are fixed, and to comment the retest result |
+| Without it | Stories are pasted into the conversation, defects become `specs/defects.csv` for someone to import, and the retest needs telling which bugs were fixed. Everything still works; there is just more copying by hand. |
 
-Names take the form `mcp__<server>__<tool>`; `/mcp` in an interactive session lists what your server
-exposes. Name only the read-only tools — leaving a write or execute tool off the list keeps read-only true
-even if the account turns out not to be.
+The example is Jira, through Atlassian's remote MCP server:
 
-Skip it and nothing errors: both agents simply behave as though no database existed. That silence is why it
-is worth checking.
+```json
+"tracker": { "type": "http", "url": "https://mcp.atlassian.com/v2/mcp?tools=all" }
+```
+
+Sign in by running `/mcp` in Claude Code — it is OAuth, so no token goes in the file. Two details matter:
+
+- **Keep `?tools=all`.** Without it the server exposes two generic tools, `discovery` and `execute`, and
+  every Jira operation goes through `execute` — which would slip past the per-tool rules below. That is why
+  `execute` is denied.
+- **Keep the key `tracker`.** The rules name tools as `mcp__tracker__<tool>`.
+
+### What agents may do in the tracker
+
+| | Tools | Why |
+|---|---|---|
+| **Allowed** | read an issue, search by JQL, read issue-type and link-type metadata, read comments | Fetching stories and checking bug status |
+| **Ask every time** | create an issue, link issues, comment, attach a file | A person approves every write to a system other people work from |
+| **Denied** | edit or move an issue, delete anything, worklogs, sprints, boards, versions, project admin | Nothing in the harness needs them; changing a bug's status is a person's decision |
+
+The agents' instructions say the same — the defect-raiser asks before creating a batch, the healer before
+commenting, and the planner only reads. The rules make it hold when an instruction is missed.
+
+Another tracker works the same way if it has an MCP server: wire it under the key `tracker` and replace the
+tool names in `.claude/settings.json`. The agents describe what they need — fetch an issue, search, create a
+bug, comment — rather than naming Jira's tools.
+
+---
+
+## Guard rails — `.claude/settings.json`
+
+Shipped with the harness and committed, so they apply to everyone who runs it in Claude Code. Besides the
+database and tracker rules above, it denies agents reading `.env` and `.mcp.json`: no agent needs a
+password, because each role's seed in `tests/seeds/` logs in inside the test runner.
+
+These are a second line behind the agents' own instructions, not a sandbox — a shell command can still read
+a file the `Read` rule denies. Personal overrides belong in `.claude/settings.local.json`, which is
+gitignored.
+
+Other tools have their own permission systems; [`agents/README.md`](../agents/README.md) covers porting.
 
 ---
 
 ## Verifying
 
-After configuring, confirm each server is connected before running an agent that needs it. If the generator
-reports that `generator_setup_page` is unavailable, the Playwright MCP server is not connected — fix that
-rather than letting it proceed, because an agent that cannot drive the browser produces nothing usable.
+After configuring, confirm each server is connected before running an agent that needs it — `/mcp` in
+Claude Code lists them, and signs you in to the tracker. If the generator reports that
+`generator_setup_page` is unavailable, the Playwright MCP server is not connected — fix that rather than
+letting it proceed, because an agent that cannot drive the browser produces nothing usable.
 
 ## What does not belong in `.mcp.json`
 

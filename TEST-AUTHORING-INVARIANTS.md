@@ -53,6 +53,8 @@ Only `testUsers.<role>` / `defaultUsers.<role>` from `@data/auth_data`, driven t
 `userLogin` helper (`pages/common/login.ts`) in a `test.beforeEach`. Role keys are listed in
 `PROJECT-PROFILE.md` section 2. Never a literal email or password, not even as an example — the
 values themselves live in `.env`, and nothing in the repo should be able to leak them.
+Agents never read `.env` at all: one that needs to be logged in starts from its role's seed,
+`tests/seeds/<role>.spec.ts`, which logs in inside the test runner and hands over a signed-in page.
 
 **I5 — No hardcoded assertion values.**
 Counts, statuses, dates, and list contents that vary by environment or seed data are asserted via

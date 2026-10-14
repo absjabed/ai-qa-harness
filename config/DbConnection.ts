@@ -1,5 +1,15 @@
-import * as sql from 'mssql';
 import { appConfig } from './testConfig';
+import { connectMssql, mssqlErrors } from './db/mssqlAdapter';
+import { connectPostgres, postgresErrors } from './db/postgresAdapter';
+import { errorMessage, type DbAdapter, type DbEngine, type EngineErrors, type QueryResult } from './db/types';
+
+export type { QueryResult } from './db/types';
+
+/** The engines this harness can talk to, chosen by `DB_ENGINE` in `.env`. */
+const ENGINES: Record<DbEngine, { label: string; connect: typeof connectMssql; errors: EngineErrors }> = {
+    mssql: { label: 'SQL Server', connect: connectMssql, errors: mssqlErrors },
+    postgres: { label: 'PostgreSQL', connect: connectPostgres, errors: postgresErrors },
+};
 
 /**
  * Set once the server has refused us for a reason that will not clear on its own — a firewall rule
@@ -21,17 +31,26 @@ const CONFIG_ERROR_PREFIX = 'Database is not configured';
 /**
  * Catch an unconfigured environment before handing it to the driver.
  *
- * Without this, an unset DB_SERVER reaches `mssql` as an empty host and comes back as
+ * Without this, an unset DB_SERVER reaches the driver as an empty host and comes back as
  * "Failed to connect to :1433" under a wall of driver frames — which reads like an outage rather
  * than a missing `.env`, and sends people looking at the network instead of their own config.
  */
 function assertDbConfigured(): void {
+    const { db } = appConfig;
+
+    if (!(db.engine in ENGINES)) {
+        throw new Error(
+            `${CONFIG_ERROR_PREFIX}: DB_ENGINE is '${db.engine}'.\n` +
+            `  Set it to one of: ${Object.keys(ENGINES).join(', ')}.`
+        );
+    }
+
     const missing = (
         [
-            ['DB_SERVER', appConfig.db.server],
-            ['DB_NAME', appConfig.db.database],
-            ['DB_USER', appConfig.db.authentication.options.userName],
-            ['DB_PASSWORD', appConfig.db.authentication.options.password],
+            ['DB_SERVER', db.server],
+            ['DB_NAME', db.database],
+            ['DB_USER', db.user],
+            ['DB_PASSWORD', db.password],
         ] as const
     )
         .filter(([, value]) => !value)
@@ -40,74 +59,44 @@ function assertDbConfigured(): void {
     if (missing.length > 0) {
         throw new Error(
             `${CONFIG_ERROR_PREFIX}: ${missing.join(', ')} not set in .env.\n` +
-            '  Copy .env.example to .env and fill in the DB_* block — see SETUP.md step 3.\n' +
+            '  Copy .env.example to .env and fill in the DB_* block — see SETUP.md step 2.\n' +
             '  If this project has no database, set DB_VALIDATION_ENABLED=false and remove the\n' +
             '  DB-backed assertions from your page objects.'
         );
     }
 }
 
-/** Refusals that persist until a human changes something, as opposed to transient network faults. */
-function isPersistentRefusal(error: unknown): boolean {
-    const message = String((error as { message?: string })?.message ?? '');
-    return /not allowed to access the server|Cannot open server|Login failed for user/i.test(message);
-}
-
 /**
  * Turn the driver's error into something that says what is wrong and what to do about it. The raw
  * error is a wall of driver stack frames in which the one useful sentence is easy to miss.
  */
-function explainConnectionFailure(error: unknown): string {
-    const raw = String((error as { message?: string })?.message ?? error);
-    const firstLine = raw.split('\n')[0].trim();
-    const blockedIp = raw.match(/IP address '([^']+)'/)?.[1];
-
-    const lines = [
-        'Database unreachable — this is an environment problem, not a test failure.',
-        `  ${firstLine}`,
-    ];
-
-    if (blockedIp) {
-        lines.push(
-            `  The database firewall on '${appConfig.db.server}' is refusing this machine's IP (${blockedIp}).`,
-            "  Add this IP to the server's firewall allow-list. On Azure SQL that is",
-            '  Portal -> SQL server -> Networking -> Firewall rules, or against the master database:',
-            `    EXEC sp_set_firewall_rule N'AllowTestClient', '${blockedIp}', '${blockedIp}';`,
-            '  A new rule can take a few minutes to take effect.',
-            '  A dynamic IP will keep causing this — consider allowing the range rather than one address.'
-        );
-    } else if (/Login failed for user/i.test(raw)) {
-        lines.push(
-            '  Credentials were rejected. Check DB_USER / DB_PASSWORD in .env against the environment',
-            `  you are pointing at (DB_SERVER=${appConfig.db.server || '<unset>'}, DB_NAME=${appConfig.db.database || '<unset>'}).`
-        );
-    }
-
-    lines.push("  Every DB-backed test fails while this persists, so this run's results are not meaningful.");
-    return lines.join('\n');
+function explainConnectionFailure(error: unknown, errors: EngineErrors, label: string): string {
+    const firstLine = errorMessage(error).split('\n')[0].trim();
+    const { server, database } = appConfig.db;
+    return [
+        `Database unreachable — this is an environment problem, not a test failure.`,
+        `  ${label} at ${server || '<DB_SERVER unset>'}, database ${database || '<DB_NAME unset>'}: ${firstLine}`,
+        ...errors.explain(error),
+        "  Every DB-backed test fails while this persists, so this run's results are not meaningful.",
+    ].join('\n');
 }
 
 /**
- * Database connection utility — SQL Server via the `mssql` package.
+ * Database connection — the only thing in the harness that talks to a database.
  *
- * Projects on a different engine should swap the driver here and reshape `appConfig.db` in
- * `config/testConfig.ts` to match. The public method surface below (`executeQuery`,
- * `executeUpdate`, `executePreparedStatement`, `close`) is what the rest of the harness and the AI
- * agents depend on, so keep those signatures stable.
+ * The engine comes from `DB_ENGINE`: `mssql` (SQL Server, the default) or `postgres`. The public
+ * methods below (`executeQuery`, `executeUpdate`, `executePreparedStatement`, `close`) are what the
+ * rest of the harness and the AI agents depend on, whichever engine is underneath — keep their
+ * signatures stable.
+ *
+ * Parameters are written `@name` for every engine. The SQL itself is still the engine's dialect —
+ * `TOP 5` on SQL Server, `LIMIT 5` on PostgreSQL — so the queries in `data/sql_queries.ts` are written
+ * for the project's engine.
  */
 class DbConnection {
-    private pool: sql.ConnectionPool | null = null;
-    private config: sql.config;
+    private adapter: DbAdapter | null = null;
 
-    constructor() {
-        this.config = appConfig.db as sql.config;
-    }
-
-    /**
-     * Get database connection pool
-     * @returns {Promise<sql.ConnectionPool>} Connection pool
-     */
-    async getConnection(): Promise<sql.ConnectionPool> {
+    private async getAdapter(): Promise<DbAdapter> {
         // Already refused for a reason that will not clear by itself — don't wait for another
         // timeout to be told the same thing.
         if (blockingConnectionFailure) {
@@ -117,12 +106,13 @@ class DbConnection {
         // A misconfiguration is not worth a connect timeout to discover.
         assertDbConfigured();
 
-        if (!this.pool) {
+        if (!this.adapter) {
+            const engine = ENGINES[appConfig.db.engine];
             try {
-                this.pool = await new sql.ConnectionPool(this.config).connect();
+                this.adapter = await engine.connect(appConfig.db);
             } catch (error) {
-                const explanation = explainConnectionFailure(error);
-                if (isPersistentRefusal(error)) {
+                const explanation = explainConnectionFailure(error, engine.errors, engine.label);
+                if (engine.errors.isPersistentRefusal(error)) {
                     // Logged once for the whole worker; later tests get the message without the noise.
                     blockingConnectionFailure = explanation;
                     console.error(`\n${explanation}\n`);
@@ -132,7 +122,7 @@ class DbConnection {
                 throw wrapped;
             }
         }
-        return this.pool;
+        return this.adapter;
     }
 
     /**
@@ -142,83 +132,49 @@ class DbConnection {
      * sentence that matters.
      */
     private static isAlreadyReported(error: unknown): boolean {
-        const message = String((error as { message?: string })?.message ?? '');
-        if (message.startsWith(CONFIG_ERROR_PREFIX)) {
+        const message = errorMessage(error);
+        if (message.startsWith(CONFIG_ERROR_PREFIX) || message.startsWith('Database unreachable')) {
             return true;
         }
         return blockingConnectionFailure !== null && message === blockingConnectionFailure;
     }
 
-    /**
-     * Execute a SQL query
-     * @param {string} query - SQL query to execute
-     * @returns {Promise<sql.IResult>} Query result
-     */
-    async executeQuery(query: string): Promise<sql.IResult<any>> {
+    private async run(kind: string, query: string, params?: Record<string, unknown>): Promise<QueryResult> {
         try {
-            const pool = await this.getConnection();
-            const result = await pool.request().query(query);
-            return result;
+            const adapter = await this.getAdapter();
+            return await adapter.query(query, params);
         } catch (error) {
-            // A connection refusal has already been explained once — re-printing the whole
-            // driver stack for every subsequent test buries the real message.
             if (!DbConnection.isAlreadyReported(error)) {
-                console.error('Database query error:', error);
+                console.error(`Database ${kind} error:`, error);
             }
             throw error;
         }
     }
 
-    /**
-     * Execute a SQL update/insert/delete statement
-     * @param {string} query - SQL statement to execute
-     * @returns {Promise<number>} Number of rows affected
-     */
+    /** Run a query and return its rows. */
+    async executeQuery(query: string): Promise<QueryResult> {
+        return this.run('query', query);
+    }
+
+    /** Run an INSERT, UPDATE or DELETE and return how many rows it changed. */
     async executeUpdate(query: string): Promise<number> {
-        try {
-            const pool = await this.getConnection();
-            const result = await pool.request().query(query);
-            return result.rowsAffected[0];
-        } catch (error) {
-            if (!DbConnection.isAlreadyReported(error)) {
-                console.error('Database update error:', error);
-            }
-            throw error;
-        }
+        return (await this.run('update', query)).rowCount;
     }
 
     /**
-     * Execute a prepared statement with parameters
-     * @param {string} query - SQL query with parameters
-     * @param {Object} params - Parameters object {name: value}
-     * @returns {Promise<sql.IResult>} Query result
+     * Run a query with named parameters, written `@name` in the SQL whatever the engine.
+     * Use this for anything derived from test input — see `data/sql_queries.ts`.
      */
-    async executePreparedStatement(query: string, params: Record<string, any>): Promise<sql.IResult<any>> {
-        try {
-            const pool = await this.getConnection();
-            const request = pool.request();
-
-            for (const [key, value] of Object.entries(params)) {
-                request.input(key, value);
-            }
-
-            const result = await request.query(query);
-            return result;
-        } catch (error) {
-            if (!DbConnection.isAlreadyReported(error)) {
-                console.error('Database prepared statement error:', error);
-            }
-            throw error;
-        }
+    async executePreparedStatement(query: string, params: Record<string, unknown>): Promise<QueryResult> {
+        return this.run('prepared statement', query, params);
     }
 
-    /**
-     * Close database connection
-     */
+    /** Close the connection. Safe to call when none was opened. */
     async close(): Promise<void> {
-        if (this.pool) {
-            await this.pool.close();
-            this.pool = null;
+        if (this.adapter) {
+            const adapter = this.adapter;
+            this.adapter = null;
+            await adapter.close();
         }
     }
 }

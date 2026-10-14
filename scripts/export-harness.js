@@ -72,8 +72,22 @@ if (dirty && !allowDirty) {
 }
 if (dirty) commit += '-dirty';
 
+// Only tracked files are copied. With --allow-dirty, a new file nobody has `git add`ed yet would be left
+// out without a word — say which.
+const untracked = dirty ? git('ls-files', '--others', '--exclude-standard').split('\n').filter(Boolean) : [];
+
 const templatePkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
-const templateVersion = templatePkg.version;
+
+// A copy should start from a release. Releases are tagged `v<version>`; anything else is work in progress,
+// which is allowed but recorded as such, so nobody later mistakes it for the release of the same number.
+let releaseTag = null;
+try {
+    releaseTag = git('describe', '--tags', '--exact-match', 'HEAD');
+} catch {
+    // not on a tag
+}
+const released = !dirty && releaseTag === `v${templatePkg.version}`;
+const templateVersion = released ? templatePkg.version : `${templatePkg.version} (unreleased)`;
 
 // ---------------------------------------------------------------- plan the copy
 
@@ -192,6 +206,17 @@ export: copied ${toCopy.length} files into ${target}
   README.md        ${writeReadme ? 'written for the project' : 'already existed — left as it was'}
   check:docs       ${verified ? 'passed in the copy' : 'FAILED in the copy — see above'}
 `);
+if (untracked.length) {
+    console.log(`  note: ${untracked.length} untracked file(s) in the template were NOT copied — git add them first if they belong:`);
+    untracked.forEach((f) => console.log(`        ${f}`));
+    console.log('');
+}
+if (!released) {
+    console.log(
+        `  note: HEAD is not the release tag v${templatePkg.version}, so this copy is recorded as unreleased.\n` +
+        `        For a release, check out its tag first — git checkout v${templatePkg.version} — and export again.\n`
+    );
+}
 if (recorded !== 2) {
     console.log('  note: could not find the template version/commit rows in PROJECT-PROFILE.md section 1 — fill them by hand.\n');
 }

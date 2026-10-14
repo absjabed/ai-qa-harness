@@ -36,6 +36,10 @@ which navigation-flow plan to read. One row per role that can log in.
 
 **Baseline role** (the full-access role every other role's restrictions are defined against): `<role key>`
 
+Each role also needs a login seed, `tests/seeds/<role key>.spec.ts` — copy an existing one and change the
+role. Agents start from it whenever they need to be logged in, so they never handle a password.
+`npm run check:docs` fails if a role has no seed.
+
 ## 3. Domain vocabulary
 
 The agents use this to recognize a domain entity in a story, and to refuse to inline it as a literal (I3).
@@ -65,9 +69,9 @@ Feature areas of the application. Drives the `Module` / `Sub Module` plan fields
 
 | Field | Value |
 |---|---|
-| Database engine | `<SQL Server>` — `config/DbConnection.ts` ships with `mssql`; swap the driver if different |
+| Database engine | `<SQL Server / PostgreSQL>` — set `DB_ENGINE` in `.env` to `mssql` or `postgres`; `config/DbConnection.ts` supports both |
 | DB validation in scope? | `<yes / no>` — if no, agents skip all DB-backed assertion guidance |
-| Schema owner/prefix | `<e.g. dbo>` |
+| Schema owner/prefix | `<e.g. dbo on SQL Server, public on PostgreSQL>` |
 | Smoke-test query | Set `DB_SMOKE_QUERY` in `.env`; `npm run db:check` runs it |
 
 ## 6. API layer
@@ -119,6 +123,7 @@ except what is recorded here and in `context/`.
 |---|---|---|
 | Running application | Yes, via `BASE_URL` and the Playwright MCP server | `.env` |
 | Database schema | `<yes, via a read-only MCP server / no>` | `.mcp.json` — see [docs/MCP.md](docs/MCP.md) |
+| Issue tracker | `<yes, via the tracker MCP server / no — stories pasted, defects imported from CSV>` | `.mcp.json` — see [docs/MCP.md](docs/MCP.md) |
 | Application source | `<no / yes, at a path a person reads and distils>` | `<path>` |
 | API documentation | `<no / yes>` | `<url or path>` |
 | Everything else | Only once distilled into `context/` | `context/BASELINE.md` |
@@ -184,11 +189,13 @@ so knowingly — the report exists so that the decision is made with the numbers
 - [ ] Sections 1–10 above filled in, no `<...>` placeholders left (including the template version and commit in section 1)
 - [ ] `config/projectProfile.ts` updated to match sections 1, 2 and 5
 - [ ] `.env` created from `.env.example` and populated
-- [ ] `.mcp.json` created from `.mcp.json.example`; Playwright MCP connected
+- [ ] `.mcp.json` created from `.mcp.json.example`; Playwright MCP connected; unused servers removed
+- [ ] If the tracker server is wired: signed in through `/mcp`, and a story fetches by its key
 - [ ] `context/BASELINE.md` written, including its known-unknowns section
 - [ ] `data/auth_data.ts` role keys match section 2 (credentials come from `.env`, never inline)
 - [ ] `data/testData.ts` keys match section 3
 - [ ] `pages/LoginPage.ts` + `pages/DashboardPage.ts` selectors point at the real app
+- [ ] One login seed per role in `tests/seeds/`, and each passes: `npx playwright test tests/seeds/`
 - [ ] `lib/BaseTest.ts` exposes a fixture per page object
 - [ ] One navigation-flow plan per role in section 2, from the template
 - [ ] `specs/RegressionTags/regression-tags.md` table matches section 4

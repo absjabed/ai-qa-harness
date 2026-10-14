@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "mcp__database__read_query",
+      "mcp__database__list_tables",
+      "mcp__database__describe_table",
+      "mcp__tracker__getAccessibleAtlassianResources",
+      "mcp__tracker__getJiraIssue",
+      "mcp__tracker__searchJiraIssuesUsingJql",
+      "mcp__tracker__getJiraIssueTypeMetaWithFields",
+      "mcp__tracker__listJiraProjectIssueTypesMetadata",
+      "mcp__tracker__listJiraIssueLinkTypes",
+      "mcp__tracker__listJiraIssueComments"
+    ],
+    "ask": [
+      "mcp__tracker__createJiraIssue",
+      "mcp__tracker__createJiraIssueLink",
+      "mcp__tracker__addOrEditJiraIssueComment",
+      "mcp__tracker__uploadAttachmentToJiraIssue"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.mcp.json)",
+
+      "mcp__database__write_query",
+      "mcp__database__create_table",
+      "mcp__database__alter_table",
+      "mcp__database__drop_table",
+      "mcp__database__append_insight",
+
+      "mcp__tracker__execute",
+      "mcp__tracker__editJiraIssue",
+      "mcp__tracker__transitionJiraIssue",
+      "mcp__tracker__deleteJiraIssue",
+      "mcp__tracker__deleteJiraComment",
+      "mcp__tracker__deleteJiraIssueAttachment",
+      "mcp__tracker__addOrEditJiraIssueWorklog",
+      "mcp__tracker__createJiraIssueRemoteIssueLink",
+      "mcp__tracker__watchJiraIssue",
+      "mcp__tracker__manageJiraSprint",
+      "mcp__tracker__manageJiraProjectVersion",
+      "mcp__tracker__manageJiraProjectVersionRelatedWork",
+      "mcp__tracker__createJiraBoard",
+      "mcp__tracker__editJiraEntityProperty",
+      "mcp__tracker__convertJiraIssueHierarchy",
+      "mcp__tracker__createJiraProject",
+      "mcp__tracker__updateJiraProject",
+      "mcp__tracker__updateJiraScreen"
+    ]
+  }
+}

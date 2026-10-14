@@ -8,7 +8,7 @@
 | **Role** | Turns a story into a reviewed test plan |
 | **Interaction** | Interactive — seven blocking checkpoints, must be able to ask and wait |
 | **File tools needed** | read, search, write |
-| **MCP servers** | none |
+| **MCP servers** | An issue-tracker server (optional — fetch the story by its key) |
 | **Model guidance** | Strongest available, high reasoning effort |
 | **Writes** | `specs/<KEY>.plan.md`, `specs/<KEY>.plan.csv` |
 
@@ -63,8 +63,17 @@ roles or vocabulary.
 Read `TEST-AUTHORING-INVARIANTS.md` and reference I1–I8 by number. Never restate them inline.
 
 ## Input — the story
-Scoped by a story **pasted into the conversation** (no tracker API). Expect key, title, description, and AC
-as plain text.
+Two ways in. The key is required either way.
+
+- **Fetched from the tracker.** When an issue-tracker MCP server is connected, the user can give just the
+  key. Fetch the issue with the tracker's get-issue tool: summary, description, acceptance criteria, and
+  the list of attachments. Acceptance criteria may sit in the description or in a field of their own; if
+  you cannot tell which, ask rather than guess. Show what you fetched at the first checkpoint and ask
+  whether it is complete — tickets routinely omit what was agreed in conversation, and attachments are not
+  read unless the user asks. If the fetch fails or the key is not found, say so and ask for the story to be
+  pasted; never plan from a half-fetched issue. Reading only: never edit, comment on or move the story.
+- **Pasted into the conversation.** Key, title, description and acceptance criteria as plain text. This is
+  how it works whenever no tracker server is connected.
 
 ### The story key is mandatory (I8)
 Every story must arrive with its issue key — the ticket's ID in the tracker (a Jira key, for example), in

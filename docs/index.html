@@ -609,15 +609,15 @@ td code { white-space: nowrap; }
       suite built on the Page Object / Page Factory pattern. Everything project-specific lives in two files —
       <code>PROJECT-PROFILE.md</code> and <code>.env</code>. Nothing in the agents, the config, or the
       fixtures names an application.</p>
-      <p class="meta-line">Setup ≈ 1 hour · Node 18+ · Playwright Test MCP required · database MCP optional but recommended</p>
+      <p class="meta-line">Setup ≈ 1 hour · Node 18+ · Playwright Test MCP required · database MCP optional but recommended · Jira MCP optional</p>
 
       <h3>The pipeline</h3>
       <ol class="pipeline">
         <li class="pipe-step"><span class="pipe-n">00</span><b>context-builder</b><span class="desc">Learns the application once, so the rest have something to work from.</span></li>
-        <li class="pipe-step"><span class="pipe-n">01</span><b>planner</b><span class="desc">A pasted story becomes a reviewed plan + CSV.</span></li>
+        <li class="pipe-step"><span class="pipe-n">01</span><b>planner</b><span class="desc">A story — fetched by its key, or pasted — becomes a reviewed plan + CSV.</span></li>
         <li class="pipe-step"><span class="pipe-n">02</span><b>generator</b><span class="desc">Drives the real browser, then writes the spec and any page objects.</span></li>
         <li class="pipe-step"><span class="pipe-n">03</span><b>healer</b><span class="desc">Fixes failures, or confirms a genuine bug with you.</span></li>
-        <li class="pipe-step"><span class="pipe-n">04</span><b>defect-raiser</b><span class="desc">Files the CSV row and marks the test <code>fixme</code>.</span></li>
+        <li class="pipe-step"><span class="pipe-n">04</span><b>defect-raiser</b><span class="desc">Files the bug — in the tracker, or as a CSV row — and marks the test <code>fixme</code>.</span></li>
       </ol>
 
       <h3>What makes this different from asking an LLM to write tests</h3>
@@ -662,8 +662,9 @@ td code { white-space: nowrap; }
           </tbody>
         </table>
       </div>
-      <p>Per story, add the acceptance criteria you paste in and any screenshots. That is everything. There
-      is no automatic sight of anything else.</p>
+      <p>Per story, add the story itself — fetched from the tracker by its key if the tracker server is
+      wired, pasted in otherwise — and any screenshots. That is everything. There is no automatic sight of
+      anything else.</p>
 
       <h3>Distilled, not dumped</h3>
       <p>The instinct is to hand the agents a schema dump. That does not work: a real one runs to tens of
@@ -721,8 +722,9 @@ td code { white-space: nowrap; }
         point the copy at your application, and that copy becomes your project's test suite — the template
         itself never gains application-specific content.</p>
         <p style="margin-top:10px"><b>Recommended: export it</b> into the project's QA repository — an empty
-        folder or a fresh clone. From the template, no install needed:</p>
-        <pre style="margin-top:8px"><code>npm run export -- ../&lt;app&gt;-qa</code></pre>
+        folder or a fresh clone. From the template at a release tag, no install needed:</p>
+        <pre style="margin-top:8px"><code>git checkout v&lt;version&gt;          # the latest release; `git tag` lists them
+npm run export -- ../&lt;app&gt;-qa</code></pre>
         <p style="margin-top:10px">It copies every file the harness needs, dotfiles included, and leaves
         behind the three that describe the template — <code>README.md</code>, <code>CHANGELOG.md</code> and
         the export script. It names the package after the folder, writes a starter README, records the
@@ -770,10 +772,20 @@ cp .mcp.json.example .mcp.json</code></pre>
             the role key uppercased, split on the camelCase boundary: <code>caseWorker</code> →
             <code>CASE_WORKER_EMAIL</code>. Set the <code>roles</code> array in
             <code>config/projectProfile.ts</code> to match.</p>
-            <p>In <code>.mcp.json</code>, the Playwright entry is required — the context-builder,
-            generator and healer cannot work without a browser. The database entry is optional and removes the single biggest
-            source of friction here: with it, agents read your schema instead of asking you for every
-            query.</p>
+            <p>For the database, set <code>DB_ENGINE</code> to <code>mssql</code> (SQL Server) or
+            <code>postgres</code> (PostgreSQL), then the <code>DB_*</code> block. Port and schema default to
+            the engine's own.</p>
+            <p><code>.mcp.json</code> has three entries; delete the ones you will not use.</p>
+            <ul>
+              <li><b><code>playwright-test</code> — required.</b> The context-builder, generator and healer
+              cannot work without a browser.</li>
+              <li><b><code>database</code> — optional, high value.</b> Agents read your schema instead of
+              asking you for every query. PostgreSQL in the example, SQL Server flags in its comment.</li>
+              <li><b><code>tracker</code> — optional.</b> Jira, through Atlassian's MCP server: the planner
+              fetches stories by key, the defect-raiser creates the bugs, the healer reads their status for
+              retests. Sign in with <code>/mcp</code>. Keep <code>?tools=all</code> and the key
+              <code>tracker</code>.</li>
+            </ul>
             <div class="note warn">
               <p><strong>Use a read-only database account, against QA.</strong> An agent with write access
               is one confused instruction away from changing data other people's tests depend on, and
@@ -781,29 +793,33 @@ cp .mcp.json.example .mcp.json</code></pre>
               point it at production.</p>
             </div>
             <div class="note">
-              <p><strong>Wired a database server? Name its tools too.</strong> In Claude Code the
-              <code>tools:</code> line in an agent's wrapper is an allow-list, and a connected server's
-              tools are withheld from any agent that does not name them. Two agents use the database, so
-              append its tool names to the <code>tools:</code> line of both
-              <code>.claude/commands/playwright-context-builder.md</code> (to introspect the schema) and
-              <code>.claude/commands/playwright-test-healer.md</code> (to judge a failing database-backed
-              assertion).</p>
-              <p style="margin-top:8px">Names take the form <code>mcp__&lt;server&gt;__&lt;tool&gt;</code> —
-              <code>mcp__database__&lt;tool&gt;</code> with the example's server key. <code>/mcp</code> in an
-              interactive Claude Code session lists what your server exposes. Name only read-only tools, so
-              read-only holds even if the account turns out not to be.</p>
-              <p style="margin-top:8px">Skip it and <b>nothing errors</b> — both agents quietly behave as
-              though no database existed. This is frontmatter wiring, not instructions, so it is the one
-              wrapper edit that is expected.</p>
+              <p><strong>Guard rails ship with the harness — <code>.claude/settings.json</code>.</strong></p>
+              <div class="table-wrap" style="margin-top:8px">
+                <table>
+                  <thead><tr><th>Rule</th><th>Covers</th></tr></thead>
+                  <tbody>
+                    <tr><td><b>Deny</b></td><td>Reading <code>.env</code> and <code>.mcp.json</code> — agents never see a password. The database server's write tools. Jira edits, status changes, deletes, admin tools, and its generic <code>execute</code>.</td></tr>
+                    <tr><td><b>Ask</b></td><td>Creating, linking, commenting on or attaching to a Jira issue — a person approves every tracker write.</td></tr>
+                    <tr><td><b>Allow</b></td><td>The read-only database and Jira tools, so lookups don't prompt.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <p style="margin-top:8px">The rules name tools as <code>mcp__database__…</code> and
+              <code>mcp__tracker__…</code>, so they follow the server keys in <code>.mcp.json</code> — change a
+              key or a server, update the rules. They are a second line behind the agents' own instructions,
+              not a sandbox: a shell command could still read <code>.env</code>, and the read-only database
+              account is still the real guard. Personal overrides go in
+              <code>.claude/settings.local.json</code>, which is gitignored.</p>
             </div>
             <h4 style="font-size:14px;margin:18px 0 6px">If you are not using Claude Code</h4>
             <p>The harness does not require it. The test suite uses no AI at all, the knowledge layer is
             plain markdown, and the agent definitions live in <code>agents/</code> as plain prose with no
-            vendor's frontmatter and no vendor's tool names. Only the wrappers in <code>.claude/</code> are
-            Claude-specific, and each is a single line pointing at its canonical file.</p>
+            vendor's frontmatter and no vendor's tool names. Only <code>.claude/</code> is
+            Claude-specific: the wrappers, each a single line pointing at its canonical file, and the
+            permission rules in <code>settings.json</code>.</p>
             <p>To add another tool: put a one-line wrapper where that tool looks for agent definitions,
-            translate the frontmatter, and point it at the same MCP servers — the protocol is open, only
-            the config file's shape differs. <code>agents/README.md</code> has the locations and the
+            translate the frontmatter, recreate the permission rules, and point it at the same MCP servers —
+            the protocol is open, only the config file's shape differs. <code>agents/README.md</code> has the locations and the
             tool-name translation table.</p>
             <div class="note">
               <p><strong>Whichever tool you use, edit <code>agents/*.md</code>, never a wrapper</strong> —
@@ -839,14 +855,17 @@ cp .mcp.json.example .mcp.json</code></pre>
                     The application reachable from where the agent runs — VPN or allow-listed IP if needed,
                     and not mid-deploy.<br>
                     <code>BASE_URL</code> and a working <code>&lt;ROLE&gt;_EMAIL</code>/<code>_PASSWORD</code>
-                    pair per role in <code>.env</code> — log in by hand as each first.<br>
+                    pair per role in <code>.env</code>.<br>
                     The role keys in <code>config/projectProfile.ts</code> <em>and</em> the Role key column of
                     profile section 2, with the baseline role named. It logs in as each role listed there and
                     drafts the rest of the row, but cannot guess which accounts exist.<br>
+                    <b>A working login per role.</b> The agent starts from each role's seed,
+                    <code>tests/seeds/&lt;role&gt;.spec.ts</code>, so do the login half of step 5 now — real
+                    selectors in <code>LoginPage.ts</code> and the logged-in check — then
+                    <code>npx playwright test tests/seeds/</code> must pass.<br>
                     The Playwright MCP server connected (<code>/mcp</code>), browsers installed.</td></tr>
                   <tr><td><b>Worth gathering</b></td><td>
-                    A read-only QA database account, wired in <code>.mcp.json</code> with its tools named in
-                    the wrapper (step 2).<br>
+                    A read-only QA database account, wired in <code>.mcp.json</code> (step 2).<br>
                     Local paths to the application source, an OpenAPI or Swagger file, schema scripts,
                     integration contracts, exported requirement or wiki pages — it asks for each and checks it
                     can read it.<br>
@@ -860,11 +879,11 @@ cp .mcp.json.example .mcp.json</code></pre>
                 </tbody>
               </table>
             </div>
-            <div class="note warn">
-              <p><strong>Use dedicated test accounts.</strong> To log in, the agent reads each password from
-              <code>.env</code> and types it into the browser, so the value passes through the AI
-              conversation. Use QA-only accounts that exist for testing — never a person's own account, and
-              never one that also works in production.</p>
+            <div class="note">
+              <p><strong>Passwords stay out of the AI conversation.</strong> Each seed logs in inside the
+              test runner, which reads <code>.env</code> itself; agents are handed a signed-in page and are
+              denied reading <code>.env</code>. Still use QA-only accounts that exist for testing — never a
+              person's own account, and never one that also works in production.</p>
             </div>
             <p>Skipping is allowed: write the profile and flow plans by hand instead. Same work, no first
             draft.</p>
@@ -962,7 +981,9 @@ cp .mcp.json.example .mcp.json</code></pre>
                 <thead><tr><th>If</th><th>Delete</th></tr></thead>
                 <tbody>
                   <tr><td>No API tests</td><td><code>lib/api/</code>, the <code>apiClient</code> fixture, the <code>api</code> project in the Playwright config</td></tr>
-                  <tr><td>No database</td><td><code>config/DbConnection.ts</code>, <code>config/testDbConnection.ts</code>, the <code>db:check</code> script, the <code>mssql</code> deps, <code>expectGroupsMatchDatabase</code></td></tr>
+                  <tr><td>No database</td><td><code>config/DbConnection.ts</code>, <code>config/db/</code>, <code>config/testDbConnection.ts</code>, the <code>db:check</code> script, the <code>mssql</code> and <code>pg</code> deps, <code>expectGroupsMatchDatabase</code></td></tr>
+                  <tr><td>One database engine only (optional)</td><td>The other driver, its adapter in <code>config/db/</code>, and its <code>ENGINES</code> entry in <code>DbConnection.ts</code> — unused drivers are never loaded, so this is tidiness only</td></tr>
+                  <tr><td>No tracker server</td><td>The <code>tracker</code> entry in <code>.mcp.json</code> — agents fall back to pasted stories and the defect CSV</td></tr>
                   <tr><td>One browser only</td><td>The <code>edge</code> project in the Playwright config</td></tr>
                 </tbody>
               </table>
@@ -993,8 +1014,9 @@ npx playwright test tests/example.spec.ts</code></pre>
       <h2>Your first real test</h2>
 
       <ol>
-        <li><b>Paste the story, with its issue key,</b> into the conversation, then run
-        <code>/playwright-test-planner</code>. No key, and it stops to ask.
+        <li><b>Give the planner the story's issue key</b> — run <code>/playwright-test-planner</code> with
+        it. With the tracker server wired it fetches the ticket and asks you to confirm it is complete;
+        otherwise paste the story in with its key. No key, and it stops to ask.
         Work its checkpoints. Out: <code>specs/&lt;KEY&gt;.plan.md</code> and <code>.plan.csv</code>.</li>
         <li><b>Read the plan's gap table</b> — "new page objects, fixtures and data keys required". If a
         data key is listed, add it to <code>data/testData.ts</code> yourself; the generator flags data keys
@@ -1026,7 +1048,7 @@ npx playwright test tests/example.spec.ts</code></pre>
       <p>You are the sixth role, and not an optional one. The first three stop and ask for your approval at
       every decision that would be expensive to get wrong; the fourth asks before calling anything a defect.
       None of them is designed to be left running unattended — except the last, which makes no judgments
-      at all.</p>
+      at all; and with a tracker wired, even it asks once before creating bugs.</p>
 
       <!-- context builder -->
       <article class="agent">
@@ -1048,9 +1070,10 @@ npx playwright test tests/example.spec.ts</code></pre>
 
         <h4>What it needs first</h4>
         <p>The application reachable, a working credential pair per role in <code>.env</code>, the role
-        keys in the profile, and the Playwright MCP server connected. Database access and local sources are
-        optional extras; with a database, its tools must be named in this agent's wrapper. Setup step 3 has
-        the full list — including why these should be dedicated test accounts.</p>
+        keys in the profile, a passing login seed per role in <code>tests/seeds/</code>, and the Playwright
+        MCP server connected. Database access and local sources are optional extras. It never logs in by
+        hand: it starts from each role's seed, so it never sees a password. Setup step 3 has the full
+        list.</p>
 
         <h4>When to run it</h4>
         <p><b>Not for every story.</b> It runs once at setup, before filling in the profile by hand — it
@@ -1142,9 +1165,12 @@ npx playwright test tests/example.spec.ts</code></pre>
         before anything is written down. It writes no test code at all.</p>
 
         <h4>How to invoke</h4>
-        <p>Paste the story into the conversation — key, title, description, AC as plain text — then run the
-        command. No tracker API. Screenshots are supplementary: used for field names, layout and labels the
-        text omitted, never to invent behavior they only imply.</p>
+        <p>Run the command with the story's key. With the tracker server wired it fetches the ticket —
+        summary, description, acceptance criteria — shows you what it read, and asks whether anything agreed
+        outside the ticket is missing. It only reads; it never edits or comments on the story. Without a
+        tracker, paste the story in — key, title, description, AC as plain text. Screenshots are
+        supplementary: used for field names, layout and labels the text omitted, never to invent behavior
+        they only imply.</p>
 
         <h4>Story key and test case IDs</h4>
         <p><b>The story's issue key is mandatory</b> — without one the planner stops and asks before doing
@@ -1218,7 +1244,9 @@ npx playwright test tests/example.spec.ts</code></pre>
         <h4>The loop, per step</h4>
         <ol>
           <li><code>generator_setup_page</code> — mandatory, even when the plan reads descriptive enough to
-          write code directly.</li>
+          write code directly. It always names the seed: the scenario's role,
+          <code>tests/seeds/&lt;role&gt;.spec.ts</code>, or <code>tests/seed.spec.ts</code> for a signed-out
+          scenario — so the drive starts logged in without the agent ever handling a password.</li>
           <li>Drive the step live. This drive is <b>exploratory</b> — it operates on the raw page to
           discover real behavior, and is not the shape the final code takes.</li>
           <li>Map it back to conventions: which page object method (I1), which fixture (I2), which data key
@@ -1253,6 +1281,7 @@ npx playwright test tests/example.spec.ts</code></pre>
         <ul>
           <li>Mint a TCID — a scenario with no plan row goes back to the plan first</li>
           <li>Write a test for a step it never drove</li>
+          <li>Log in by hand, or read <code>.env</code></li>
           <li>Assume a file path</li>
           <li>Invent a module tag — it asks, then writes the row into <code>regression-tags.md</code> itself</li>
           <li>Invent SQL</li>
@@ -1327,9 +1356,8 @@ npx playwright test tests/example.spec.ts</code></pre>
           than just how fast it does it. Two cautions even with access: introspection tools misreport
           structure, so confirm anything structural against real rows; and one query shows the state
           <em>now</em>, not at assertion time.</p>
-          <p style="margin-top:8px">In Claude Code, "wired" means named too: the database's tools must be on
-          the healer wrapper's <code>tools:</code> line, or it behaves as though there were none. Setup step
-          2 covers it.</p>
+          <p style="margin-top:8px">Its access is read-only twice over: a read-only account, and
+          <code>.claude/settings.json</code> denying the database server's write tools.</p>
         </div>
         <h4>It never changes a TCID</h4>
         <p>A fix may reword a title's summary; the <code>&lt;STORY-KEY&gt;-TC&lt;NNN&gt;</code> prefix stays
@@ -1354,20 +1382,35 @@ npx playwright test tests/example.spec.ts</code></pre>
       <article class="agent">
         <div class="agent-head">
           <span class="agent-name">/playwright-defect-raiser</span>
-          <span class="agent-role">defect log → tracker CSV + fixme</span>
+          <span class="agent-role">defect log → tracker bug + fixme</span>
         </div>
         <div class="pills">
           <span class="pill on-accent">opus</span>
           <span class="pill">no browser</span>
-          <span class="pill">unattended — asks nothing</span>
-          <span class="pill">writes specs/defects.csv</span>
+          <span class="pill">Jira MCP optional</span>
+          <span class="pill">tracker mode asks once · CSV mode unattended</span>
         </div>
 
         <p class="agent-plain"><b>The role it plays:</b> the administrator who does the paperwork. Every
         judgment was already made and confirmed by a person; this agent only turns it into a properly
-        formatted bug row and marks the failing test as a known issue so it stops breaking the build. It
-        asks nothing and decides nothing — if an entry looks wrong, it stops and tells you rather than
-        filing something approximate.</p>
+        formatted bug and marks the failing test as a known issue so it stops breaking the build. It decides
+        nothing — if an entry looks wrong, it stops and tells you rather than filing something
+        approximate.</p>
+
+        <h4>Two modes</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th></th><th>Tracker mode — server wired</th><th>CSV mode — no server</th></tr></thead>
+            <tbody>
+              <tr><td>Files the bug</td><td>Creates it in the tracker, linked to the story</td><td>Appends a row to <code>specs/defects.csv</code> to import</td></tr>
+              <tr><td>Duplicates</td><td>Searches for an open bug with the TCID label first, and reuses it</td><td>One row per log entry; re-runs skip existing rows</td></tr>
+              <tr><td>Asks</td><td>Once — shows the whole batch before creating any of it</td><td>Nothing</td></tr>
+              <tr><td><code>trackerKey</code></td><td>Filled in for you</td><td>Fill it in after the import</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>It never writes a CSV row for a bug it created — importing would file it twice — and never edits,
+        moves or comments on an existing issue.</p>
 
         <h4>Traceability it adds</h4>
         <p>Every filed row carries the story key and TCID, in its labels and a <em>Traceability</em> line, so
@@ -1381,7 +1424,7 @@ npx playwright test tests/example.spec.ts</code></pre>
           <span class="sev p2">P2</span> High/Major ·
           <span class="sev p3">P3</span> Medium/Minor ·
           <span class="sev p4">P4</span> Low/Low.</li>
-          <li>Append a row to <code>specs/defects.csv</code>.</li>
+          <li>File it: create it in the tracker after the batch confirmation, or append the CSV row.</li>
           <li>Find the <code>test()</code> whose title matches exactly, change to <code>test.fixme(</code>,
           add a comment referencing the defect and what the app does instead.</li>
           <li>Set <code>status: "raised"</code>, add <code>raisedAt</code>.</li>
@@ -1394,8 +1437,9 @@ npx playwright test tests/example.spec.ts</code></pre>
             <tbody>
               <tr><td>Severity missing or not P1–P4</td><td>Entry left <code>pending</code>, reported</td></tr>
               <tr><td>Test renamed or removed since detection</td><td>Entry left <code>pending</code>, reported — never guesses which test</td></tr>
-              <tr><td>CSV row already exists for that <code>id</code></td><td>Skipped, log reconciled. Re-run safe.</td></tr>
-              <tr><td>Tracker key still a placeholder</td><td>Stops. A CSV filed under a placeholder key is worse than no CSV.</td></tr>
+              <tr><td>CSV row or tracker bug already exists for it</td><td>Skipped, log reconciled. Re-run safe.</td></tr>
+              <tr><td>A tracker create fails mid-batch</td><td>Stops, reports what was and was not created. The duplicate check makes a re-run safe.</td></tr>
+              <tr><td>Tracker key still a placeholder</td><td>Stops. A bug filed under a placeholder key is worse than none.</td></tr>
             </tbody>
           </table>
         </div>
@@ -1424,7 +1468,7 @@ npx playwright test tests/example.spec.ts</code></pre>
             <tr><td><b>Test case design</b></td><td><code>playwright-test-planner</code> — equivalence partitioning, boundary values, decision tables, state transitions, pairwise, error guessing</td><td><code>specs/&lt;KEY&gt;.plan.md</code> and <code>.plan.csv</code>, one TCID per case</td></tr>
             <tr><td><b>Environment setup</b></td><td><code>.env</code>, <code>.mcp.json</code>, and the readiness check in <code>lib/globalSetup.ts</code>; <code>data/seed.ts</code> for a known data state</td><td>An environment verified reachable before any test runs</td></tr>
             <tr><td><b>Test execution</b></td><td>Playwright, with <code>playwright-test-generator</code> automating each case against the live app and <code>playwright-test-healer</code> triaging failures; manual cases recorded in <code>specs/execution/</code></td><td><code>test-results/results.json</code>, <code>manual-results.csv</code></td></tr>
-            <tr><td><b>Defect management</b></td><td>Healer confirms with a person → <code>playwright-defect-raiser</code> files it → the healer retests once fixed</td><td><code>specs/defects.csv</code> for the tracker; a defect log with each defect's status</td></tr>
+            <tr><td><b>Defect management</b></td><td>Healer confirms with a person → <code>playwright-defect-raiser</code> files it → the healer retests once fixed</td><td>A bug in the tracker, or <code>specs/defects.csv</code> to import; a defect log with each defect's status</td></tr>
             <tr><td><b>Cycle closure</b></td><td><code>npm run report:cycle</code></td><td>A summary with pass rates, acceptance-criteria coverage, open defects, and each exit criterion met or not</td></tr>
           </tbody>
         </table>
@@ -1489,7 +1533,7 @@ npx playwright test tests/example.spec.ts</code></pre>
           <thead><tr><th>Status</th><th>Set by</th><th>Means</th></tr></thead>
           <tbody>
             <tr><td><code>pending</code></td><td>healer</td><td>Confirmed by a person, not yet filed</td></tr>
-            <tr><td><code>raised</code></td><td>defect-raiser</td><td>In <code>specs/defects.csv</code> for the tracker; the test is <code>test.fixme</code></td></tr>
+            <tr><td><code>raised</code></td><td>defect-raiser</td><td>Created in the tracker, or in <code>specs/defects.csv</code> to import; the test is <code>test.fixme</code></td></tr>
             <tr><td><code>verified</code></td><td>healer, on retest</td><td>Passed twice after the fix; the test is active again</td></tr>
           </tbody>
         </table>
@@ -1653,13 +1697,27 @@ npx playwright test tests/example.spec.ts</code></pre>
 
       <div class="comp">
         <div class="comp-head"><code class="comp-name">.mcp.json</code><span class="comp-tag you">you fill this in</span></div>
-        <p class="comp-plain">How agents reach the browser and, optionally, the database.</p>
+        <p class="comp-plain">How agents reach the browser and, optionally, the database and the tracker.</p>
         <p>The Playwright entry is required — three of the five agents cannot work without a browser. The
         database entry is optional and is the single biggest reduction in friction available: with it,
         agents read your schema instead of asking you for every query. Use a read-only account against QA —
-        and in Claude Code, name its tools in the context-builder and healer wrappers (setup step 2).</p>
+        the example server has no read-only mode of its own. The tracker entry connects Jira, so stories are
+        fetched by key and bugs created directly.</p>
         <p class="you-do"><b>You touch it:</b> once at setup, from <code>.mcp.json.example</code>. It is
-        gitignored — it usually carries a connection string.</p>
+        gitignored — the database entry carries a password.</p>
+      </div>
+
+      <div class="comp">
+        <div class="comp-head"><code class="comp-name">.claude/settings.json</code><span class="comp-tag">ships ready</span></div>
+        <p class="comp-plain">What agents are never allowed to do, enforced by Claude Code rather than left to
+        the agent.</p>
+        <p>Agents may not read <code>.env</code> or <code>.mcp.json</code>, may not call the database
+        server's write tools, and may not edit, move or delete anything in Jira. Creating, linking or
+        commenting on a Jira issue always asks a person first. Read-only lookups are pre-approved so they
+        do not prompt. It is a second line behind the agents' own instructions — not a sandbox.</p>
+        <p class="you-do"><b>You touch it:</b> only if you rename a server key in <code>.mcp.json</code> or
+        choose a different database or tracker server — the rules name their tools. Personal overrides go in
+        <code>.claude/settings.local.json</code>.</p>
       </div>
 
       <h3>Configuration — how the harness is wired</h3>
@@ -1699,13 +1757,19 @@ npx playwright test tests/example.spec.ts</code></pre>
 
       <div class="comp">
         <div class="comp-head"><code class="comp-name">config/DbConnection.ts</code><span class="comp-tag">rarely edited</span></div>
-        <p class="comp-plain">How tests read the database, and how they report it when they cannot.</p>
+        <p class="comp-plain">How tests read the database — SQL Server or PostgreSQL — and how they report it
+        when they cannot.</p>
+        <p><code>DB_ENGINE</code> in <code>.env</code> picks the engine; each has its adapter in
+        <code>config/db/</code>, and only the one in use is loaded. Parameters are written
+        <code>@name</code> on both, so a query's shape does not change with the engine — only its
+        dialect.</p>
         <p>Two behaviors worth knowing. It checks your database settings are filled in <em>before</em>
         dialling, so a missing <code>.env</code> reads as "you have not configured this" instead of a
         connection stack trace that looks like an outage. And when the server refuses for a reason that
         will not fix itself — a firewall that does not know your IP, a wrong password — it remembers, so the
         rest of the run fails instantly instead of waiting out a full timeout on every single test.</p>
-        <p class="you-do"><b>You touch it:</b> only if your project uses something other than SQL Server.</p>
+        <p class="you-do"><b>You touch it:</b> only to add a third engine — a new adapter in
+        <code>config/db/</code> — or to drop the one you don't use.</p>
       </div>
 
       <div class="comp">
@@ -1886,13 +1950,25 @@ npx playwright test tests/example.spec.ts</code></pre>
 
       <div class="comp">
         <div class="comp-head"><code class="comp-name">tests/example.spec.ts</code> · <code class="comp-name">tests/seed.spec.ts</code><span class="comp-tag">reference</span></div>
-        <p class="comp-plain">A worked example, and a starting point for the generator.</p>
+        <p class="comp-plain">A worked example, and the signed-out starting point for the generator.</p>
         <p>The example demonstrates the authoring conventions in working code — the fastest way to understand
         them is to read it alongside the invariants. It fails until you point the harness at a real
-        application, which makes it a useful check that setup is finished. The seed file is where the
-        generator's browser session begins; its body stays empty.</p>
+        application, which makes it a useful check that setup is finished. The seed file is where a
+        signed-out browser session begins — the login screen itself; its body stays empty.</p>
         <p class="you-do"><b>You touch it:</b> keep the example as a smoke check, or delete it once real
         tests exist.</p>
+      </div>
+
+      <div class="comp">
+        <div class="comp-head"><code class="comp-name">tests/seeds/&lt;role&gt;.spec.ts</code><span class="comp-tag you">one per role</span></div>
+        <p class="comp-plain">Where an agent starts when it needs to be logged in — so it never handles a
+        password.</p>
+        <p>Each is a single test that logs in as its role, inside the test runner. The context-builder and
+        generator hand the file to Playwright and pick up the signed-in page it leaves. That is
+        what lets <code>.claude/settings.json</code> deny agents reading <code>.env</code>. They also run with
+        the suite, as a login check per role.</p>
+        <p class="you-do"><b>You touch it:</b> when you add a role — copy a seed, rename it to the role,
+        change the role inside. <code>npm run check:docs</code> fails if a role has no seed.</p>
       </div>
 
       <p style="margin-top:22px"><a href="COMPONENTS.md">Deeper reference — extension points, exports and failure modes →</a></p>
@@ -1978,10 +2054,12 @@ npx playwright test tests/example.spec.ts</code></pre>
       </ol>
 
       <h3>Retesting a fixed defect</h3>
-      <p>When the tracker shows a defect fixed, fill <code>trackerKey</code> in its defect-log entry and ask
-      <code>/playwright-test-healer</code> to retest. It un-<code>fixme</code>s the test, runs it twice, and
-      either marks the entry <code>verified</code> or restores the <code>fixme</code> and reports that the fix
-      didn't hold.</p>
+      <p>Ask <code>/playwright-test-healer</code> to retest. With the tracker server wired it finds the
+      fixed bugs itself, from their status; without one, tell it which, and make sure each defect-log entry
+      has its <code>trackerKey</code>. It un-<code>fixme</code>s the test, runs it twice, and either marks
+      the entry <code>verified</code> or restores the <code>fixme</code> and reports that the fix didn't
+      hold. With a tracker it offers to comment the result on the bug — asking first — and never closes or
+      reopens it itself.</p>
     </section>
 
     <!-- ================= TROUBLESHOOTING ================= -->
@@ -1999,6 +2077,21 @@ npx playwright test tests/example.spec.ts</code></pre>
               <td><code>… contains a term from the originating project</code></td>
               <td>A copy still named <code>ai-qa-harness</code> in <code>package.json</code>, so the template's neutrality check runs against your application's name</td>
               <td>Rename <code>name</code> in <code>package.json</code>. <code>npm run export</code> does this for you.</td>
+            </tr>
+            <tr>
+              <td>A seed in <code>tests/seeds/</code> fails</td>
+              <td>That role's login is broken — wrong selectors in <code>LoginPage.ts</code>, or a locked or expired account</td>
+              <td>Fix it before running an agent as that role. The agents start from these files and will not work around them.</td>
+            </tr>
+            <tr>
+              <td><code>tests/seeds/&lt;role&gt;.spec.ts is missing</code></td>
+              <td>A role was added to <code>config/projectProfile.ts</code> without its seed</td>
+              <td>Copy another seed, rename it to the role, change the role inside.</td>
+            </tr>
+            <tr>
+              <td>The tracker server is listed but agents cannot use it</td>
+              <td>Not signed in, or <code>?tools=all</code> missing from its URL — then only the generic <code>execute</code> tool exists, which is denied</td>
+              <td>Run <code>/mcp</code> to sign in; restore <code>?tools=all</code>.</td>
             </tr>
             <tr>
               <td><code>.gitignore does not ignore .env</code></td>

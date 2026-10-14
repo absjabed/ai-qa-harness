@@ -49,13 +49,15 @@ The body of every wrapper is the same one line: read `agents/<name>.md` and foll
 
 Only three things matter, and two are optional:
 
-- **The tool allow-list.** Translate the names — the table below. If the tool has no way to restrict
-  tools, drop the field; the agents' own instructions still constrain what they do.
+- **The tool list.** The Claude wrappers carry `allowed-tools`, which in a Claude Code command
+  *pre-approves* those tools for the turn so they run without a prompt — it does not restrict anything; the
+  restrictions live in `.claude/settings.json` (step 4). Other tools may treat their list as an allow-list:
+  translate the names (the table below), and if the tool has no such field, drop it.
 - **Model selection**, if the tool supports pinning one. See *Model choice* below — this matters more than
   the syntax.
 - **A description**, for tools that show one.
 
-Everything else in Claude's frontmatter (`color`, `effort`) is cosmetic or Claude-only.
+Everything else in Claude's frontmatter (`effort`) is Claude-only.
 
 ### 3. Point it at the MCP servers
 
@@ -63,10 +65,17 @@ MCP is an open protocol. The servers are the same; only the config file differs 
 Code, `.vscode/mcp.json` for VS Code, `mcp.json` for Cursor, and so on. Copy the server entries from
 `.mcp.json.example` into whatever shape your tool expects.
 
-If your tool restricts agents to an allow-list, a database server's tools have to be on the list for
-`playwright-context-builder` and `playwright-test-healer` — the only two that use it. The canonical
-definitions cannot name those tools, because the server is project-chosen. List only its read-only tools.
-The Claude wrappers for both agents carry a note saying so.
+If your tool restricts agents to an allow-list, the database and tracker servers' tools have to be on it
+for the agents that use them — the context-builder and healer for the database; the planner, healer and
+defect-raiser for the tracker. List only read-only tools, plus the tracker's create, link and comment tools
+for the defect-raiser and healer.
+
+### 4. Carry over the guard rails
+
+`.claude/settings.json` holds the harness's permission rules for Claude Code: agents may not read `.env` or
+`.mcp.json`, may not call the database server's write tools, and must ask before any write to the tracker.
+Recreate the equivalent in your tool's own permission system. The agents' instructions say the same things,
+so the rules are a second line — but it is the line that holds when an instruction is missed.
 
 ## Tool-name translation
 
@@ -108,8 +117,9 @@ thing to suspect — not the prompt.
 ## Interaction model
 
 Four of the five need to ask a question and wait for an answer. A tool running headless in CI cannot do
-that, so those four are not CI-shaped on any vendor. `playwright-defect-raiser` is the exception: it makes
-no judgments and runs unattended by design.
+that, so those four are not CI-shaped on any vendor. `playwright-defect-raiser` is the exception in CSV
+mode: it makes no judgments and runs unattended. With a tracker server it asks once, before creating
+anything — so it is CI-shaped only without one.
 
 ## Relationship to `npx playwright init-agents`
 

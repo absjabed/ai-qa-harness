@@ -60,7 +60,8 @@ export const projectProfile: ProjectProfile = {
     roles,
     dbValidationEnabled: process.env.DB_VALIDATION_ENABLED !== 'false',
     apiTestsEnabled: process.env.API_TESTS_ENABLED === 'true',
-    schemaPrefix: process.env.DB_SCHEMA_PREFIX || 'dbo',
+    // SQL Server's default schema is dbo; PostgreSQL's is public.
+    schemaPrefix: process.env.DB_SCHEMA_PREFIX || (process.env.DB_ENGINE === 'postgres' ? 'public' : 'dbo'),
     exitCriteria: {
         priority1PassRate: 100,
         priority2PassRate: 95,

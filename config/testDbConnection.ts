@@ -17,12 +17,15 @@ async function testConnection(): Promise<void> {
     }
 
     const db = new DbConnection();
-    console.log(`Connecting to ${appConfig.db.database || '<DB_NAME unset>'} on ${appConfig.db.server || '<DB_SERVER unset>'}...`);
+    console.log(
+        `Connecting to ${appConfig.db.database || '<DB_NAME unset>'} on ${appConfig.db.server || '<DB_SERVER unset>'} ` +
+        `(${appConfig.db.engine})...`
+    );
 
     try {
         const result = await db.executeQuery(appConfig.dbSmokeQuery);
         console.log('Connected. Smoke query returned:');
-        console.table(result.recordset);
+        console.table(result.rows);
     } catch (error) {
         // Message only. Every failure this check produces — unset config, blocked IP, rejected
         // credentials — is explained in the message itself, and the driver stack behind it points

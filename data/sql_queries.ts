@@ -3,6 +3,11 @@ import { projectProfile } from '@config/projectProfile';
 /**
  * Centralized SQL — invariant I3.
  *
+ * Written in the dialect of the project's engine (`DB_ENGINE`): `TOP 5` on SQL Server, `LIMIT 5` on
+ * PostgreSQL. Two PostgreSQL habits worth knowing: unquoted identifiers fold to lower case, so a column
+ * written `Name` comes back as `name` unless the SQL aliases it (`SELECT name AS "Name"`); and string
+ * comparison is case-sensitive.
+ *
  * Every DB-backed assertion names a key from this file. No spec file writes SQL inline, and no
  * page object builds a query string of its own. A schema change then has exactly one place to be
  * fixed, and a reviewer can see the whole database surface the suite depends on in one read.
@@ -10,7 +15,8 @@ import { projectProfile } from '@config/projectProfile';
  * Conventions, followed by the AI agents when they add a key:
  * - Name the key for what it answers, not how: `getOpenRecordsForOwner`, not `selectFromRecords`.
  * - A query with no parameters is a string; a parameterized one is a function returning a string.
- * - Parameterize through `executePreparedStatement` for anything derived from test input. String
+ * - Parameterize through `executePreparedStatement` for anything derived from test input, writing
+ *   parameters as `@name` whatever the engine — the adapter translates them. String
  *   interpolation is acceptable only for values the test itself controls, never for values that
  *   came from the page.
  * - Keep queries read-only unless the key name says otherwise (`unlock...`, `reset...`).

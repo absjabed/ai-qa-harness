@@ -18,9 +18,10 @@ application-specific content so the next project can start clean.
 
 ### Recommended: export into the project's QA repository
 
-From a checkout of the template — no `npm install` needed for this step:
+From a checkout of the template, at a release tag — no `npm install` needed for this step:
 
 ```bash
+git checkout v<version>          # the latest release; `git tag` lists them
 npm run export -- ../<app>-qa
 ```
 
@@ -30,7 +31,8 @@ The target can be an empty folder or a fresh clone of the QA repository. The exp
   above all — and leaves behind the three that describe the template: `README.md`, `CHANGELOG.md` and the
   export script itself
 - names the package after the target folder, and writes a starter `README.md` if the target has none
-- records the template version and commit in `PROJECT-PROFILE.md` section 1
+- records the template version and commit in `PROJECT-PROFILE.md` section 1 — marked *unreleased* if you
+  exported from anything but a release tag
 - runs `check:docs` against the copy, so anything missing shows up now rather than in CI
 
 It never overwrites. If any file it would write already exists in the target, it lists them and writes
@@ -103,6 +105,9 @@ array in that file to your application's actual roles.
 `.env` is gitignored. Never put a credential anywhere else — `data/auth_data.ts` reads them at runtime and
 throws a clear error if a role is unconfigured, which is the behavior you want.
 
+**Database:** set `DB_ENGINE` to `mssql` (SQL Server) or `postgres` (PostgreSQL), then the `DB_*` block.
+`DB_PORT` and `DB_SCHEMA_PREFIX` default to the engine's own (1433 and `dbo`, or 5432 and `public`).
+
 No database? Set `DB_VALIDATION_ENABLED=false` and skip the `DB_*` block. No API? Leave
 `API_TESTS_ENABLED=false`.
 
@@ -112,28 +117,38 @@ No database? Set `DB_VALIDATION_ENABLED=false` and skip the `DB_*` block. No API
 cp .mcp.json.example .mcp.json
 ```
 
-The Playwright entry is required — the context-builder, generator and healer cannot work without a browser.
-It ships with `@playwright/test`, so there is nothing extra to install. The database entry is optional but
-removes the single biggest source of friction in this harness: with it, agents read your schema instead of
-asking you for every query. Use a **read-only** account against a QA database, never production.
+Three entries. Delete the ones you will not use.
+
+- **`playwright-test` — required.** The context-builder, generator and healer cannot work without a
+  browser. It ships with `@playwright/test`, so there is nothing extra to install.
+- **`database` — optional, high value.** With it, agents read your schema instead of asking you for every
+  query. The example is PostgreSQL; the comment above it gives the SQL Server flags. This server has no
+  read-only mode, so use a **read-only** account against a QA database, never production.
+- **`tracker` — optional.** Jira, through Atlassian's remote MCP server. The planner then fetches a story
+  from its key, the defect-raiser creates bugs instead of writing a CSV to import, and the healer reads bug
+  status to know what to retest. Sign in by running `/mcp` in Claude Code. Keep `?tools=all` on the URL and
+  the server key `tracker` — the guard rails below depend on both.
+
 [docs/MCP.md](docs/MCP.md) has the reasoning and the caveats.
 
-**Wired a database server? Name its tools too.** In Claude Code the `tools:` line in an agent's wrapper is
-an allow-list: a connected server's tools are withheld from any agent that does not name them. Two agents
-use the database, so append its tool names to the `tools:` line of both:
+**Guard rails — `.claude/settings.json`.** Shipped and committed, so they apply to everyone using the
+harness in Claude Code:
 
-- `.claude/commands/playwright-context-builder.md` — to introspect the schema
-- `.claude/commands/playwright-test-healer.md` — to judge a failing database-backed assertion
+| Rule | Covers |
+|---|---|
+| **Deny** | Reading `.env` and `.mcp.json` — agents never see a password. The database server's write tools. Jira deletes, edits, status changes and admin tools, and the server's generic `execute` tool. |
+| **Ask** | Creating a Jira issue, linking one, commenting, attaching. A person approves every write to the tracker. |
+| **Allow** | The read-only database and Jira tools, so agents do not prompt on every lookup. |
 
-The names take the form `mcp__<server>__<tool>` — with the server keyed `database`, as in the example,
-`mcp__database__<tool>`. Running `/mcp` in an interactive Claude Code session lists the exact tools your
-server exposes. List only read-only ones; if the server also offers a write or execute tool, leave it out,
-so read-only holds even if the account turns out not to be.
+The rules name tools as `mcp__database__<tool>` and `mcp__tracker__<tool>`, so they depend on the server
+keys in `.mcp.json`. Rename a key, or choose a different database or tracker server, and update the rules
+to match — `/mcp` in Claude Code lists the tools a server exposes. Personal overrides go in
+`.claude/settings.local.json`, which is gitignored.
 
-Skip this and nothing errors. The context-builder quietly skips schema introspection and the healer declines
-to judge database-backed failures, both behaving as though no database existed. This is frontmatter
-wiring, not instructions, so it is the one wrapper edit that is expected. Other tools with an allow-list
-need the same — see [`agents/README.md`](agents/README.md).
+The agents' own instructions already forbid writing to the application or the database, and require
+confirmation before anything is filed. These rules are the second line, for when an instruction is missed.
+They are not a sandbox: Bash can still read a file the `Read` rule denies — agents have no reason to, but
+the real protection for the database is still the read-only account.
 
 ### If you are not using Claude Code
 
@@ -146,9 +161,10 @@ The harness does not require it. Three of its four layers are vendor-neutral alr
 - The **agent definitions** live in [`agents/`](agents/) as plain prose with no vendor's frontmatter and no
   vendor's tool names.
 
-Only the wrappers in `.claude/` are Claude-specific, and they contain no instructions — each is one line
-pointing at its canonical file in `agents/`. To support another tool, write the equivalent one-line wrapper
-where that tool looks, translate the frontmatter, and point it at the same MCP servers.
+Only `.claude/` is Claude-specific: the wrappers in `.claude/commands/`, which contain no instructions —
+each is one line pointing at its canonical file in `agents/` — and the permission rules in
+`.claude/settings.json`. To support another tool, write the equivalent one-line wrapper where that tool
+looks, translate the frontmatter, recreate the permission rules, and point it at the same MCP servers.
 [`agents/README.md`](agents/README.md) has the locations, the tool-name translation table, and the part
 that actually matters: these definitions depend on blocking checkpoints, refusals and self-audits, and a
 weaker model drops those first.
@@ -183,21 +199,30 @@ thin.
 - **The application reachable** from the machine the agent runs on — VPN, allow-listed IP, whatever your QA
   environment needs — and not mid-deploy.
 - **Working credentials in `.env`** — `BASE_URL`, and one `<ROLE>_EMAIL`/`<ROLE>_PASSWORD` pair per role.
-  Log in by hand as each one first; a locked or expired account wastes the run.
 - **The role keys** — in the `roles` array of `config/projectProfile.ts` *and* the *Role key* column of
   `PROJECT-PROFILE.md` section 2, with the baseline role named. It logs in as each role listed there. It
   drafts the rest of each row, but it cannot guess which accounts exist.
+- **A working login for each role.** The agent never logs in by hand — it starts from each role's seed,
+  `tests/seeds/<role>.spec.ts`, which logs in inside the test runner. So do the login half of step 5 now:
+  replace the `CHANGE_ME` selectors in `pages/LoginPage.ts` and the logged-in check in
+  `pages/DashboardPage.ts`. Then, with one seed per role (copy one and change the role), this must pass:
+
+  ```bash
+  npx playwright test tests/seeds/
+  ```
+
+  A seed that fails here is a role the agent cannot map — and a locked or expired account found now is
+  cheaper than one found halfway through the run.
 - **The Playwright MCP server connected** — confirm with `/mcp` in Claude Code before starting.
 - **Browsers installed** — `npx playwright install`, from step 1.
 
-**Use dedicated test accounts.** To log in, the agent reads each password from `.env` and types it into the
-browser, so the value passes through the AI conversation. Use QA-only accounts that exist for testing —
-never a person's own account, and never one that also works in production.
+**Passwords stay out of the AI conversation.** The seeds read `.env` inside the test runner, and
+`.claude/settings.json` denies agents reading `.env` themselves. Still use QA-only accounts that exist for
+testing — never a person's own account, and never one that also works in production.
 
 **Gather if you have them** — each one widens what it can establish; none is required:
 
-- **Database access** — a read-only QA account, wired in `.mcp.json`, with its tool names added to the
-  wrapper (step 2).
+- **Database access** — a read-only QA account, wired in `.mcp.json` (step 2).
 - **Local paths** to the application source, an OpenAPI or Swagger file, schema scripts, integration
   contracts, and exported requirement or wiki pages. It asks for each path and checks it can read it.
 - **Who to ask about what** — it records contacts in the baseline so the other agents know who settles a
@@ -320,8 +345,14 @@ The generator looks up a scenario's module here; anything unregistered makes it 
 
 - **No API tests?** Delete `lib/api/`, the `apiClient` fixture in `lib/BaseTest.ts`, and the `api` project
   in `playwright.config.ts`.
-- **No database?** Delete `config/DbConnection.ts`, `config/testDbConnection.ts`, the `db:check` script,
-  the `mssql` dependencies, and `expectGroupsMatchDatabase` in `DashboardPage.ts`.
+- **No database?** Delete `config/DbConnection.ts`, `config/db/`, `config/testDbConnection.ts`, the
+  `db:check` script, the `mssql` and `pg` dependencies, and `expectGroupsMatchDatabase` in
+  `DashboardPage.ts`.
+- **One engine only?** Optional — the other driver is loaded only when used. To drop it, uninstall it
+  (`mssql @types/mssql`, or `pg @types/pg`), delete its adapter in `config/db/`, and remove its entry from
+  `ENGINES` in `config/DbConnection.ts`.
+- **No tracker server?** Delete the `tracker` entry from `.mcp.json`. The agents fall back to pasted
+  stories and the defect CSV; the `mcp__tracker__` rules in `.claude/settings.json` are then inert.
 - **Only one browser?** Drop the `edge` project from `playwright.config.ts`.
 
 ## 10. Verify
@@ -406,8 +437,19 @@ fails fast instead of spending a full connect timeout per test.
 **The generator says `generator_setup_page` is unavailable** — the Playwright MCP server is not connected.
 Fix that rather than letting it proceed; an agent that cannot drive the browser produces nothing usable.
 
-**The database is wired, but the context-builder skipped introspection or the healer says it has no database
-access** — its tool names are missing from that agent's `tools:` line. See step 2.
+**A seed in `tests/seeds/` fails** — the login itself is broken for that role: wrong selectors in
+`pages/LoginPage.ts`, or a locked or expired account. Fix it before running an agent as that role; the agents
+start from these files and will not work around them.
+
+**`check:docs` says `tests/seeds/<role>.spec.ts is missing`** — a role was added to
+`config/projectProfile.ts` without its seed. Copy another seed and change the role.
+
+**The tracker server is listed but the agents cannot use it** — not signed in (run `/mcp`), or `?tools=all`
+is missing from its URL, in which case the server offers only its generic `execute` tool, which
+`.claude/settings.json` denies.
+
+**A database or tracker tool is refused outright** — it is on the deny list in `.claude/settings.json`. That
+is deliberate for writes; for a read tool your server names differently, add it to `allow`.
 
 **An agent says a section is still a placeholder** — it found `<...>` in `PROJECT-PROFILE.md`. Fill that
 section in; the agents refuse to invent your application's vocabulary, which is the point.

@@ -16,7 +16,28 @@ frontmatter and no tool's tool names. Each opens with a header stating its role,
 access, MCP servers and model guidance.
 
 **How to use** Edit these. `.claude/commands/*.md` are one-line wrappers that point here and deliberately
-carry no prose, so the two cannot drift. `agents/README.md` covers porting to another agentic tool.
+carry no prose, so the two cannot drift. Their frontmatter sets the model and *pre-approves* the tools each
+agent uses (`allowed-tools`) so they run without a prompt — it restricts nothing; the restrictions are in
+`.claude/settings.json`. `agents/README.md` covers porting to another agentic tool.
+
+---
+
+### `.claude/settings.json`
+
+**What** The harness's permission rules for Claude Code — shipped and committed, so they apply to everyone.
+
+| Rule | Covers |
+|---|---|
+| Deny | Reading `.env` and `.mcp.json`; the database server's write tools; Jira edits, status changes, deletes and admin tools, and the server's generic `execute` |
+| Ask | Creating, linking, commenting on or attaching to a Jira issue |
+| Allow | The read-only database and Jira tools |
+
+**How to use** The rules name tools as `mcp__database__<tool>` and `mcp__tracker__<tool>`, so they follow the
+server keys in `.mcp.json`. Change a key, or choose a different server, and update the names. Personal
+overrides go in `.claude/settings.local.json`, which is gitignored.
+
+**What to expect** A second line behind the agents' own instructions, not a sandbox — a shell command can
+still read a file the `Read` rule denies. For the database, the read-only account remains the real guard.
 
 **What to expect** Changing an agent's behavior is one edit in one file, regardless of how many tools you
 have wired up.
@@ -46,14 +67,19 @@ agent will act on it confidently. Fix the document in the same change as the tes
 
 ### `.mcp.json`
 
-**What** How agents reach the browser and, optionally, the database. Copied from `.mcp.json.example`;
-gitignored, because the database entry carries a connection string.
+**What** How agents reach the browser and, optionally, the database and the issue tracker. Copied from
+`.mcp.json.example`; gitignored, because the database entry carries a password.
 
-**The required entry** `npx playwright run-test-mcp-server` — ships with `@playwright/test`, nothing extra
-to install. Three of the five agents cannot work without it.
+**The required entry** `playwright-test` — `npx playwright run-test-mcp-server`, which ships with
+`@playwright/test`, nothing extra to install. Three of the five agents cannot work without it.
 
-**The optional entry** A read-only database server. Biggest single reduction in friction available: with
-it, agents read your schema rather than asking you for every query.
+**The optional entries**
+- `database` — `@executeautomation/database-server`, PostgreSQL or SQL Server, version pinned. Biggest
+  single reduction in friction available: with it, agents read your schema rather than asking you for
+  every query. It has no read-only mode, so give it a read-only account.
+- `tracker` — Jira through Atlassian's remote MCP server, signed in with `/mcp`. The planner fetches stories
+  by key, the defect-raiser creates bugs, the healer reads bug status. Keep `?tools=all` and the key
+  `tracker`; `.claude/settings.json` depends on both.
 
 **What to expect** Introspection reports structure, and not always correctly — confirm anything surprising
 with a direct query before writing it into a context document. Full reasoning in
@@ -139,8 +165,8 @@ is not copied, since a copy has nothing to export.
 hand-made copy most often misses `.gitignore`, and without it `.env` is committed on the first push.
 
 **Also** Names the package after the target folder, writes a starter README if the target has none,
-records the template version and commit in PROJECT-PROFILE.md section 1, and runs `check:docs` against the
-copy.
+records the template version and commit in PROJECT-PROFILE.md section 1 — *unreleased* unless HEAD is the
+release tag `v<version>` — and runs `check:docs` against the copy.
 
 **What to expect** It never overwrites — any existing file it would write stops it before it writes
 anything. It refuses a template with uncommitted changes unless given `--allow-dirty`, which records the
@@ -228,7 +254,10 @@ Required environment variable BASE_URL is not set.
 
 ### `config/DbConnection.ts`
 
-**What** SQL Server connection pool via `mssql`, with two pieces of hard-won failure handling.
+**What** The one database connection in the harness, for SQL Server or PostgreSQL — `DB_ENGINE` in `.env`
+picks. The engine-specific parts live in `config/db/`: `mssqlAdapter.ts` (the `mssql` driver),
+`postgresAdapter.ts` (`pg`), and `types.ts`, the contract between them. Each driver is loaded only when
+used. Two pieces of hard-won failure handling sit on top, for both engines.
 
 **The two behaviors worth knowing**
 
@@ -246,14 +275,23 @@ Required environment variable BASE_URL is not set.
    Transient faults (a dropped socket, a momentary timeout) are deliberately **not** latched — those can
    recover within a run, and latching on them would let one blip void everything after it.
 
-**Methods** `getConnection()`, `executeQuery(sql)`, `executeUpdate(sql)`,
-`executePreparedStatement(sql, params)`, `close()`.
+   Each adapter supplies its engine's persistent refusals and the advice for them — the firewall rule for an
+   Azure SQL IP block, the `pg_hba.conf` entry or managed-server firewall for PostgreSQL, rejected
+   credentials, a missing database, a TLS mismatch.
+
+**Methods** `executeQuery(sql)`, `executeUpdate(sql)` (rows changed), `executePreparedStatement(sql,
+params)`, `close()`. Queries return `{ rows, rowCount }`; `recordset` is the same array as `rows`, kept for
+code written before PostgreSQL support.
+
+**Parameters** Written `@name` in the SQL for both engines; the PostgreSQL adapter turns them into `$1`,
+`$2`. The SQL itself is still the engine's dialect.
 
 **How to use** Never from a spec file. A page object method opens it, queries, and closes it in a `finally`
 — see `DashboardPage.expectGroupsMatchDatabase()` for the shape.
 
-**Different engine?** Swap the driver here and reshape `appConfig.db` in `testConfig.ts` together. Keep
-those five method signatures — the rest of the harness and every agent depends on them.
+**A third engine?** Add an adapter to `config/db/` implementing `DbAdapter` and `EngineErrors`, and an
+entry in `ENGINES`. Keep the four method signatures — the rest of the harness and every agent depends on
+them. **Only one engine?** Uninstall the other driver, delete its adapter and its `ENGINES` entry.
 
 ---
 
@@ -358,9 +396,11 @@ inline; a term missing from it will end up hardcoded in a test.
 
 - Name the key for what it answers, not how: `getOpenRecordsForOwner`, not `selectFromRecords`.
 - Parameterless query → a string. Parameterized → a function returning a string.
-- Parameterize through `executePreparedStatement` for anything derived from test input. String
-  interpolation is acceptable only for values the test itself controls, never for values that came from the
-  page.
+- Parameterize through `executePreparedStatement` for anything derived from test input, writing
+  parameters `@name` on either engine. String interpolation is acceptable only for values the test itself
+  controls, never for values that came from the page.
+- Write in the project's engine dialect. On PostgreSQL, unquoted identifiers fold to lower case — alias a
+  column (`SELECT name AS "Name"`) when code reads it by its mixed-case name.
 - Read-only unless the key name says otherwise (`unlock...`, `reset...`).
 
 **What the agents will not do** Invent SQL. They have no schema visibility, so a query they wrote would be
@@ -537,7 +577,22 @@ section 11. Once it passes, the harness is wired. Keep it as a smoke check or de
 
 ### `tests/seed.spec.ts`
 
-The generator's live-drive starting point. Body stays empty; generated tests go to their own files.
+The live-drive starting point for a signed-out scenario — the login screen itself. Body stays empty;
+generated tests go to their own files. It is also what Playwright falls back to when an agent names no seed,
+which is why no other seed has "seed" in its filename.
+
+### `tests/seeds/<role>.spec.ts`
+
+One per role in `config/projectProfile.ts`; the template ships `admin`, `standardUser` and `readOnlyUser`.
+Each is a single test that logs in as its role through `userLogin`, inside the test runner. Agents pass the
+file to `generator_setup_page` and start from the signed-in page it leaves — so no agent ever handles a
+password, and `.claude/settings.json` can deny them reading `.env`.
+
+**Adding a role** Copy a seed, rename it to the role key, change the role in it. `npm run check:docs` fails
+when a role has no seed, or a seed has no role.
+
+**What to expect** They run with the rest of the suite, as a login check per role. Not traced — they are
+scaffolding, not coverage.
 
 ### `tests/common/login.ts`
 

@@ -233,6 +233,40 @@ check(
     'generator_write_test cannot create parent folders, so the first story would fail'
 );
 
+// ---------------------------------------------------------------- per-role login seeds
+
+// Agents start from tests/seeds/<role>.spec.ts so they never handle a password. A role added to the
+// profile without its seed leaves the agents no way to log in as it, short of reading .env — which
+// .claude/settings.json denies.
+const rolesSource = read('config/projectProfile.ts').match(/export const roles = \[([^\]]*)\]/);
+const profileRoles = rolesSource ? [...rolesSource[1].matchAll(/['"]([^'"]+)['"]/g)].map((m) => m[1]) : [];
+check('config/projectProfile.ts has no roles array the checker can read', profileRoles.length > 0,
+    'expected `export const roles = [...] as const`');
+const seedDir = 'tests/seeds';
+const seeds = exists(seedDir) ? fs.readdirSync(path.join(root, seedDir)).filter((f) => f.endsWith('.spec.ts')) : [];
+for (const role of profileRoles) {
+    check(`${seedDir}/${role}.spec.ts is missing`, seeds.includes(`${role}.spec.ts`),
+        `every role in config/projectProfile.ts needs a login seed — copy another seed and change the role`);
+}
+for (const seed of seeds) {
+    const role = seed.replace(/\.spec\.ts$/, '');
+    check(`${seedDir}/${seed} is for a role the profile does not list`, profileRoles.includes(role),
+        'rename it to match a role in config/projectProfile.ts, or delete it');
+}
+
+// ---------------------------------------------------------------- release version
+
+// The changelog's newest entry is the version being released; a copy records it, so the two must agree.
+if (isTemplate && exists('CHANGELOG.md')) {
+    const pkgVersion = JSON.parse(read('package.json')).version;
+    const latest = read('CHANGELOG.md').match(/^## (\d+\.\d+\.\d+)\b/m)?.[1];
+    check(
+        `package.json version ${pkgVersion} is not the newest CHANGELOG.md entry`,
+        latest === pkgVersion,
+        `the newest entry is ${latest ?? 'missing'} — bump one to match the other`
+    );
+}
+
 // ---------------------------------------------------------------- report
 
 if (notes.length) notes.forEach((n) => console.log(`note: ${n}`));

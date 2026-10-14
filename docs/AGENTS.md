@@ -60,8 +60,8 @@ cover. Name an area, module or role to run it for that alone. Usually the QA lea
 | | |
 |---|---|
 | **Model** | opus, `effort: xhigh` |
-| **Tools** | Read, search and write over the repo; the Playwright browser tools — plus the database's tools, if you name them |
-| **Browser** | Required. It walks the application as each role, read-only. |
+| **Tools** | Read, search and write over the repo; the Playwright browser tools; the database's read tools, if wired |
+| **Browser** | Required. It walks the application as each role, read-only, starting from each role's seed in `tests/seeds/`. |
 | **Input** | Answers to its inventory questions: what sources exist, where they are, who to ask |
 | **Output** | `context/BASELINE.md`, `context/<area>.md`, drafts of PROJECT-PROFILE §2–4, navigation plans, module tags |
 
@@ -69,11 +69,12 @@ cover. Name an area, module or role to run it for that alone. Usually the QA lea
 
 - **Must have:** the application reachable from where the agent runs; `BASE_URL` and a working credential
   pair per role in `.env`; the role keys in `config/projectProfile.ts` and PROJECT-PROFILE §2, with the
-  baseline role named; the Playwright MCP server connected.
-- **Use dedicated QA test accounts.** It reads passwords from `.env` to type them into the browser, so they
-  pass through the AI conversation.
-- **Worth gathering:** a read-only database account with its tools named in the wrapper; local paths to
-  source, API docs, schema scripts, contracts and requirement docs; who to ask about what.
+  baseline role named; a working login — `npx playwright test tests/seeds/` passing, one seed per role; the
+  Playwright MCP server connected.
+- **It never sees a password.** Each seed logs in inside the test runner, and `.claude/settings.json`
+  denies agents reading `.env`. Still use dedicated QA test accounts.
+- **Worth gathering:** a read-only database account; local paths to source, API docs, schema scripts,
+  contracts and requirement docs; who to ask about what.
 - **Decide:** which environment (never production), what it should stay out of, and that you will be there
   to answer its checkpoints.
 
@@ -104,14 +105,14 @@ Turns a story into a reviewed test plan.
 | | |
 |---|---|
 | **Model** | opus, `effort: xhigh` |
-| **Tools** | Glob, Grep, Read, LS, Write — read-only over the codebase, plus writing the plan |
+| **Tools** | Glob, Grep, Read, LS, Write — read-only over the codebase, plus writing the plan; the tracker's read tools, if wired |
 | **Browser** | None. Grounds everything in the codebase. |
-| **Input** | A story pasted into the conversation — key, title, description, AC. Optionally screenshots. |
+| **Input** | A story key. With the tracker server wired it fetches the story itself; otherwise paste key, title, description and AC. Optionally screenshots. |
 | **Output** | `specs/<KEY>.plan.md` and `specs/<KEY>.plan.csv` |
 
 ### How to invoke
 
-Paste the story into the conversation, then run the command. No tracker API — the story arrives as text.
+Run the command with the story's key. With the tracker server wired, the planner fetches the ticket and asks you to confirm it is complete; without one, paste the story into the conversation as text.
 
 **The story's issue key is mandatory** — the ticket's ID in the tracker, a Jira key for example. Without one
 the planner stops and asks, before doing anything else; with one that doesn't match the format in
@@ -206,6 +207,7 @@ Turns an approved plan into a working spec, plus whatever page objects it needed
 | **Tools** | Glob, Grep, Read, LS, Edit, Write + the Playwright Test MCP browser and generator tools |
 | **Browser** | **Required.** Drives the real application live. |
 | **Input** | A plan from `specs/`, or an explicit scenario |
+| **Starts from** | The scenario's role seed, `tests/seeds/<role>.spec.ts` — or `tests/seed.spec.ts` for a signed-out scenario. It always names the seed; it never logs in by hand or reads `.env`. |
 | **Output** | A spec file, plus new page object methods, new page objects, and new `lib/BaseTest.ts` fixtures |
 
 ### Requires the Playwright Test MCP server
@@ -264,7 +266,7 @@ Diagnoses and fixes failing tests. Stops short of filing defects.
 | | |
 |---|---|
 | **Model** | opus |
-| **Tools** | Read/Edit/Write + Playwright MCP snapshot, console, network, `test_run`, `test_debug`, `test_list`, and `AskUserQuestion` |
+| **Tools** | Read/Edit/Write + Playwright MCP snapshot, console, network, `test_run`, `test_debug`, `test_list`, and `AskUserQuestion`; the database's and tracker's read tools, if wired |
 | **Input** | A failing suite |
 | **Output** | Fixed tests, or an entry in `specs/temp-defects/defect-log.json` |
 
@@ -307,9 +309,8 @@ and treats an unreachable database as an environment fault, reported and stopped
 problem, so it stops and reports which assertion failed and the query involved. This is the one place the
 harness deliberately declines to reach a conclusion.
 
-In Claude Code, the database tools must also be named in the healer wrapper's `tools:` line — the allow-list
-withholds them otherwise, and the healer then behaves as though no database existed. The context-builder's
-wrapper needs the same; `SETUP.md` step 2 has the details.
+Its database access is read-only twice over: a read-only account, and `.claude/settings.json` denying the
+database server's write tools.
 
 ### It never changes a TCID
 
@@ -319,10 +320,15 @@ test whose title has no TCID is reported as a suite defect, not logged as an app
 
 ### Retesting a fixed defect
 
-When asked to retest raised defects, it switches each `test.fixme(` back to `test(`, runs it twice, and:
+With the tracker server wired it finds what to retest itself — the `raised` defects whose bugs the tracker
+shows as done — and says which it found. Without one, tell it which were fixed. Then it switches each
+`test.fixme(` back to `test(`, runs it twice, and:
 
 - **passes both times** → keeps it active, removes the defect comment, marks the log entry `verified`
 - **fails either time** → restores the `fixme` exactly, leaves the entry `raised`, records the retest
+
+With a tracker, it offers to comment the result on the bug — asking first. It never closes or reopens a bug
+itself; that is a person's call.
 
 Without this step a `fixme`'d test stays skipped forever, long after its bug was fixed, and the suite quietly
 loses coverage.
@@ -353,27 +359,39 @@ The mechanical last step. Does not investigate or judge.
 | | |
 |---|---|
 | **Model** | opus |
-| **Tools** | Glob, Grep, Read, Edit, Write — no browser, no test runner |
+| **Tools** | Glob, Grep, Read, Edit, Write — no browser, no test runner; the tracker's search, create and link tools, if wired |
 | **Input** | `specs/temp-defects/defect-log.json` |
-| **Output** | Rows in `specs/defects.csv`, plus tests marked `test.fixme()` |
-| **Interactive** | No. Runs unattended. |
+| **Output** | Bugs in the tracker, or rows in `specs/defects.csv` — plus tests marked `test.fixme()` |
+| **Interactive** | Without a tracker, no — runs unattended. With one, it asks once before creating anything. |
+
+### Two modes
+
+| | Tracker mode — server wired | CSV mode — no server |
+|---|---|---|
+| Files the bug | Creates it in the tracker, linked to the story | Appends a row to `specs/defects.csv` for someone to import |
+| Duplicates | Searches for an open bug labelled with the TCID first; reuses it if found | One row per log `id`; a re-run skips existing rows |
+| Asks | Once, showing the whole batch before creating any of it | Nothing |
+| `trackerKey` | Filled in for you | Fill it in after the import |
+| `fixme` comment | References the tracker key | References the log `id` |
+
+It never writes a CSV row for a bug it created — importing the CSV would then file it twice — and it never
+edits, moves or comments on an existing issue.
 
 ### Traceability it adds
 
-Every row it files carries the story key and TCID — in the labels, and in a *Traceability* line in the
+Every bug it files carries the story key and TCID — in the labels, and in a *Traceability* line in the
 description — so anyone reading the tracker can walk back to the test case and the acceptance criterion it
-verifies. The `fixme` comment references the defect by its log `id`, since the tracker's own key doesn't
-exist until the CSV is imported; fill `trackerKey` in the log afterwards. An entry that can't be traced to a
-TCID is left `pending` and reported rather than filed.
+verifies. An entry that can't be traced to a TCID is left `pending` and reported rather than filed.
 
 ### Per pending entry
 
 1. Map `entry.severity` to tracker Priority and Severity via PROJECT-PROFILE.md section 7. Default:
    P1→Highest/Critical, P2→High/Major, P3→Medium/Minor, P4→Low/Low.
-2. Append a row to `specs/defects.csv`.
-3. Open the spec, find the `test()` whose title matches exactly, change it to `test.fixme(`, and add a
+2. Build the bug — the same summary, description and labels in either mode.
+3. File it: create it in the tracker after the batch confirmation, or append the CSV row.
+4. Open the spec, find the `test()` whose title matches exactly, change it to `test.fixme(`, and add a
    comment above referencing the defect and what the application does instead.
-4. Set `status: "raised"` and add `raisedAt`.
+5. Set `status: "raised"` and add `raisedAt`.
 
 ### Safety behaviors
 
@@ -381,8 +399,9 @@ TCID is left `pending` and reported rather than filed.
 |---|---|
 | Severity missing or not P1–P4 | Entry left `pending`, reported |
 | `testName` not found in the spec (renamed or removed) | Entry left `pending`, reported — never guesses which test |
-| A CSV row already exists for that `id` | Skipped, log status reconciled. Re-run safe. |
-| Tracker key still a placeholder | Stops. A CSV of bugs filed under a placeholder key is worse than no CSV. |
+| A CSV row or tracker bug already exists for it | Skipped, log status reconciled. Re-run safe. |
+| A tracker create fails mid-batch | Stops and reports what was and was not created — the duplicate check makes the re-run safe |
+| Tracker key still a placeholder | Stops. A bug filed under a placeholder key is worse than none. |
 
 It never alters the facts of a defect — summary, steps, actual/expected, evidence, severity all came from
 the human-confirmed healer finding. Its only judgment is a table lookup.

@@ -57,8 +57,14 @@ once the user checks, and that is exactly what this step is for.
 This is the source that is always available, and the only one that reflects what the application actually
 does today.
 
-Using `generator_setup_page` and the browser tools, log in as each role from `PROJECT-PROFILE.md` section 2
-(credentials via `.env`, per I4 — never type a literal) and walk the application:
+For each role in `PROJECT-PROFILE.md` section 2, call `generator_setup_page` with that role's seed —
+`tests/seeds/<role>.spec.ts` — and walk the application from the page it leaves you on. The seed logs in
+inside the test runner, so you start already signed in and never handle a password (I4). Never read
+`.env`, and never type a credential into the page. If a role has no seed, stop and ask for one rather than
+logging in by hand; if a seed fails, the login itself is broken — report that, since nothing else can be
+mapped for that role until it works.
+
+As each role:
 
 - What are the top-level areas a user can reach? Those become the module list.
 - From each area, what can this role do — and what is visibly absent or disabled compared with the baseline

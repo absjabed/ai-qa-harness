@@ -26,3 +26,6 @@ specs/temp-defects/
 
 # TypeScript build output
 dist/
+
+# Personal Claude Code settings — the shared guard rails are .claude/settings.json, which is committed.
+.claude/settings.local.json

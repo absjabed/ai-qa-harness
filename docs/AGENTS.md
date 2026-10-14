@@ -25,7 +25,7 @@ story ──▶ planner ──▶ plan.md + plan.csv ──▶ generator ──�
                                                                             defect-raiser
                                                                                       │
                                                                                       ▼
-                                                                    defects.csv + test.fixme()
+                                                    tracker bug (or defects.csv) + test.fixme()
 ```
 
 All five read `PROJECT-PROFILE.md` first. Three of them also read
@@ -122,6 +122,12 @@ Each plan also records the story's **release** — the client release it ships i
 from Jira's fix version and parent epic when connected, otherwise asked at the first checkpoint. *No release
 yet* is a valid answer; such stories are listed as *no release* by `npm run regression`. The release is the
 project's own, never the harness's version.
+
+**From existing test cases.** Point it at the project's old cases for the story's feature — a file in
+`context/sources/`, which rows — and it treats each as a candidate scenario: checked against the AC, rewritten
+in the plan's format with data keys, given a new TCID. Scope Notes keep the mapping, old ID → TCID. A feature
+older than anyone's Jira is planned under the story or epic that introduced it, or a ticket the team raises
+for that regression area — it asks which, and never invents a key.
 
 **The story's issue key is mandatory** — the ticket's ID in the tracker, a Jira key for example. Without one
 the planner stops and asks, before doing anything else; with one that doesn't match the format in
@@ -279,8 +285,16 @@ Diagnoses and fixes failing tests. Stops short of filing defects.
 |---|---|
 | **Model** | opus |
 | **Tools** | Read/Edit/Write + Playwright MCP snapshot, console, network, `test_run`, `test_debug`, `test_list`, and `AskUserQuestion`; the database's and tracker's read tools, if wired |
-| **Input** | A failing suite |
-| **Output** | Fixed tests, or an entry in `specs/temp-defects/defect-log.json` |
+| **Input** | What to heal: a story key, spec files, TCIDs, or the last run's failures — it asks if not told |
+| **Output** | Fixed tests, or an entry in `specs/defects/defect-log.json` with its evidence in `specs/defects/evidence/` |
+
+### What it heals
+
+What you point it at — `PROJ-1234`, a spec, a TCID, or "what failed in the last run", read from
+`test-results/results.json`. Point it at nothing and it lists the last run's failures and asks which; it runs
+the whole suite only when asked for exactly that. When it finishes, it runs the healed specs once more
+through the test runner, so the fixed results reach `specs/execution/automated-results.csv` and the cycle
+report.
 
 ### The three-attempt rule
 
@@ -353,8 +367,18 @@ line, the observed behavior, the evidence ruling out a test-side cause, and a se
 against PROJECT-PROFILE.md section 7 — judged by observed impact, **never** by the test's own `@PriorityN`
 tag, which is test-coverage priority, not defect impact.
 
-On your confirmation it appends to `specs/temp-defects/defect-log.json`. It does not write the CSV and does
-not mark the test `fixme()`. The test stays red until the defect-raiser processes it.
+On your confirmation it appends to `specs/defects/defect-log.json`, then runs `npm run defect:evidence`,
+which copies the failure's screenshots and page snapshot into `specs/defects/evidence/<entry id>/` before the
+next run wipes `test-results/`. It does not file the bug and does not mark the test `fixme()`. The test stays
+red until the defect-raiser processes it.
+
+### Defects found by hand
+
+A tester running a manual case who finds the application wrong tells the healer the TCID and what happened.
+It reads the plan's steps and expected result, asks for the environment, build and screenshots — saved into
+`specs/defects/evidence/<entry id>/` — confirms the severity the same way, and logs the entry as
+`"foundBy": "manual"`. From there it follows the same path. Its retest is the tester re-executing the case.
+A problem outside any planned case has no TCID: plan a scenario for it, or file it in the tracker directly.
 
 ### What to expect
 
@@ -373,17 +397,17 @@ The mechanical last step. Does not investigate or judge.
 |---|---|
 | **Model** | opus |
 | **Tools** | Glob, Grep, Read, Edit, Write — no browser, no test runner; the tracker's search, create and link tools, if wired |
-| **Input** | `specs/temp-defects/defect-log.json` |
-| **Output** | Bugs in the tracker, or rows in `specs/defects.csv` — plus tests marked `test.fixme()` |
-| **Interactive** | Without a tracker, no — runs unattended. With one, it asks once before creating anything. |
+| **Input** | The pending entries in `specs/defects/defect-log.json` — all of them, or the stories or TCIDs you name |
+| **Output** | Bugs in the tracker, linked to the story, evidence attached — or rows in `specs/defects/defects.csv` — plus tests marked `test.fixme()` |
+| **Interactive** | Asks once: it shows the batch — each bug, its severity, TCID, story and evidence — and files only what you agree to |
 
 ### Two modes
 
 | | Tracker mode — server wired | CSV mode — no server |
 |---|---|---|
-| Files the bug | Creates it in the tracker, linked to the story | Appends a row to `specs/defects.csv` for someone to import |
+| Files the bug | Creates it in the tracker, linked to the story, with the evidence files attached if the tracker's tools can upload them | Appends a row to `specs/defects/defects.csv` for someone to import; tells you which evidence to attach after |
 | Duplicates | Searches for an open bug labelled with the TCID first; reuses it if found | One row per log `id`; a re-run skips existing rows |
-| Asks | Once, showing the whole batch before creating any of it | Nothing |
+| Asks | Once, showing the whole batch before creating any of it | Once, the same way |
 | `trackerKey` | Filled in for you | Fill it in after the import |
 | `fixme` comment | References the tracker key | References the log `id` |
 
@@ -403,7 +427,8 @@ verifies. An entry that can't be traced to a TCID is left `pending` and reported
 2. Build the bug — the same summary, description and labels in either mode.
 3. File it: create it in the tracker after the batch confirmation, or append the CSV row.
 4. Open the spec, find the `test()` whose title matches exactly, change it to `test.fixme(`, and add a
-   comment above referencing the defect and what the application does instead.
+   comment above referencing the defect and what the application does instead. A defect found by hand has
+   no test: its key goes in the case's row in `specs/execution/manual-results.csv` instead.
 5. Set `status: "raised"` and add `raisedAt`.
 
 ### Safety behaviors

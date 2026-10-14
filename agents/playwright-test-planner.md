@@ -75,6 +75,27 @@ Two ways in. The key is required either way.
 - **Pasted into the conversation.** Key, title, description and acceptance criteria as plain text. This is
   how it works whenever no tracker server is connected.
 
+### Built from existing test cases
+When the project already has test cases for the story's feature — a spreadsheet or test-management export in
+`context/sources/`, or cases summarized under *Existing coverage* in `context/<area>.md` — the user can point
+at them: the file, and which rows. They are a head start, not a finished plan:
+
+- Treat each as a candidate scenario. Check it against this story's acceptance criteria — keep it, adapt it,
+  or drop it if the story changed the behavior it checks.
+- Rewrite what you keep in this plan's format: Given/When/Then, `data/*.ts` keys instead of the literal
+  values old cases tend to carry (I3), a specific Expected Result, a Priority. Then the Completeness critique
+  runs as usual — old suites have gaps too.
+- Each gets a **new TCID**. The old ID never becomes one (I8). Record the mapping in Scope Notes, in a table
+  *Carried over from existing test cases*: old ID → new TCID, or "dropped — why", so the team can retire the
+  old copy.
+
+### Features with no story
+An existing regression suite often covers features older than anyone's Jira — no story to plan them under.
+They still need an issue key: ask which ticket owns the area — the story or epic that introduced it, or a
+ticket the team raises for that regression area — and its release, and plan under that key. Never invent
+one. Bringing a whole old suite across is one plan per area, done over several sessions, starting with the
+areas the next release touches.
+
 ### The story key is mandatory (I8)
 Every story must arrive with its issue key — the ticket's ID in the tracker (a Jira key, for example), in
 the format set in `PROJECT-PROFILE.md` section 1.

@@ -101,7 +101,9 @@ agents, the components and the workflows. Alongside it, this file, `AGENTS.md`, 
 project's QA repository. `qa-harness-intro.html` is a three-slide deck for
 introducing the harness to a QA team — how a story is tested by hand today, how it is tested with the
 harness, and what changes for them. Open it in a browser; arrow keys move between slides, F goes full
-screen, and printing gives one slide per page.
+screen, and printing gives one slide per page. `qa-harness-walkthrough.html` follows one example through a
+whole cycle — setup, one ticket, regression and closure — showing for each step what you run, what the
+harness asks and what comes out; the handbook's *Follow a whole cycle* covers the same in reference form.
 
 **How to use** `npm run docs` opens the handbook. The markdown files are read in place, and are also what
 the agents read when they need a convention rather than an instruction.
@@ -174,10 +176,13 @@ never appears in them.
 **What** `npm run report:cycle` — the STLC test-cycle closure report, by hand. The same report is written
 automatically when any run ends (`lib/cycleReporter.ts`), scoped to the stories that ran; use this to
 rebuild it after recording manual results, or for another scope: `--release 2.26`, `--stories PROJ-12,PROJ-15`,
-or nothing for every story. Written to `reports/cycle-summary-<scope>-<time>.md`.
+or nothing for every story; `--since <date>` ignores results from before the cycle began. Written to
+`reports/cycle-summary-<scope>-<time>.md`, which is not committed — or, with `--closure`, to
+`specs/execution/closure/`, which is: the cycle's final report, kept for the record.
 
-**Reads** Plans, the latest `test-results/results.json`, `specs/execution/manual-results.csv` and the defect
-log — all optional; it says plainly which were missing.
+**Reads** Plans, `specs/execution/automated-results.csv` (each test case's latest result across runs),
+`specs/execution/manual-results.csv` and `specs/defects/defect-log.json` — all optional; it says plainly which
+were missing. It names the build under test (`BUILD_UNDER_TEST`) and warns when results come from several.
 
 **Reports** Every active test case and how it ended (Passed · Flaky · Failed · Blocked by a `fixme` ·
 Skipped · Not Run), pass rates by priority, acceptance-criteria coverage per story, open defects by
@@ -500,14 +505,23 @@ environment. Does not fire on `--list`.
 
 ### `lib/cycleReporter.ts`
 
-**What** A Playwright reporter that writes the test-cycle closure report as soon as a run ends, scoped to the
-stories that ran — run one ticket's spec and the report covers that ticket, not every plan with the rest
+**What** A Playwright reporter that, as a run ends, first records each test case's result in
+`specs/execution/automated-results.csv` — so a cycle of several runs is reported as a whole — then writes the
+test-cycle closure report, scoped to the stories that ran — run one ticket's spec and the report covers that ticket, not every plan with the rest
 marked *Not Run*. `npm run regression` hands it its own scope: the release and tickets you selected.
 
 **Why after the JSON reporter** It reads `test-results/results.json`, and Playwright finishes reporters in
 the order listed, so it is listed last in `playwright.config.ts`.
 
-**Escape hatch** `AUTO_CYCLE_REPORT=false`. A failure to write the report is printed and never fails the run.
+**Escape hatch** `AUTO_CYCLE_REPORT=false` turns the report off; the results are recorded regardless. A
+failure to record or report is printed and never fails the run.
+
+### `scripts/defect-evidence.ts`
+
+**What** `npm run defect:evidence` — copies a confirmed defect's screenshots and page snapshot out of
+`test-results/`, which the next run wipes, into `specs/defects/evidence/<entry id>/`, and lists them in the
+entry's `attachments`. The healer runs it when you confirm a defect; the defect-raiser attaches the files.
+`--with-traces` copies the trace and video too.
 
 ---
 
@@ -595,9 +609,17 @@ You don't need them complete before the first test. Start with the baseline role
 
 ### `specs/execution/`
 
-**What** `manual-results.csv` — the execution record for manual test cases, which have no runner. Columns:
-`TCID, Status, Executed By, Executed On, Environment, Notes`; Status is `Passed`, `Failed`, `Blocked` or
-`Not Run`.
+**What** The cycle's execution record, committed. `automated-results.csv` — each automated test case's latest
+result, written by every run. `manual-results.csv` — the record for manual test cases, which have no runner.
+Columns: `TCID, Status, Executed By, Executed On, Environment, Notes`; Status is `Passed`, `Failed`,
+`Blocked` or `Not Run`. `closure/` — each cycle's final report.
+
+### `specs/defects/`
+
+**What** Committed, so the whole team shares one defect record. `defect-log.json` — every confirmed defect
+and its status (`pending` → `raised` → `verified`); `evidence/<entry id>/` — its screenshots;
+`defects.csv` — bugs to import, only without a Jira connection. The cycle report counts open defects from
+the log, so a regression run on any machine sees them.
 
 **How rows arrive** The planner seeds a `Not Run` row for every `Manual` scenario when it saves a plan; a
 tester updates them; `report:cycle` reads them alongside automated results. A manual case still `Not Run`

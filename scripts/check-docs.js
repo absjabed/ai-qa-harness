@@ -26,7 +26,7 @@ function check(label, condition, detail) {
 }
 
 /** Installed or generated — never documentation, whether or not .gitignore is there to say so. */
-const GENERATED = /^(node_modules|\.git|test-results|playwright-report|reports|blob-report|allure-\w+|dist|specs\/temp-defects)(\/|$)/;
+const GENERATED = /^(node_modules|\.git|test-results|playwright-report|reports|blob-report|allure-\w+|dist)(\/|$)/;
 /** Never scanned when walking the tree: generated, installed, or gitignored for carrying secrets. */
 const WALK_SKIP = new RegExp(`${GENERATED.source}|^\\.env(?!\\.example$)|^\\.mcp\\.json$`);
 

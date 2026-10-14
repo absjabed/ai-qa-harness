@@ -10,10 +10,14 @@
  * and an evaluation of the exit criteria in PROJECT-PROFILE.md section 10.
  *
  * Inputs, all optional — the report says plainly which were missing:
- *   specs/<STORY-KEY>.plan.md           planned test cases, AC → TCID links, release and epic
- *   test-results/results.json           the latest automated run (Playwright's JSON reporter)
- *   specs/execution/manual-results.csv  manual executions
- *   specs/temp-defects/defect-log.json  defects and their lifecycle status
+ *   specs/<STORY-KEY>.plan.md              planned test cases, AC → TCID links, release and epic
+ *   specs/execution/automated-results.csv  every test case's latest automated result, across runs
+ *   test-results/results.json              the latest run — folded into the file above as each run ends
+ *   specs/execution/manual-results.csv     manual executions
+ *   specs/defects/defect-log.json          defects and their lifecycle status
+ *
+ * The automated record matters because a cycle is many runs, not one: the regression, then the healer's
+ * re-runs of what failed, then a retest. The latest result of each test case is what the cycle reports.
  *
  * Releases here are the project's own — the client release a story ships in. The harness's version never
  * appears in a report.
@@ -36,7 +40,16 @@ export interface CycleScope {
     label?: string;
     /** Where the results came from, for the report's header — e.g. "automatic, after the run". */
     trigger?: string;
+    /** Ignore results executed before this date (`YYYY-MM-DD`) — they count as not run. For a new cycle. */
+    since?: string;
+    /** Write to specs/execution/closure/, which is committed, instead of reports/. For the cycle's final report. */
+    closure?: boolean;
 }
+
+export const DEFECT_LOG = 'specs/defects/defect-log.json';
+export const AUTOMATED_RECORD = 'specs/execution/automated-results.csv';
+const MANUAL_RECORD = 'specs/execution/manual-results.csv';
+const LATEST_RUN = 'test-results/results.json';
 
 export interface CycleResult {
     file: string | null;
@@ -73,10 +86,25 @@ const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9.]+/g, '-').replace
 
 // ---------------------------------------------------------------- automated results
 
-interface PwTest { status: 'expected' | 'unexpected' | 'flaky' | 'skipped'; annotations?: { type: string }[] }
-interface PwSpec { title: string; file: string; tests: PwTest[] }
-interface PwSuite { specs?: PwSpec[]; suites?: PwSuite[] }
-interface PwReport { suites?: PwSuite[]; stats?: { startTime?: string; duration?: number } }
+export interface PwAttachment { name: string; contentType: string; path?: string }
+export interface PwResult { status: string; attachments?: PwAttachment[] }
+export interface PwTest { status: 'expected' | 'unexpected' | 'flaky' | 'skipped'; projectName?: string; annotations?: { type: string }[]; results?: PwResult[] }
+export interface PwSpec { title: string; file: string; tests: PwTest[] }
+export interface PwSuite { specs?: PwSpec[]; suites?: PwSuite[] }
+export interface PwReport { suites?: PwSuite[]; stats?: { startTime?: string; duration?: number } }
+
+/** Every spec in Playwright's JSON report, flattened. */
+export function eachSpec(report: PwReport): PwSpec[] {
+    const out: PwSpec[] = [];
+    const walk = (suites: PwSuite[] = []) => {
+        for (const s of suites) {
+            out.push(...(s.specs ?? []));
+            walk(s.suites);
+        }
+    };
+    walk(report.suites);
+    return out;
+}
 
 function specOutcome(spec: PwSpec): Outcome {
     const statuses = spec.tests.map((t) => t.status);
@@ -93,29 +121,70 @@ const RANK: Outcome[] = ['Failed', 'Blocked', 'Flaky', 'Skipped', 'Passed', 'Not
 const worse = (a: Outcome, b: Outcome) => (RANK.indexOf(a) <= RANK.indexOf(b) ? a : b);
 
 /** TCID → outcome, from Playwright's JSON report. Also the count of results with no TCID. */
-export function readAutomatedResults(file = 'test-results/results.json'): {
+export function readAutomatedResults(file = LATEST_RUN): {
     outcomes: Map<string, Outcome>;
+    specs: Map<string, { file: string; browsers: string[] }>;
     untraced: number;
     started?: string;
     found: boolean;
 } {
     const outcomes = new Map<string, Outcome>();
-    if (!has(file)) return { outcomes, untraced: 0, found: false };
+    const specs = new Map<string, { file: string; browsers: string[] }>();
+    if (!has(file)) return { outcomes, specs, untraced: 0, found: false };
     let untraced = 0;
     const report = JSON.parse(read(file)) as PwReport;
-    const walkSuites = (suites: PwSuite[] = []) => {
-        for (const s of suites) {
-            for (const spec of s.specs ?? []) {
-                const tcid = spec.title.match(TCID_PREFIX)?.[1];
-                if (!tcid) { untraced++; continue; }
-                const o = specOutcome(spec);
-                outcomes.set(tcid, outcomes.has(tcid) ? worse(outcomes.get(tcid)!, o) : o);
-            }
-            walkSuites(s.suites);
-        }
-    };
-    walkSuites(report.suites);
-    return { outcomes, untraced, started: report.stats?.startTime, found: true };
+    for (const spec of eachSpec(report)) {
+        const tcid = spec.title.match(TCID_PREFIX)?.[1];
+        if (!tcid) { untraced++; continue; }
+        const o = specOutcome(spec);
+        outcomes.set(tcid, outcomes.has(tcid) ? worse(outcomes.get(tcid)!, o) : o);
+        const browsers = [...new Set([...(specs.get(tcid)?.browsers ?? []), ...spec.tests.map((t) => t.projectName ?? '').filter(Boolean)])];
+        specs.set(tcid, { file: `tests/${spec.file}`.replace(/^tests\/tests\//, 'tests/'), browsers });
+    }
+    return { outcomes, specs, untraced, started: report.stats?.startTime, found: true };
+}
+
+// ---------------------------------------------------------------- the automated record
+
+interface RecordRow { tcid: string; status: Outcome; executedOn: string; browser: string; build: string; spec: string }
+const RECORD_HEADER = ['TCID', 'Status', 'Executed On', 'Browser', 'Build', 'Spec'];
+
+function readRecord(file: string, header: string[]): Map<string, Record<string, string>> {
+    const rows = new Map<string, Record<string, string>>();
+    if (!has(file)) return rows;
+    const [head, ...body] = parseCsv(read(file));
+    if (!head) return rows;
+    const cols = head.map((h) => h.trim());
+    for (const r of body) {
+        const row: Record<string, string> = {};
+        header.forEach((h) => { row[h] = (r[cols.indexOf(h)] ?? '').trim(); });
+        if (row.TCID) rows.set(row.TCID, row);
+    }
+    return rows;
+}
+
+const csvCell = (s: string) => (/[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s);
+
+/**
+ * Folds the latest run into specs/execution/automated-results.csv: each test case that ran gets its new
+ * result, every other row is kept. Called as each run ends, by lib/cycleReporter.ts.
+ */
+export function recordAutomatedResults(): { recorded: number; file: string } {
+    const latest = readAutomatedResults();
+    if (!latest.found || latest.outcomes.size === 0) return { recorded: 0, file: AUTOMATED_RECORD };
+    const rows = readRecord(AUTOMATED_RECORD, RECORD_HEADER);
+    const executedOn = (latest.started ? new Date(latest.started) : new Date()).toISOString().slice(0, 16).replace('T', ' ');
+    const build = process.env.BUILD_UNDER_TEST?.trim() ?? '';
+    for (const [tcid, status] of latest.outcomes) {
+        const spec = latest.specs.get(tcid);
+        const row: RecordRow = { tcid, status, executedOn, browser: spec?.browsers.join(' ') ?? '', build, spec: spec?.file ?? '' };
+        rows.set(tcid, { TCID: row.tcid, Status: row.status, 'Executed On': row.executedOn, Browser: row.browser, Build: row.build, Spec: row.spec });
+    }
+    const sorted = [...rows.values()].sort((a, b) => a.TCID.localeCompare(b.TCID, undefined, { numeric: true }));
+    const text = [RECORD_HEADER.join(','), ...sorted.map((r) => RECORD_HEADER.map((h) => csvCell(r[h] ?? '')).join(','))].join('\n') + '\n';
+    fs.mkdirSync(path.dirname(path.join(ROOT, AUTOMATED_RECORD)), { recursive: true });
+    fs.writeFileSync(path.join(ROOT, AUTOMATED_RECORD), text, 'utf8');
+    return { recorded: latest.outcomes.size, file: AUTOMATED_RECORD };
 }
 
 // ---------------------------------------------------------------- manual results
@@ -161,29 +230,43 @@ export function buildCycleReport(scope: CycleScope = {}): CycleResult {
     const cases = plans.flatMap((p) => p.cases).filter((c) => !c.retired);
     const retiredCount = plans.flatMap((p) => p.cases).filter((c) => c.retired).length;
 
-    // ---- automated
+    // ---- automated: the record across runs, else the latest run alone
+    const storyOf = (id: string) => id.replace(/-TC\d{3}$/, '');
+    const fresh = (on: string) => !scope.since || on.slice(0, 10) >= scope.since;
     const auto = readAutomatedResults();
-    if (auto.found) inputs.push('test-results/results.json');
-    const automated = new Map([...auto.outcomes].filter(([id]) => inScope.has(id.replace(/-TC\d{3}$/, ''))));
+    const automated = new Map<string, Outcome>();
+    const executedOn: string[] = [];
+    const builds = new Set<string>();
+    if (has(AUTOMATED_RECORD)) {
+        inputs.push(AUTOMATED_RECORD);
+        for (const [id, row] of readRecord(AUTOMATED_RECORD, RECORD_HEADER)) {
+            if (!inScope.has(storyOf(id)) || !fresh(row['Executed On'])) continue;
+            automated.set(id, row.Status as Outcome);
+            executedOn.push(row['Executed On']);
+            if (row.Build) builds.add(row.Build);
+        }
+    } else if (auto.found) {
+        inputs.push(LATEST_RUN);
+        for (const [id, o] of auto.outcomes) if (inScope.has(storyOf(id))) automated.set(id, o);
+    }
+    executedOn.sort();
 
     // ---- manual
     const manual = new Map<string, Outcome>();
-    if (has('specs/execution/manual-results.csv')) {
-        inputs.push('specs/execution/manual-results.csv');
-        const [header, ...rows] = parseCsv(read('specs/execution/manual-results.csv'));
-        const iId = header.indexOf('TCID'), iStatus = header.indexOf('Status');
-        for (const r of rows) {
-            const s = (r[iStatus] ?? '').trim();
+    if (has(MANUAL_RECORD)) {
+        inputs.push(MANUAL_RECORD);
+        for (const [id, row] of readRecord(MANUAL_RECORD, ['TCID', 'Status', 'Executed On'])) {
+            const s = row.Status;
             const o: Outcome = s === 'Passed' ? 'Passed' : s === 'Failed' ? 'Failed' : s === 'Blocked' ? 'Blocked' : 'Not Run';
-            manual.set((r[iId] ?? '').trim(), o);
+            manual.set(id, o === 'Not Run' || fresh(row['Executed On']) ? o : 'Not Run');
         }
     }
 
     // ---- defects, in scope
     let defects: Defect[] = [];
-    if (has('specs/temp-defects/defect-log.json')) {
-        inputs.push('specs/temp-defects/defect-log.json');
-        defects = (JSON.parse(read('specs/temp-defects/defect-log.json')) as Defect[]).filter(
+    if (has(DEFECT_LOG)) {
+        inputs.push(DEFECT_LOG);
+        defects = (JSON.parse(read(DEFECT_LOG)) as Defect[]).filter(
             (d) => !d.storyKey || inScope.has(d.storyKey)
         );
     }
@@ -252,10 +335,19 @@ export function buildCycleReport(scope: CycleScope = {}): CycleResult {
     const releases = [...new Set(plans.map((p) => p.release ?? '—'))];
     const md: string[] = [];
     md.push(`# Test cycle summary — ${projectProfile.appName} — ${label}`, '');
-    md.push(`Generated ${stamp} UTC from commit \`${commit}\`${auto.started ? `, automated run started ${auto.started}` : ''}${scope.trigger ? ` — ${scope.trigger}` : ''}.`, '');
+    md.push(`Generated ${stamp} UTC from commit \`${commit}\`${scope.trigger ? ` — ${scope.trigger}` : ''}.`, '');
+    const buildNow = process.env.BUILD_UNDER_TEST?.trim();
+    const facts = [
+        `Build under test: **${[...new Set([...builds, ...(buildNow ? [buildNow] : [])])].join(', ') || 'not recorded — set `BUILD_UNDER_TEST` in `.env`'}**`,
+        executedOn.length ? `automated results from ${executedOn[0]} to ${executedOn[executedOn.length - 1]} UTC` : null,
+        scope.since ? `results before ${scope.since} ignored` : null,
+    ].filter(Boolean);
+    md.push(`${facts.join(' · ')}.`, '');
+    if (builds.size > 1) md.push(`> These results come from **${builds.size} different builds**. Re-run what was tested on an older build before closing.`, '');
     md.push(`**Exit criteria: ${allMet ? 'all met' : 'NOT all met'}.** This report states facts; whether to close the cycle is a person's decision.`, '');
 
-    const missing = ['test-results/results.json', 'specs/execution/manual-results.csv', 'specs/temp-defects/defect-log.json'].filter((i) => !inputs.includes(i));
+    const automatedInput = inputs.includes(LATEST_RUN) ? LATEST_RUN : AUTOMATED_RECORD;
+    const missing = [automatedInput, MANUAL_RECORD, DEFECT_LOG].filter((i) => !inputs.includes(i));
     if (missing.length) md.push(`> Inputs not found, treated as empty: ${missing.map((m) => `\`${m}\``).join(', ')}.`, '');
 
     md.push('## Scope', '');
@@ -292,7 +384,7 @@ export function buildCycleReport(scope: CycleScope = {}): CycleResult {
     md.push(`- Results whose TCID is in no plan: **${orphanResults.length}**${orphanResults.length ? ` — ${orphanResults.join(', ')}` : ''}`);
     md.push(`- Open defects with no TCID: **${openDefects.filter((d) => !d.tcid).length}**`, '');
 
-    const outDir = path.join(ROOT, 'reports');
+    const outDir = path.join(ROOT, scope.closure ? 'specs/execution/closure' : 'reports');
     fs.mkdirSync(outDir, { recursive: true });
     const fileStamp = now.toISOString().slice(0, 16).replace(/[:T]/g, '-');
     const out = path.join(outDir, `cycle-summary-${slug(label)}-${fileStamp}.md`);

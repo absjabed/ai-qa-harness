@@ -597,6 +597,7 @@ td code { white-space: nowrap; }
       <a href="#new-repo"><span class="ord">→</span> New QA repo</a>
       <a href="#setup"><span class="ord">1–10</span> Setup</a>
       <a href="#first-test"><span class="ord">→</span> First real test</a>
+      <a href="#cycle"><span class="ord">→</span> Follow a whole cycle</a>
 
       <div class="nav-group">Reference</div>
       <a href="#agents"><span class="ord">5</span> The agents</a>
@@ -882,6 +883,29 @@ npx playwright install</code></pre></div></li>
       rule's source, records any disagreement between a document and the application as a known unknown, and
       only ever reads Jira.</p>
 
+      <h4>Existing test cases and test data — where they go, how they are used</h4>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>What you have</th><th>Where it goes</th><th>How it is used</th></tr></thead>
+          <tbody>
+            <tr><td>Test-case sheets, test-tool exports</td><td><code>context/sources/&lt;name&gt;.csv</code></td><td>The context-builder summarizes them per area as <em>Existing coverage</em>; the planner builds each new plan on them</td></tr>
+            <tr><td>An older automated suite</td><td>stays where it is; export its list of cases into <code>context/sources/</code></td><td>The same. Its code is not converted line by line — the generator writes fresh code by driving the app</td></tr>
+            <tr><td>QA test accounts</td><td><code>.env</code>, one pair per role</td><td>The login files</td></tr>
+            <tr><td>Records tests rely on — IDs, names, codes</td><td><code>data/testData.ts</code> keys</td><td>Each plan's <em>Data</em> field and the specs — never typed into a test (I3)</td></tr>
+            <tr><td>Seed and reset scripts</td><td><code>data/sql_queries.ts</code> keys, called from <code>data/seed.ts</code></td><td>Run before every run with <code>SEED_TEST_DATA=true</code></td></tr>
+            <tr><td>How to put an area into a state</td><td><code>context/&lt;area&gt;.md</code> → <em>Recipes</em></td><td>The planner's <em>Given</em> steps; the seed</td></tr>
+            <tr><td>Personal data, production extracts</td><td>nowhere in the repo</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><b>Bringing old cases into the harness.</b> Point the planner at them — the file, the rows — with the
+      story key. Each becomes a candidate scenario: checked against the acceptance criteria, rewritten in the
+      plan's format with data keys instead of literal values, and given a <b>new TCID</b>. The plan's Scope Notes
+      keep the mapping, old ID → TCID, so the old copy can be retired. Manual cases stay manual; automated ones
+      become code through the generator. A feature older than anyone's Jira still needs a key: plan it under
+      the story or epic that introduced it, or a ticket the team raises for that regression area — one plan
+      per area, starting with what the next release touches.</p>
+
       <h3>4 · Checklist before <code>/playwright-context-builder</code></h3>
       <h4>Must be done</h4>
       <ul class="checklist">
@@ -954,10 +978,12 @@ npx playwright install</code></pre></div></li>
             <tr><td>Fixtures</td><td>generator</td><td><code>lib/BaseTest.ts</code></td><td>yes</td></tr>
             <tr><td>Test data, database queries</td><td>you, when an agent asks</td><td><code>data/testData.ts</code>, <code>data/sql_queries.ts</code></td><td>yes</td></tr>
             <tr><td>Manual test results</td><td>you</td><td><code>specs/execution/manual-results.csv</code></td><td>yes</td></tr>
-            <tr><td>Run results, HTML report</td><td>Playwright</td><td><code>test-results/</code>, <code>playwright-report/</code></td><td>no</td></tr>
-            <tr><td>Cycle reports</td><td>after every run</td><td><code>reports/</code></td><td>your choice</td></tr>
-            <tr><td>Confirmed defects</td><td>healer, defect-raiser</td><td><code>specs/temp-defects/defect-log.json</code>, on the machine that ran it</td><td>no</td></tr>
-            <tr><td>Bugs to import, without Jira</td><td>defect-raiser</td><td><code>specs/defects.csv</code></td><td>yes</td></tr>
+            <tr><td>Automated results — each test case's latest, across runs</td><td>every run</td><td><code>specs/execution/automated-results.csv</code></td><td>yes</td></tr>
+            <tr><td>Run output, HTML report</td><td>Playwright</td><td><code>test-results/</code>, <code>playwright-report/</code></td><td>no</td></tr>
+            <tr><td>Cycle reports after each run</td><td>automatic</td><td><code>reports/</code></td><td>no</td></tr>
+            <tr><td>The cycle's final report</td><td><code>report:cycle --closure</code></td><td><code>specs/execution/closure/</code></td><td>yes</td></tr>
+            <tr><td>Confirmed defects and their screenshots</td><td>healer, defect-raiser</td><td><code>specs/defects/defect-log.json</code>, <code>specs/defects/evidence/</code></td><td>yes</td></tr>
+            <tr><td>Bugs to import, without Jira</td><td>defect-raiser</td><td><code>specs/defects/defects.csv</code></td><td>yes</td></tr>
           </tbody>
         </table>
       </div>
@@ -1251,16 +1277,179 @@ npx playwright test tests/example.spec.ts</code></pre>
         <li><b>Generate</b> with <code>/playwright-test-generator</code>. It drives the browser, then stops
         twice: for the target file path, and for each new page object.</li>
         <li><b>Run</b> the spec.</li>
-        <li><b>Heal</b> what fails with <code>/playwright-test-healer</code>.</li>
-        <li><b>File</b> confirmed defects with <code>/playwright-defect-raiser</code>.</li>
+        <li><b>Heal</b> what fails with <code>/playwright-test-healer &lt;KEY&gt;</code> — name the story, a
+        spec or a TCID; name nothing and it lists the last run's failures and asks.</li>
+        <li><b>File</b> confirmed defects with <code>/playwright-defect-raiser</code> — it shows the pending
+        ones and asks before filing; bugs are linked to the story, with screenshots attached.</li>
+        <li><b>Run the manual cases</b> and record them in <code>specs/execution/manual-results.csv</code>.</li>
         <li><b>Read the cycle report</b> — written to <code>reports/</code> as the run ends, for the stories
         that ran. For a release's regression, <code>npm run regression</code>.</li>
       </ol>
+      <p><a href="#cycle">Follow a whole cycle</a> walks through every step with an example story — what each
+      agent asks, and what comes out.</p>
 
       <div class="note">
         <p><strong>Checkpoint 4 is the cheapest redirect in the pipeline.</strong> The planner shows you
         scenario titles only, before any scenario is written out. Trimming there costs a sentence; trimming
         at the full-plan checkpoint means re-reviewing everything.</p>
+      </div>
+    </section>
+
+    <!-- ================= A WHOLE CYCLE ================= -->
+    <section id="cycle">
+      <p class="eyebrow">Get running</p>
+      <h2>Follow a whole cycle</h2>
+      <p class="lede">One example, start to finish: setting up, testing one ticket, closing a release. What you
+      run, what each agent asks, and what comes out. Written for someone who has never tested this way. The
+      same example, laid out to show a team, is the <a href="qa-harness-walkthrough.html">cycle walkthrough</a>.</p>
+
+      <div class="note warn">
+        <p><strong>An illustration of the design, not a recording.</strong> The harness has not yet been run end
+        to end against a real application; this is what each agent is written to do.</p>
+      </div>
+
+      <h3>The example</h3>
+      <p>An online store. Jira project <code>ACME</code>, connected through the Atlassian plugin. Three kinds of
+      user: store admins, warehouse staff, customers. Release <code>2.26</code>, epic <code>ACME-100</code>
+      "Checkout discounts", and the ticket to test: <code>ACME-1234</code> "Customer applies a discount code at
+      checkout", with four acceptance criteria. The QA repo has been exported into a plain folder; you have
+      one QA test account per kind of user, a business-rules PDF, last release's test cases as a spreadsheet,
+      and a bug list.</p>
+
+      <h4>Words you will see</h4>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Term</th><th>Means</th></tr></thead>
+          <tbody>
+            <tr><td><b>AC</b></td><td>Acceptance criteria — the ticket's "done when" list. Each needs at least one test case.</td></tr>
+            <tr><td><b>Test case</b></td><td>One scenario: starting state, steps, expected result.</td></tr>
+            <tr><td><b>TCID</b></td><td>The test case's ID, <code>ACME-1234-TC003</code>. Given by the planner, never changed. It links ticket → test case → code → result → defect.</td></tr>
+            <tr><td><b>Priority 1 / 2 / 3</b></td><td>How much the test case matters. P1 and P2 are tagged <code>@Regression</code>; P3 is not.</td></tr>
+            <tr><td><b>Manual / Automated</b></td><td>Automated cases become code; manual ones a person runs and records.</td></tr>
+            <tr><td><b>Severity P1–P4</b></td><td>How bad a <em>defect</em> is, by profile section 7 — unrelated to test priority.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Part 1 · The context-builder — once, at setup</h3>
+      <p><code>/playwright-context-builder</code> builds what the harness knows about the application, from the
+      running app, your documents in <code>context/sources/</code> and Jira. It stops at each checkpoint.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Step</th><th>It asks or does</th><th>You</th></tr></thead>
+          <tbody>
+            <tr><td><b>0 · Roles</b></td><td>"The profile has the example roles <code>admin</code>, <code>standardUser</code>, <code>readOnlyUser</code>. Are these yours?" Proposes <code>storeAdmin</code>, <code>warehouseStaff</code>, <code>customer</code>; writes the roles, the profile rows and a login file each; lists the <code>.env</code> names to fill — <code>STORE_ADMIN_EMAIL</code>, <code>STORE_ADMIN_PASSWORD</code>…</td><td>Say which kinds of user exist and which has full access; fill the passwords into <code>.env</code> yourself — it never sees them</td></tr>
+            <tr><td><b>0 · Logins</b></td><td>Runs the three login files. "All failed: the login screen's selectors are still <code>CHANGE_ME</code> — fill them?" Proposes <code>getByLabel('Email')</code>…, edits, re-runs; then the signed-in check the same way</td><td>Agree to the edits</td></tr>
+            <tr><td><b>0 · Jira</b></td><td>"Atlassian plugin connected. One story key you know exists?" — fetches it to prove the connection</td><td>Give one, e.g. <code>ACME-1100</code></td></tr>
+            <tr><td><b>1 · Inventory</b></td><td>Asks about each source by name: database, source code, API docs, specs and business rules, existing test cases, existing test data, bug history, Jira epics to digest, guides, who to ask</td><td>Answer, point at the files; correct the table</td></tr>
+            <tr><td><b>2 · Roam</b></td><td>Signed out first — login, password reset, public pages — then as each role, page to page, <b>read-only</b>: the modules, what each role can and cannot do, the click paths, the exact labels</td><td>Review the module map and role differences</td></tr>
+            <tr><td><b>3 · Read</b></td><td>The rules PDF → rules citing page and section; the old test cases → <em>Existing coverage</em>; the bug list → <em>Caveats</em>; Jira epics → rules citing issue keys. A document that disagrees with the app becomes a <em>known unknown</em></td><td>—</td></tr>
+            <tr><td><b>5–8 · Write</b></td><td>Drafts, each shown first: <code>context/BASELINE.md</code>, profile sections 2–4, module tags, one navigation plan per role, the cross-role matrix (each cell <em>Verified</em> or <em>Not tested here</em>), and deep context for the areas you name — "Which areas will the first stories touch?"</td><td>Approve or correct; name Checkout</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><b>Then, before testing:</b> correct the drafts — a wrong draft becomes a "fact" downstream; fill
+      profile section 7 (severity rubric) and section 10 (exit criteria); run <code>npm run check</code>;
+      <code>git init</code> and commit. The context-builder runs again only when the application changes — a
+      new module or role, changed navigation — never per ticket.</p>
+
+      <h3>Part 2 · Testing one ticket</h3>
+      <ol>
+        <li><b>Plan — <code>/playwright-test-planner ACME-1234</code>.</b> It fetches the ticket and stops at
+        seven checkpoints. <b>1</b>: the ticket, AC1–AC4, release <code>2.26</code> and epic
+        <code>ACME-100</code> from Jira, gaps such as "AC3: which error message for an expired code?", and the
+        existing coverage it will build on — <em>answer here; this matters most</em>. <b>4</b>: scenario titles
+        only — <em>cut or add here; the cheapest place to change course</em>. The rest: conventions, reusable
+        page objects, anything new, the full plan, the CSV. <br><b>Out:</b> <code>specs/ACME-1234.plan.md</code>
+        and <code>.plan.csv</code> with TC001–TC009, and a <code>Not Run</code> row in
+        <code>specs/execution/manual-results.csv</code> for each manual case.</li>
+        <li><b>Fill the gap table.</b> A data key the plan needs, such as <code>discountData.expiredCode</code>,
+        goes in <code>data/testData.ts</code> — by you; the generator never writes data.</li>
+        <li><b>Generate — <code>/playwright-test-generator specs/ACME-1234.plan.md</code>.</b> For each automated
+        case it logs in through the role's login file and drives the real browser, step by step. It asks:
+        "Write to <code>tests/stories/2.26/ACME-1234.spec.ts</code>?"; "No page object for the discount panel —
+        create <code>DiscountPanelPage.ts</code>?"; for SQL it needs; for a module tag's name.
+        <br><b>Out:</b> one test per TCID, titled <code>ACME-1234-TC001 Validate that…</code>, tagged
+        <code>@Regression @Priority1 @Checkout</code>, plus the new page objects.</li>
+        <li><b>Run — <code>npx playwright test tests/stories/2.26/ACME-1234.spec.ts</code>.</b> Say 7 pass and 2
+        fail. <b>Out:</b> the HTML report (<code>npm run report</code>), each case's result recorded in
+        <code>specs/execution/automated-results.csv</code>, and the cycle report in <code>reports/</code>.</li>
+        <li><b>Heal — <code>/playwright-test-healer ACME-1234</code>.</b> Name what to heal — the story, a spec,
+        a TCID, or "what failed in the last run"; name nothing and it lists the last run's failures and asks.
+        A test problem it fixes and says how: "TC004 — the button now reads <em>Redeem</em>; updating
+        <code>DiscountPanelPage</code>". A real bug — reproduced twice, test-side causes ruled out — it stops
+        on: "TC006 expects the total to return after the code is removed; it keeps the discount. Severity
+        <b>P2 Major</b>. Log it?" You confirm or correct the severity. <br><b>Out:</b> fixed tests; a
+        <code>pending</code> entry in <code>specs/defects/defect-log.json</code>, its screenshots kept in
+        <code>specs/defects/evidence/</code>; the healed spec re-run so the record holds the final results.</li>
+        <li><b>Raise — <code>/playwright-defect-raiser</code>.</b> It takes the pending defects — all, or the
+        story or TCIDs you name — checks Jira for a bug already labelled <code>ACME-1234-TC006</code>, and asks
+        once: "Create 1 bug — <em>QA - discount kept after code removed in Checkout</em>, High / Major, TC006,
+        story ACME-1234, 2 screenshots?" On yes: bug <code>ACME-1302</code>, linked to the story, labelled with
+        the TCID, screenshots attached (or listed for you to attach, if the tools cannot upload); the test
+        becomes <code>test.fixme</code>, pointing at ACME-1302. Without Jira it writes
+        <code>specs/defects/defects.csv</code> to import.</li>
+        <li><b>Run the manual cases.</b> Follow each one's steps; fill its row in
+        <code>manual-results.csv</code> — status, who, when, environment. One fails? Tell the healer its TCID
+        and what happened: it records the defect the same way, and the raiser files it.</li>
+        <li><b>Report and commit.</b> <code>npm run report:cycle -- --stories ACME-1234</code>: 8 of 9
+        passing, AC2 blocked by a known defect, one open P2 — criterion not met. Commit the plan, spec, page
+        objects, <code>specs/execution/</code> and <code>specs/defects/</code>. Moving the story's own Jira
+        status stays with people.</li>
+        <li><b>When the fix lands — <code>/playwright-test-healer</code>, "retest raised defects".</b> It sees
+        ACME-1302 done in Jira, makes TC006 active again and runs it twice. Passes both → <code>verified</code>.
+        Fails either → <code>fixme</code> restored, reported. Then, asking first: a comment on the bug, and a
+        status change chosen from the transitions your Jira workflow offers on it.</li>
+      </ol>
+
+      <h3>Part 3 · Regression for the release</h3>
+      <p><b>How it is arranged</b> — nothing extra to set up; it builds up as tickets are tested. Each plan
+      records its <code>Release</code> and <code>Epic</code>; each release's code sits in
+      <code>tests/stories/2.26/</code>; P1 and P2 tests carry <code>@Regression</code>; manual cases are in the
+      plans and their results in <code>manual-results.csv</code>.</p>
+      <ol>
+        <li>Set <code>BUILD_UNDER_TEST</code> in <code>.env</code> to the build deployed — e.g.
+        <code>2.26.0-rc3</code> — and retest anything reported fixed.</li>
+        <li><code>npm run regression</code>:
+<pre><code>Releases:
+  1. 2.25  (14 tickets)
+  2. 2.26  (9 tickets)
+  3. no release yet  (2 tickets)
+Which release? Numbers, comma-separated, or "all" for every release [2.26]: 2
+Run [a]ll of them, pick by [e]pic, or pick [t]ickets? [a]: e
+Only tests tagged @Regression? [Y/n]: y
+Run it? [Y/n]: y</code></pre>
+        A release's own tickets test what changed; earlier releases' tests catch what the change broke —
+        choose several releases, or <em>all</em>, for the full regression.</li>
+        <li><b>Out, as it ends:</b> results per test, each recorded with the build; and
+        <code>reports/cycle-summary-release-2.26-….md</code> — every TCID's outcome, pass rate per priority,
+        AC coverage per ticket, open defects, traceability gaps, and each exit criterion met or not.</li>
+        <li>Heal what failed — "what failed in the last run" — and raise what is confirmed. Run and record the
+        manual cases.</li>
+        <li>Rebuild for the whole cycle: <code>npm run report:cycle -- --release 2.26 --since 2026-10-01</code>.
+        The record keeps each case's <em>latest</em> result, so a test healed after the regression counts as
+        passing; <code>--since</code> stops last cycle's results counting in this one.</li>
+        <li><b>A person decides</b> whether the release can close. Keep the final report:
+        <code>--closure</code> writes it to <code>specs/execution/closure/</code>; commit it.</li>
+      </ol>
+
+      <h3>Who does what</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Stage</th><th>Run</th><th>You decide</th><th>Out</th></tr></thead>
+          <tbody>
+            <tr><td>Setup, once</td><td><code>/playwright-context-builder</code></td><td>Roles, sources, the drafts</td><td><code>context/</code>, profile 2–4, navigation plans, tags</td></tr>
+            <tr><td>Plan</td><td><code>/playwright-test-planner &lt;KEY&gt;</code></td><td>The AC reading, the scenario list</td><td>The plan, its CSV, manual rows</td></tr>
+            <tr><td>Generate</td><td><code>/playwright-test-generator &lt;plan&gt;</code></td><td>Path, new page objects, SQL</td><td><code>tests/stories/&lt;release&gt;/&lt;KEY&gt;.spec.ts</code></td></tr>
+            <tr><td>Run</td><td><code>npx playwright test …</code></td><td>—</td><td>Results recorded; cycle report</td></tr>
+            <tr><td>Heal</td><td><code>/playwright-test-healer &lt;KEY&gt;</code></td><td>Is it a bug? Its severity</td><td>Fixed tests, or a defect with screenshots</td></tr>
+            <tr><td>Raise</td><td><code>/playwright-defect-raiser</code></td><td>Which to file</td><td>Jira bug, linked, evidence attached; <code>test.fixme</code></td></tr>
+            <tr><td>Manual</td><td>you</td><td>Each outcome</td><td><code>manual-results.csv</code></td></tr>
+            <tr><td>Retest</td><td><code>/playwright-test-healer</code> — retest</td><td>Comment? Which transition?</td><td>Test active again; Jira updated</td></tr>
+            <tr><td>Regression</td><td><code>npm run regression</code></td><td>Release → epics or tickets</td><td>Release cycle report</td></tr>
+            <tr><td>Closure</td><td><code>npm run report:cycle -- --closure</code></td><td>Close or not</td><td>The committed final report</td></tr>
+          </tbody>
+        </table>
       </div>
     </section>
 
@@ -1275,8 +1464,8 @@ npx playwright test tests/example.spec.ts</code></pre>
       Monday generates fine on Wednesday.</p>
       <p>You are the sixth role, and not an optional one. The first three stop and ask for your approval at
       every decision that would be expensive to get wrong; the fourth asks before calling anything a defect.
-      None of them is designed to be left running unattended — except the last, which makes no judgments
-      at all; and with a tracker wired, even it asks once before creating bugs.</p>
+      None of them is designed to be left running unattended — not even the last, which makes no judgments
+      at all but still shows you the batch and asks once before filing anything.</p>
 
       <!-- context builder -->
       <article class="agent">
@@ -1550,7 +1739,7 @@ npx playwright test tests/example.spec.ts</code></pre>
           <span class="pill on-warn">requires Playwright Test MCP</span>
           <span class="pill">database MCP optional</span>
           <span class="pill">3 attempts per test</span>
-          <span class="pill">writes specs/temp-defects/defect-log.json</span>
+          <span class="pill">writes specs/defects/defect-log.json</span>
         </div>
 
         <p class="agent-plain"><b>The role it plays:</b> the engineer who triages a red build. It runs the
@@ -1558,6 +1747,13 @@ npx playwright test tests/example.spec.ts</code></pre>
         failures are the test's fault — a moved button, a race, stale data — and it fixes those itself. When
         it believes the application is genuinely broken it stops, shows you the evidence, and asks you to
         confirm before anything is recorded as a defect.</p>
+
+        <h4>What it heals</h4>
+        <p>What you name: <code>/playwright-test-healer ACME-1234</code>, a spec, a TCID, or "what failed in
+        the last run" — read from <code>test-results/results.json</code>. Name nothing and it lists the last
+        run's failures and asks which; it runs the whole suite only when asked for exactly that. When it
+        finishes it runs the healed specs once more through the test runner, so the fixed results reach the
+        record and the cycle report.</p>
 
         <h4>The three-attempt rule</h4>
         <p>Up to 3 fix attempts per test, then one of three things:</p>
@@ -1629,8 +1825,18 @@ npx playwright test tests/example.spec.ts</code></pre>
         line, observed behavior, evidence ruling out a test-side cause, and a severity classified against
         profile section 7 — judged by observed impact, <b>never</b> by the test's <code>@PriorityN</code>
         tag, which is coverage priority, not defect impact.</p>
-        <p>On your confirmation it appends to the defect log. It does not write the CSV and does not mark
-        the test <code>fixme()</code>. The test stays red until the defect-raiser runs.</p>
+        <p>On your confirmation it appends to <code>specs/defects/defect-log.json</code> and runs
+        <code>npm run defect:evidence</code>, which keeps the failure's screenshots and page snapshot in
+        <code>specs/defects/evidence/&lt;entry id&gt;/</code> before the next run wipes them. It does not file
+        the bug and does not mark the test <code>fixme()</code>. The test stays red until the defect-raiser
+        runs.</p>
+
+        <h4>Defects found by hand</h4>
+        <p>A tester whose manual case fails tells the healer the TCID and what happened. It reads the plan's
+        steps and expected result, asks for the environment, build and screenshots, confirms the severity the
+        same way, and records the entry as <code>"foundBy": "manual"</code> — from there it follows the same
+        path, and its retest is the tester re-running the case. A problem outside any planned case has no
+        TCID: plan a scenario for it, or file it in Jira directly.</p>
       </article>
 
       <!-- raiser -->
@@ -1643,7 +1849,7 @@ npx playwright test tests/example.spec.ts</code></pre>
           <span class="pill on-accent">opus</span>
           <span class="pill">no browser</span>
           <span class="pill">Jira MCP optional</span>
-          <span class="pill">tracker mode asks once · CSV mode unattended</span>
+          <span class="pill">asks once, before filing</span>
         </div>
 
         <p class="agent-plain"><b>The role it plays:</b> the administrator who does the paperwork. Every
@@ -1652,14 +1858,19 @@ npx playwright test tests/example.spec.ts</code></pre>
         nothing — if an entry looks wrong, it stops and tells you rather than filing something
         approximate.</p>
 
+        <h4>Which defects, and who says yes</h4>
+        <p>It takes every <code>pending</code> entry in the defect log — or only the stories or TCIDs you name
+        — and shows the batch: each bug's summary, severity, TCID, story and evidence files. Nothing is filed
+        until you agree, and the entries you drop stay <code>pending</code> for later.</p>
+
         <h4>Two modes</h4>
         <div class="table-wrap">
           <table>
             <thead><tr><th></th><th>Tracker mode — server wired</th><th>CSV mode — no server</th></tr></thead>
             <tbody>
-              <tr><td>Files the bug</td><td>Creates it in the tracker, linked to the story</td><td>Appends a row to <code>specs/defects.csv</code> to import</td></tr>
+              <tr><td>Files the bug</td><td>Creates it in the tracker, linked to the story, labelled with the TCID, screenshots attached if the tracker's tools can upload them</td><td>Appends a row to <code>specs/defects/defects.csv</code> to import; tells you which screenshots to attach after</td></tr>
               <tr><td>Duplicates</td><td>Searches for an open bug with the TCID label first, and reuses it</td><td>One row per log entry; re-runs skip existing rows</td></tr>
-              <tr><td>Asks</td><td>Once — shows the whole batch before creating any of it</td><td>Nothing</td></tr>
+              <tr><td>Asks</td><td>Once — shows the whole batch before creating any of it</td><td>Once, the same way</td></tr>
               <tr><td><code>trackerKey</code></td><td>Filled in for you</td><td>Fill it in after the import</td></tr>
             </tbody>
           </table>
@@ -1681,7 +1892,8 @@ npx playwright test tests/example.spec.ts</code></pre>
           <span class="sev p4">P4</span> Low/Low.</li>
           <li>File it: create it in the tracker after the batch confirmation, or append the CSV row.</li>
           <li>Find the <code>test()</code> whose title matches exactly, change to <code>test.fixme(</code>,
-          add a comment referencing the defect and what the app does instead.</li>
+          add a comment referencing the defect and what the app does instead. A defect found by hand has no
+          test: its key goes in that case's row of <code>manual-results.csv</code>.</li>
           <li>Set <code>status: "raised"</code>, add <code>raisedAt</code>.</li>
         </ol>
 
@@ -1722,9 +1934,9 @@ npx playwright test tests/example.spec.ts</code></pre>
             <tr><td><b>Test planning</b></td><td><code>PROJECT-PROFILE.md</code> section 10 — the test types in scope, and the entry and exit criteria</td><td>A strategy every story's test design serves</td></tr>
             <tr><td><b>Test case design</b></td><td><code>playwright-test-planner</code> — equivalence partitioning, boundary values, decision tables, state transitions, pairwise, error guessing</td><td><code>specs/&lt;KEY&gt;.plan.md</code> and <code>.plan.csv</code>, one TCID per case</td></tr>
             <tr><td><b>Environment setup</b></td><td><code>.env</code>, <code>.mcp.json</code>, and the readiness check in <code>lib/globalSetup.ts</code>; <code>data/seed.ts</code> for a known data state</td><td>An environment verified reachable before any test runs</td></tr>
-            <tr><td><b>Test execution</b></td><td>Playwright, with <code>playwright-test-generator</code> automating each case against the live app and <code>playwright-test-healer</code> triaging failures; regression per client release with <code>npm run regression</code>; manual cases recorded in <code>specs/execution/</code></td><td><code>test-results/results.json</code>, <code>manual-results.csv</code></td></tr>
-            <tr><td><b>Defect management</b></td><td>Healer confirms with a person → <code>playwright-defect-raiser</code> files it → the healer retests once fixed</td><td>A bug in the tracker, or <code>specs/defects.csv</code> to import; a defect log with each defect's status</td></tr>
-            <tr><td><b>Cycle closure</b></td><td>The cycle report — written as every run ends, for what ran; <code>npm run report:cycle</code> rebuilds it by hand</td><td>A summary with pass rates, acceptance-criteria coverage, open defects, and each exit criterion met or not</td></tr>
+            <tr><td><b>Test execution</b></td><td>Playwright, with <code>playwright-test-generator</code> automating each case against the live app and <code>playwright-test-healer</code> triaging failures; regression per client release with <code>npm run regression</code>; manual cases recorded in <code>specs/execution/</code></td><td><code>automated-results.csv</code> — each case's latest result across runs, with the build — and <code>manual-results.csv</code></td></tr>
+            <tr><td><b>Defect management</b></td><td>Healer confirms with a person — for automated failures and for defects found by hand → <code>playwright-defect-raiser</code> files it → the healer retests once fixed</td><td>A bug in the tracker, linked to the story with screenshots, or <code>specs/defects/defects.csv</code> to import; the committed defect log with each defect's status</td></tr>
+            <tr><td><b>Cycle closure</b></td><td>The cycle report — written as every run ends, for what ran; <code>npm run report:cycle</code> rebuilds it by hand; <code>--closure</code> keeps the final one</td><td>A summary with pass rates, acceptance-criteria coverage, open defects, and each exit criterion met or not — committed in <code>specs/execution/closure/</code></td></tr>
           </tbody>
         </table>
       </div>
@@ -1788,7 +2000,7 @@ npx playwright test tests/example.spec.ts</code></pre>
           <thead><tr><th>Status</th><th>Set by</th><th>Means</th></tr></thead>
           <tbody>
             <tr><td><code>pending</code></td><td>healer</td><td>Confirmed by a person, not yet filed</td></tr>
-            <tr><td><code>raised</code></td><td>defect-raiser</td><td>Created in the tracker, or in <code>specs/defects.csv</code> to import; the test is <code>test.fixme</code></td></tr>
+            <tr><td><code>raised</code></td><td>defect-raiser</td><td>Created in the tracker, or in <code>specs/defects/defects.csv</code> to import; an automated test is <code>test.fixme</code></td></tr>
             <tr><td><code>verified</code></td><td>healer, on retest</td><td>Passed twice after the fix; the test is active again</td></tr>
           </tbody>
         </table>
@@ -1802,12 +2014,19 @@ npx playwright test tests/example.spec.ts</code></pre>
       of its tickets — all, by epic, or one by one — and whether to run only <code>@Regression</code>-tagged
       tests; then runs the selection. Releases and epics come from each plan's <code>Release</code> and
       <code>Epic</code> fields — the project's own releases, never the harness's version. Stories not yet
-      scheduled are offered as <em>no release</em>. With an agent, the answers go in as flags:
-      <code>--release 2.26 --epics PROJ-100 --yes</code>, or <code>--release none</code>.</p>
-      <p>As the run ends, the cycle report is written for exactly that selection — and after any other run,
-      for the stories it ran. <code>npm run report:cycle</code> rebuilds it by hand, for example after
-      recording manual results. It reads the plans, the latest run, the manual results and the defect log,
-      and writes <code>reports/cycle-summary-&lt;scope&gt;-&lt;time&gt;.md</code>: every test case's outcome — Passed, Flaky, Failed,
+      scheduled are offered as <em>no release</em>, and <em>all</em> runs every release — the full regression,
+      since the earlier releases' tests are what a new release might break. With an agent, the answers go in as
+      flags: <code>--release 2.26 --epics PROJ-100 --yes</code>, <code>--release none</code>, or
+      <code>--release all</code>.</p>
+      <p>As the run ends, each test case's result is recorded in
+      <code>specs/execution/automated-results.csv</code> — with the build under test, <code>BUILD_UNDER_TEST</code>
+      in <code>.env</code> — and the cycle report is written for exactly that selection; after any other run,
+      for the stories it ran. Because the record keeps each case's latest result, the report covers the whole
+      cycle — the regression, the healer's re-runs, the retests — not just the last run.
+      <code>npm run report:cycle</code> rebuilds it by hand, for example after recording manual results;
+      <code>--since &lt;date&gt;</code> ignores results from before the cycle began, and <code>--closure</code>
+      writes the final report to <code>specs/execution/closure/</code> to commit. It reads the plans, the
+      automated and manual records and the defect log, and writes <code>reports/cycle-summary-&lt;scope&gt;-&lt;time&gt;.md</code>: every test case's outcome — Passed, Flaky, Failed,
       Blocked by a known defect, Skipped, or Not Run — pass rates by priority, acceptance-criteria coverage
       per story, open defects, traceability gaps, and each exit criterion marked met or not.</p>
       <div class="note">
@@ -1937,8 +2156,9 @@ npx playwright test tests/example.spec.ts</code></pre>
         verifies.</div></li>
         <li><div>The tags on the test — <code>@Regression</code>, <code>@Priority1</code>, a module tag —
         decide whether it ran at all under a filtered <code>--grep</code>.</div></li>
-        <li><div>When the run ends, <code>lib/cycleReporter.ts</code> writes the cycle report for the
-        stories that ran — the TCID in each title is how it knows which — to <code>reports/</code>.</div></li>
+        <li><div>When the run ends, <code>lib/cycleReporter.ts</code> records the test's result in
+        <code>specs/execution/automated-results.csv</code> and writes the cycle report for the stories that ran
+        — the TCID in each title is how it knows which — to <code>reports/</code>.</div></li>
       </ol>
 
       <div class="note">
@@ -2173,19 +2393,32 @@ npx playwright test tests/example.spec.ts</code></pre>
       <div class="comp">
         <div class="comp-head"><code class="comp-name">The cycle report</code><span class="comp-tag">automatic</span></div>
         <p class="comp-plain">The end-of-cycle summary — written after every run, no step to remember.</p>
-        <p>Turns the plans, the latest run, the manual results and the defect log into one report with every
-        exit criterion evaluated, scoped to what ran. <code>lib/cycleReporter.ts</code> writes it as a run
-        ends; <code>npm run report:cycle</code> rebuilds it by hand, for any scope;
-        <code>AUTO_CYCLE_REPORT=false</code> turns the automatic one off.</p>
+        <p>Turns the plans, the automated and manual records and the defect log into one report with every
+        exit criterion evaluated, scoped to what ran, naming the build under test. <code>lib/cycleReporter.ts</code>
+        records each run's results and writes the report as a run ends; <code>npm run report:cycle</code>
+        rebuilds it by hand, for any scope — <code>--since</code> for the cycle's start, <code>--closure</code>
+        to keep the final one; <code>AUTO_CYCLE_REPORT=false</code> turns the automatic report off.</p>
         <p class="you-do"><b>You touch it:</b> you read it.</p>
       </div>
 
       <div class="comp">
         <div class="comp-head"><code class="comp-name">specs/execution/</code><span class="comp-tag you">you fill this in</span></div>
-        <p class="comp-plain">Where manual test results go.</p>
-        <p>Manual cases have no runner, so their outcomes live in <code>manual-results.csv</code>. The planner
-        seeds a <code>Not Run</code> row for each; testers update them; the report counts them.</p>
+        <p class="comp-plain">What was executed in the cycle, and its final report.</p>
+        <p><code>automated-results.csv</code> holds each automated case's latest result, written by every run.
+        Manual cases have no runner, so their outcomes live in <code>manual-results.csv</code>: the planner
+        seeds a <code>Not Run</code> row for each; testers update them; the report counts them.
+        <code>closure/</code> keeps each cycle's final report. All committed.</p>
         <p class="you-do"><b>You touch it:</b> every time you execute a manual case.</p>
+      </div>
+
+      <div class="comp">
+        <div class="comp-head"><code class="comp-name">specs/defects/</code><span class="comp-tag">agents write this</span></div>
+        <p class="comp-plain">The team's shared defect record.</p>
+        <p><code>defect-log.json</code> — every confirmed defect and its status; <code>evidence/&lt;entry id&gt;/</code>
+        — its screenshots, kept by <code>npm run defect:evidence</code>; <code>defects.csv</code> — bugs to
+        import, only without Jira. Committed, so a regression on any machine counts the open defects and anyone
+        can retest a fix.</p>
+        <p class="you-do"><b>You touch it:</b> you commit it; for a defect found by hand, you add its screenshots.</p>
       </div>
 
       <h3>Specs — plans, conventions and tests</h3>
@@ -2309,7 +2542,7 @@ npx playwright test tests/example.spec.ts</code></pre>
 
       <h3>Onboarding someone new</h3>
       <ol>
-        <li>For a whole team, the <a href="qa-harness-intro.html">three intro slides</a> first — how their testing changes</li>
+        <li>For a whole team, the <a href="qa-harness-intro.html">three intro slides</a> first — how their testing changes — then the <a href="qa-harness-walkthrough.html">walkthrough</a> of one whole cycle</li>
         <li>This page — orientation and agents</li>
         <li><code>SETUP.md</code>, even if the harness is already configured — it explains why each piece exists</li>
         <li><code>TEST-AUTHORING-INVARIANTS.md</code> — eight rules, one page</li>
@@ -2323,11 +2556,16 @@ npx playwright test tests/example.spec.ts</code></pre>
       <h3>Regression for a release</h3>
       <ol>
         <li>Retest anything reported fixed, so fixed bugs don't count as blocked coverage.</li>
-        <li><code>npm run regression</code> — pick the release, then its tickets or epics. The cycle report
-        for that selection is written as the run ends.</li>
+        <li>Set <code>BUILD_UNDER_TEST</code> in <code>.env</code> to the build deployed for testing.</li>
+        <li><code>npm run regression</code> — pick the release (or several, or <em>all</em>), then its tickets
+        or epics. The cycle report for that selection is written as the run ends.</li>
+        <li>Heal what failed — <code>/playwright-test-healer</code> with "what failed in the last run" — and
+        file the confirmed defects with <code>/playwright-defect-raiser</code>.</li>
         <li>Update <code>specs/execution/manual-results.csv</code> with every manual case's real outcome,
-        then <code>npm run report:cycle -- --release &lt;release&gt;</code> to rebuild the report.</li>
-        <li>Decide — with the numbers in front of you.</li>
+        then <code>npm run report:cycle -- --release &lt;release&gt; --since &lt;cycle start&gt;</code> to
+        rebuild the report.</li>
+        <li>Decide — with the numbers in front of you — and keep the final report:
+        <code>--closure</code>, then commit.</li>
       </ol>
 
       <h3>Retesting a fixed defect</h3>
@@ -2364,6 +2602,21 @@ npx playwright test tests/example.spec.ts</code></pre>
               <td>A story is missing from the release you picked</td>
               <td>Its plan has no <code>**Release:**</code> yet, so it is listed under <em>no release</em></td>
               <td>Run it with <code>--release none</code>, or add the Release line to its plan — the planner takes it from Jira's fix version when connected — and move its spec into that release's folder.</td>
+            </tr>
+            <tr>
+              <td>The cycle report counts a pass from an earlier cycle</td>
+              <td><code>automated-results.csv</code> keeps each case's latest result, however old</td>
+              <td>Rebuild with <code>--since &lt;the day this cycle began&gt;</code>: older results count as not run. The report's header shows the date range and the builds the results came from.</td>
+            </tr>
+            <tr>
+              <td><code>defect:evidence</code>: no failed result with files in test-results/</td>
+              <td>The failure was seen only through the MCP tools, or another run has since cleared <code>test-results/</code></td>
+              <td>Run that test once more — <code>npx playwright test &lt;spec&gt; -g &lt;TCID&gt;</code> — then <code>npm run defect:evidence</code> again. For a defect found by hand, put the screenshots in <code>specs/defects/evidence/&lt;entry id&gt;/</code> yourself.</td>
+            </tr>
+            <tr>
+              <td>A merge conflict in <code>specs/defects/defect-log.json</code></td>
+              <td>Two people recorded defects at the same time</td>
+              <td>Keep both entries. An entry is never removed or renumbered.</td>
             </tr>
             <tr>
               <td>A seed in <code>tests/seeds/</code> fails</td>
@@ -2445,7 +2698,7 @@ npx playwright test tests/example.spec.ts</code></pre>
           <thead><tr><th>Command</th><th>Does</th></tr></thead>
           <tbody>
             <tr><td><code>npm test</code></td><td>Full suite</td></tr>
-            <tr><td><code>npm run regression</code></td><td>A client release's regression — choose its tickets or epics; writes the cycle report</td></tr>
+            <tr><td><code>npm run regression</code></td><td>A client release's regression — choose the release (or <em>all</em>), then its tickets or epics; writes the cycle report</td></tr>
             <tr><td><code>npm run test:regression</code></td><td>Every test tagged <code>@Regression</code>, no selection</td></tr>
             <tr><td><code>npm run test:headed</code></td><td>Watched</td></tr>
             <tr><td><code>npm run test:debug</code></td><td>Stepped through the inspector</td></tr>
@@ -2456,7 +2709,8 @@ npx playwright test tests/example.spec.ts</code></pre>
             <tr><td><code>npm run check:docs</code></td><td>Assert the docs still match the repository</td></tr>
             <tr><td><code>npm run check:trace</code></td><td>Every story test traceable to its test case (I8)</td></tr>
             <tr><td><code>npm run check</code></td><td>All three of the above — run it before pushing</td></tr>
-            <tr><td><code>npm run report:cycle</code></td><td>Rebuild the cycle report by hand — <code>--release</code>, <code>--stories</code>, <code>--strict</code></td></tr>
+            <tr><td><code>npm run report:cycle</code></td><td>Rebuild the cycle report by hand — <code>--release</code>, <code>--stories</code>, <code>--since</code>, <code>--closure</code>, <code>--strict</code></td></tr>
+            <tr><td><code>npm run defect:evidence</code></td><td>Keep a confirmed defect's screenshots in <code>specs/defects/evidence/</code> — the healer runs it</td></tr>
             <tr><td><code>npm run report</code></td><td>Open the last HTML report</td></tr>
             <tr><td><code>npm run setup</code></td><td><code>playwright install</code></td></tr>
             <tr><td><code>npm run export -- &lt;dir&gt;</code></td><td>Template only: copy the harness into a project's QA repository</td></tr>
@@ -2499,6 +2753,7 @@ npx playwright test --project=api                                 # API only</co
         <a href="WORKFLOWS.md">WORKFLOWS.md</a> ·
         <a href="MCP.md">MCP.md</a> ·
         <a href="qa-harness-intro.html">team intro slides</a> ·
+        <a href="qa-harness-walkthrough.html">cycle walkthrough</a> ·
         <a href="../SETUP.md">SETUP.md</a> ·
         <a href="../PROJECT-PROFILE.md">PROJECT-PROFILE.md</a> ·
         <a href="../context/README.md">context/README.md</a>

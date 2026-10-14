@@ -56,15 +56,19 @@ Out: the spec, plus new page object methods and fixtures, implemented and wired.
 npx playwright test "tests/stories/<release>/<KEY>.spec.ts"
 ```
 
-When the run ends, the cycle report for that story is written to `reports/` — no separate step.
+When the run ends, each test case's result is recorded in `specs/execution/automated-results.csv` and the
+cycle report for that story is written to `reports/` — no separate step.
 
 ### Step 5 — Heal what fails
 
 ```
-/playwright-test-healer
+/playwright-test-healer ACME-1234
 ```
 
-Three attempts per test. If it finds a genuine bug it stops and asks you to confirm severity.
+Name what to heal — the story key, a spec, a TCID, or "what failed in the last run". Name nothing and it
+lists the last run's failures and asks. Three attempts per test. If it finds a genuine bug it stops and asks
+you to confirm it and its severity, then keeps the screenshots in `specs/defects/evidence/`. When it is done
+it runs the healed spec once more, so the record has the final results.
 
 ### Step 6 — File confirmed defects
 
@@ -72,10 +76,19 @@ Three attempts per test. If it finds a genuine bug it stops and asks you to conf
 /playwright-defect-raiser
 ```
 
-Only after the healer has recorded something. With the tracker server wired it shows the batch of bugs
-and asks once before creating them — searching first, so a bug already filed for that TCID is reused rather
-than duplicated. Without one it runs unattended and appends rows to `specs/defects.csv` for you to import;
-fill each `trackerKey` in the defect log afterwards.
+Only after the healer has recorded something. It takes every pending defect, or only the story or TCIDs you
+name, shows the batch — each bug, its severity, TCID, story and evidence — and asks once before filing
+anything. With the tracker server wired it creates the bugs, linked to the story and labelled with the
+TCID, with the screenshots attached — searching first, so a bug already filed for that TCID is reused rather
+than duplicated. Without one it appends rows to `specs/defects/defects.csv` for you to import; attach the
+screenshots and fill each `trackerKey` in the defect log afterwards.
+
+### Step 7 — Manual cases, and committing
+
+Execute the plan's **Manual** cases by hand and fill in their rows in `specs/execution/manual-results.csv`. A
+case that fails: tell the healer its TCID and what happened, and it records the defect like any other. Then
+rebuild the report — `npm run report:cycle -- --stories ACME-1234` — and commit the plan, the spec, page
+objects, `specs/execution/` and `specs/defects/`.
 
 ---
 
@@ -257,8 +270,9 @@ Regression runs per **client release**, on a QA team member's own machine, again
 Each release has its tickets — the plans whose `**Release:**` names it — and you choose which of them to run.
 The STLC's last phase depends on the TCIDs being intact end to end, which is why I8 exists.
 
-1. **Retest anything reported fixed** (workflow 9) — a defect fixed in the tracker but still `fixme`'d here
-   counts as blocked coverage.
+1. **Name the build and retest anything reported fixed.** Set `BUILD_UNDER_TEST` in `.env` to the build
+   deployed for testing — it is recorded with every result and printed in the report. Then retest (workflow
+   9): a defect fixed in the tracker but still `fixme`'d here counts as blocked coverage.
 2. **Run the regression:**
 
    ```bash
@@ -267,7 +281,9 @@ The STLC's last phase depends on the TCIDs being intact end to end, which is why
 
    It asks, in turn:
    - **which release** — every release that has tickets is listed, newest last, the default — plus *no release
-     yet* for stories not scheduled, `--release none` as a flag;
+     yet* for stories not scheduled, `--release none` as a flag. Pick several, or `all`, for the full
+     regression: a release's own tickets test what changed, the earlier releases' tests what it might have
+     broken;
    - **which tickets** — all of them, those in chosen **epics**, or chosen tickets one by one;
    - **only tests tagged `@Regression`?** — yes by default; say no to run every test of those tickets.
 
@@ -284,15 +300,22 @@ The STLC's last phase depends on the TCIDs being intact end to end, which is why
    exactly the selection: each test case's outcome, pass rates by priority, acceptance-criteria coverage per
    story, open defects, traceability gaps, and each exit criterion from `PROJECT-PROFILE.md` section 10
    marked met or not.
-4. **Record manual results** in `specs/execution/manual-results.csv` — every `Manual` case the planner
-   seeded as `Not Run` — then rebuild the report by hand for the same scope:
+4. **Heal and raise.** `/playwright-test-healer` with "what failed in the last run", then
+   `/playwright-defect-raiser` for what it confirmed (workflow 1, steps 5–6).
+5. **Record manual results** in `specs/execution/manual-results.csv` — every `Manual` case the planner
+   seeded as `Not Run` — then rebuild the report by hand for the whole cycle:
 
    ```bash
-   npm run report:cycle -- --release 2.26
+   npm run report:cycle -- --release 2.26 --since 2026-10-01
    ```
 
-5. **Decide.** The report states facts; closing the cycle is a person's call. A criterion missed knowingly —
+   Every run records each test case's latest result in `specs/execution/automated-results.csv`, so a test
+   healed after the regression counts with its new result. `--since`, the day the cycle began, stops the last
+   cycle's results counting in this one.
+6. **Decide.** The report states facts; closing the cycle is a person's call. A criterion missed knowingly —
    with a reason written down — is a legitimate outcome. One missed because nobody looked is not.
+7. **Keep the final report** — the same command with `--closure` writes it to `specs/execution/closure/`.
+   Commit it, with `specs/execution/` and `specs/defects/`.
 
 **The report after every run.** Any `playwright test` run — one spec, a whole folder — writes a cycle report
 for the stories it ran, without being asked. `AUTO_CYCLE_REPORT=false` in `.env` turns that off.
@@ -305,7 +328,7 @@ for the stories it ran, without being asked. `AUTO_CYCLE_REPORT=false` in `.env`
 
 A `test.fixme` is only correct while its bug is open. Once it is fixed, the skipped test is lost coverage.
 
-1. Make sure each raised entry in `specs/temp-defects/defect-log.json` has its `trackerKey` — filled in for
+1. Make sure each raised entry in `specs/defects/defect-log.json` has its `trackerKey` — filled in for
    you in tracker mode, by hand after a CSV import.
 2. Run the healer and ask it to retest raised defects — all of them, or one by TCID. With the tracker server
    wired it finds the fixed ones itself, from the bugs' status:

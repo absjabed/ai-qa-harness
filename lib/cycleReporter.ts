@@ -1,9 +1,13 @@
 import type { FullResult, Reporter, TestCase } from '@playwright/test/reporter';
-import { buildCycleReport, type CycleScope } from '../scripts/lib/cycle';
+import { buildCycleReport, recordAutomatedResults, type CycleScope } from '../scripts/lib/cycle';
 import { TCID_PREFIX } from '../scripts/lib/trace';
 
 /**
- * Writes the test-cycle closure report as soon as a run finishes — no separate step to remember.
+ * Records every run's results, then writes the test-cycle closure report — no separate step to remember.
+ *
+ * First, each test case that ran gets its latest result in `specs/execution/automated-results.csv`, so a
+ * cycle made of several runs — the regression, the healer's re-runs, a retest — is reported as a whole.
+ * That always happens.
  *
  * Scoped to the stories that actually ran: run one ticket's spec and the report covers that ticket, not
  * every plan in the repository with everything else marked "Not Run". `npm run regression` passes its own
@@ -26,6 +30,13 @@ export default class CycleReporter implements Reporter {
     }
 
     onEnd(_result: FullResult): void {
+        try {
+            const { recorded, file } = recordAutomatedResults();
+            if (recorded) console.log(`\nResults of ${recorded} test case(s) recorded in ${file}.`);
+        } catch (error) {
+            console.log(`\nResults could not be recorded: ${(error as Error).message}`);
+        }
+
         if (process.env.AUTO_CYCLE_REPORT === 'false') return;
 
         let scope: CycleScope;

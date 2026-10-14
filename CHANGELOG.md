@@ -62,16 +62,21 @@ project-specific value lives in `PROJECT-PROFILE.md`, `.env`, `.mcp.json` and `c
   - `playwright-test-planner` — story to reviewed test plan, seven blocking checkpoints; fetches the story
     from Jira by its key when the tracker is connected
   - `playwright-test-generator` — plan to spec, driving the real browser first
-  - `playwright-test-healer` — triages failures, confirms genuine defects with a person, retests fixed ones
-    and records the result on the bug
-  - `playwright-defect-raiser` — files confirmed defects: in the tracker after one confirmation, or as a CSV
+  - `playwright-test-healer` — triages the failures of the story, spec or run it is pointed at, confirms
+    genuine defects with a person — including ones a tester found by hand — keeps their screenshots, retests
+    fixed ones and records the result on the bug
+  - `playwright-defect-raiser` — files the confirmed defects you choose, after one confirmation: in the
+    tracker, linked to the story with the evidence attached, or as a CSV
 - **Eight authoring invariants** (I1–I8) in `TEST-AUTHORING-INVARIANTS.md`, cited by number. I8 is
   traceability: every story carries its issue key, every test case a `<STORY-KEY>-TC<NNN>` ID that starts
   its test's title and travels with any defect. `npm run check:trace` enforces it.
 - **Testing-lifecycle coverage** — entry and exit criteria (`PROJECT-PROFILE.md` section 10), a readiness
-  check before every run, test-data seeding, manual results per test case, defect retest, and a cycle
-  closure report written automatically as every run ends (`npm run report:cycle` rebuilds it by hand).
-- **Regression per client release** — `npm run regression` asks for the release, then all of its tickets,
+  check before every run, test-data seeding, a committed execution record — each test case's latest
+  automated result across runs, with the build under test, and the manual results — a committed defect log
+  with its evidence, defect retest, and a cycle closure report written automatically as every run ends
+  (`npm run report:cycle` rebuilds it by hand; `--closure` keeps the final one).
+- **Regression per client release** — `npm run regression` asks for the release — or several, or all of
+  them for the full regression — then all of its tickets,
   some epics, or chosen tickets, runs them, and reports on exactly that selection. Each plan records its
   release and epic — from Jira's fix version and parent epic when the tracker is connected.
 - **A knowledge layer** — `context/` for distilled project knowledge, `PROJECT-PROFILE.md` for identity,

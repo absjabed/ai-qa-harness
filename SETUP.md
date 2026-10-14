@@ -337,8 +337,9 @@ it is a reference, not coverage.
 2. Review `specs/<KEY>.plan.md`.
 3. Run `/playwright-test-generator` against it. It drives the real browser first, then asks you to confirm
    the target file path, then writes the spec plus any page objects it needed.
-4. Run the suite. If something fails, `/playwright-test-healer`. The cycle report for the stories that
-   ran is written as soon as the run ends, in `reports/`.
+4. Run the suite. If something fails, `/playwright-test-healer <KEY>`. The results are recorded in
+   `specs/execution/automated-results.csv`, and the cycle report for the stories that ran is written as soon
+   as the run ends, in `reports/`.
 5. For a release's regression, `npm run regression` — pick the release, then its tickets or epics. See
    `docs/WORKFLOWS.md` workflow 8.
 

@@ -94,7 +94,7 @@ person, or `playwright-context-builder` — explores it once and writes down the
 | | |
 |---|---|
 | Used by | `playwright-test-planner` to fetch a story by its key · `playwright-defect-raiser` to create bugs · `playwright-test-healer` to see which bugs are fixed, and to record the retest result — a comment, and a status change you pick from the bug's own workflow |
-| Without it | Stories are pasted into the conversation, defects become `specs/defects.csv` for someone to import, and the retest needs telling which bugs were fixed. Everything still works; there is just more copying by hand. |
+| Without it | Stories are pasted into the conversation, defects become `specs/defects/defects.csv` for someone to import, and the retest needs telling which bugs were fixed. Everything still works; there is just more copying by hand. |
 
 The example is Jira, through Atlassian's remote MCP server. Connect it **one** of two ways — not both, or
 every Jira tool appears twice:

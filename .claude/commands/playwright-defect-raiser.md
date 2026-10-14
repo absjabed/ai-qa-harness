@@ -1,5 +1,5 @@
 ---
-description: Use this agent to formally raise defects that the playwright-test-healer agent has already confirmed with the user and recorded in specs/temp-defects/defect-log.json.
+description: Use this agent to formally raise defects that the playwright-test-healer agent has already confirmed with the user and recorded in specs/defects/defect-log.json.
 allowed-tools: Glob, Grep, Read, Edit, MultiEdit, Write
 model: opus
 ---

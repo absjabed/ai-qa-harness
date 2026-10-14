@@ -116,10 +116,9 @@ thing to suspect — not the prompt.
 
 ## Interaction model
 
-Four of the five need to ask a question and wait for an answer. A tool running headless in CI cannot do
-that, so those four are not CI-shaped on any vendor. `playwright-defect-raiser` is the exception in CSV
-mode: it makes no judgments and runs unattended. With a tracker server it asks once, before creating
-anything — so it is CI-shaped only without one.
+All five need to ask a question and wait for an answer, so none is CI-shaped on any vendor.
+`playwright-defect-raiser` asks the least: it makes no judgments, and asks once — which pending defects to
+file — before filing anything.
 
 ## Relationship to `npx playwright init-agents`
 

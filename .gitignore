@@ -20,9 +20,9 @@ playwright/.cache/
 allure-report/
 allure-results/
 
-# Transient defect-pipeline state written by the healer agent between runs.
-# specs/defects.csv is intentionally NOT ignored — that one is a deliverable.
-specs/temp-defects/
+# Cycle reports written after every run. The cycle's final report is kept in specs/execution/closure/
+# (npm run report:cycle -- --closure), which is committed. specs/defects/ and specs/execution/ are committed.
+reports/
 
 # TypeScript build output
 dist/

@@ -241,6 +241,26 @@ path instead.
 came from. Where a document and the running application disagree, it records the difference as a *known
 unknown* for someone to settle, rather than picking one. It only ever reads Jira; it never edits a ticket.
 
+### Existing test cases and test data — where they go, how they are used
+
+| What you have | Where it goes | How it is used |
+|---|---|---|
+| Test-case sheets, test-tool exports | `context/sources/<name>.csv` | The context-builder summarizes them per area as *Existing coverage*; the planner builds each new plan on them |
+| An older automated suite | stays where it is; export its list of cases into `context/sources/` | The same. Its code is not converted line by line — the generator writes fresh code by driving the app |
+| QA test accounts | `.env`, one pair per role (2a) | The login files |
+| Records tests rely on — IDs, names, codes | `data/testData.ts` keys | Each plan's *Data* field and the specs — never typed into a test (I3) |
+| Seed and reset scripts | `data/sql_queries.ts` keys, called from `data/seed.ts` | Run before every run with `SEED_TEST_DATA=true` ([WORKFLOWS](WORKFLOWS.md) workflow 10) |
+| How to put an area into a state | `context/<area>.md` → *Recipes* | The planner's *Given* steps; the seed |
+| Personal data, production extracts | nowhere in the repo | — |
+
+**Bringing old cases into the harness.** Point the planner at them — the file, the rows — with the story key.
+Each becomes a candidate scenario: checked against the acceptance criteria, rewritten in the plan's format
+with data keys instead of literal values, and given a **new TCID**. The plan's Scope Notes keep the mapping,
+old ID → TCID, so the old copy can be retired. Manual cases stay manual; automated ones become code through the
+generator. A feature older than anyone's Jira still needs a key: plan it under the story or epic that
+introduced it, or a ticket the team raises for that regression area — one plan per area, starting with what
+the next release touches.
+
 ---
 
 ## 4. Checklist before running `/playwright-context-builder`
@@ -332,10 +352,12 @@ recorded. Everything is files in the new QA repo, reviewed and committed like an
 | Fixtures — wiring page objects into tests | generator | `lib/BaseTest.ts` | yes |
 | Test data and database queries | you, when an agent asks for them | `data/testData.ts`, `data/sql_queries.ts` | yes |
 | Manual test results | you | `specs/execution/manual-results.csv` | yes |
-| Run results and the HTML report | Playwright | `test-results/`, `playwright-report/` | no |
-| Cycle reports | written after every run | `reports/` | your choice |
-| Confirmed defects, before and after filing | healer, defect-raiser | `specs/temp-defects/defect-log.json` — on the machine that ran it | no |
-| Bugs to import, when Jira is not connected | defect-raiser | `specs/defects.csv` | yes |
+| Automated results — each test case's latest, across runs | every run, automatically | `specs/execution/automated-results.csv` | yes |
+| Run output and the HTML report | Playwright | `test-results/`, `playwright-report/` | no |
+| Cycle reports after each run | written automatically | `reports/` | no |
+| The cycle's final report | `npm run report:cycle -- --closure` | `specs/execution/closure/` | yes |
+| Confirmed defects, before and after filing, and their screenshots | healer, defect-raiser | `specs/defects/defect-log.json`, `specs/defects/evidence/` | yes |
+| Bugs to import, when Jira is not connected | defect-raiser | `specs/defects/defects.csv` | yes |
 
 **Which folder the test code goes in.** The generator proposes the path and asks you to confirm it before
 writing anything:

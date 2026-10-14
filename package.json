@@ -15,6 +15,7 @@
     "test:api": "playwright test --project=api",
     "report": "playwright show-report",
     "report:cycle": "ts-node -r tsconfig-paths/register scripts/cycle-report.ts",
+    "defect:evidence": "ts-node -r tsconfig-paths/register scripts/defect-evidence.ts",
     "typecheck": "tsc --noEmit",
     "check:docs": "node scripts/check-docs.js",
     "check:trace": "ts-node -r tsconfig-paths/register scripts/check-trace.ts",

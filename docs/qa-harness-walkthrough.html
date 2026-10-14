@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>QA Harness Walkthrough</title>
+<style>
+  /* Layout: a run sheet. Phases down the page; each step is one row of
+     what you run · what the harness asks · what you get. Same palette as the intro deck. */
+  :root {
+    --bg: #eef1f5;
+    --paper: #ffffff;
+    --ink: #17202c;
+    --ink-2: #4a5566;
+    --ink-3: #6f7a8b;
+    --line: #dde2ea;
+    --card: #f6f8fb;
+    --accent: #2f5bd3;
+    --accent-soft: #e7eefc;
+    --agent: #6b3fd1;
+    --agent-soft: #efe9fc;
+    --you: #0f7a5c;
+    --you-soft: #e3f4ee;
+    --warn: #b4540a;
+    --warn-soft: #fcefe3;
+    --fail: #b42318;
+    --fail-soft: #fdecea;
+    --font-body: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: "Cascadia Code", Consolas, "SF Mono", Menlo, monospace;
+    --shadow: 0 6px 24px rgba(20, 30, 50, .07);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0d1117; --paper: #151b24; --ink: #e8edf4; --ink-2: #b3bdcb; --ink-3: #8b96a7;
+      --line: #2a3340; --card: #1b2330; --accent: #7ea2ff; --accent-soft: #1d2a47;
+      --agent: #b69bff; --agent-soft: #2a2144; --you: #5fd0a8; --you-soft: #16332a;
+      --warn: #f0a55f; --warn-soft: #3a2816; --fail: #ff8a80; --fail-soft: #3b1c1a;
+      --shadow: 0 6px 24px rgba(0, 0, 0, .35);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1117; --paper: #151b24; --ink: #e8edf4; --ink-2: #b3bdcb; --ink-3: #8b96a7;
+    --line: #2a3340; --card: #1b2330; --accent: #7ea2ff; --accent-soft: #1d2a47;
+    --agent: #b69bff; --agent-soft: #2a2144; --you: #5fd0a8; --you-soft: #16332a;
+    --warn: #f0a55f; --warn-soft: #3a2816; --fail: #ff8a80; --fail-soft: #3b1c1a;
+    --shadow: 0 6px 24px rgba(0, 0, 0, .35);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 15px/1.55 var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    padding-inline: 16px;
+    padding-block: 0 64px;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; }
+  code, .mono { font-family: var(--font-mono); font-size: .88em; }
+  code { background: var(--card); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; overflow-wrap: anywhere; }
+  h1, h2, h3 { text-wrap: balance; line-height: 1.2; margin: 0; }
+  p { margin: 0; }
+  a { color: var(--accent); }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+  /* ---------- top bar ---------- */
+  .bar {
+    position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+    margin-inline: -16px; padding: 10px 16px;
+  }
+  .bar .wrap { display: flex; gap: 6px 18px; align-items: center; flex-wrap: wrap; }
+  .bar b { font-size: 13px; letter-spacing: .02em; }
+  .bar nav { display: flex; gap: 4px; flex-wrap: wrap; }
+  .bar nav a {
+    font-size: 13px; text-decoration: none; color: var(--ink-2);
+    padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--paper);
+  }
+  .bar nav a:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* ---------- hero ---------- */
+  header.hero { padding-block: 40px 8px; display: grid; gap: 14px; }
+  .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+  h1 { font-size: clamp(28px, 4.2vw, 40px); letter-spacing: -.015em; }
+  .lede { font-size: 17px; color: var(--ink-2); max-width: 70ch; }
+  .caveat {
+    display: flex; gap: 10px; align-items: flex-start; max-width: 80ch;
+    background: var(--warn-soft); color: var(--ink); border-radius: 8px; padding: 10px 14px; font-size: 14px;
+  }
+  .caveat b { color: var(--warn); white-space: nowrap; }
+
+  /* ---------- scenario ---------- */
+  .scenario { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 22px; }
+  .fact { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; min-width: 0; }
+  .fact span { display: block; font-size: 11.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+  .fact p { margin-top: 4px; font-size: 14px; }
+
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 18px; font-size: 13px; color: var(--ink-2); }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+
+  /* ---------- phases ---------- */
+  section.phase { margin-top: 48px; scroll-margin-top: 64px; }
+  .phase-head { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; align-items: baseline; }
+  .phase-tag {
+    grid-row: span 2; align-self: start;
+    font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--paper); background: var(--ink);
+    border-radius: 6px; padding: 4px 8px; margin-top: 4px;
+  }
+  .phase-head h2 { font-size: clamp(21px, 2.6vw, 26px); }
+  .phase-head p { color: var(--ink-2); max-width: 75ch; }
+
+  .sheet { margin-top: 18px; background: var(--paper); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); overflow: hidden; }
+  .cols, .row { display: grid; grid-template-columns: 150px minmax(0, 1fr) minmax(0, 1.35fr) minmax(0, 1fr); }
+  .cols { background: var(--card); border-bottom: 1px solid var(--line); font-size: 11.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+  .cols div { padding: 9px 14px; }
+  .row { border-top: 1px solid var(--line); }
+  .row:first-of-type { border-top: 0; }
+  .row > div { padding: 14px; min-width: 0; }
+  .row .step { font-weight: 700; font-size: 14px; }
+  .row .step small { display: block; font-weight: 600; font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-3); margin-bottom: 2px; }
+  .cell-label { display: none; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 4px; }
+
+  .cmd {
+    display: block; font-family: var(--font-mono); font-size: 12.5px; background: var(--card); border: 1px solid var(--line);
+    border-radius: 6px; padding: 6px 8px; overflow-x: auto; white-space: nowrap;
+  }
+  .do { font-size: 14px; color: var(--ink-2); margin-top: 6px; }
+  .do:first-child { margin-top: 0; }
+
+  .talk { display: grid; gap: 6px; }
+  .say { font-size: 13.5px; border-radius: 8px; padding: 7px 10px; line-height: 1.45; }
+  .say.h { background: var(--agent-soft); border-left: 3px solid var(--agent); }
+  .say.u { background: var(--you-soft); border-left: 3px solid var(--you); }
+  .say.note { background: transparent; border: 1px dashed var(--line); color: var(--ink-2); }
+  .say b { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; margin-right: 6px; }
+  .say.h b { color: var(--agent); }
+  .say.u b { color: var(--you); }
+
+  .out { display: grid; gap: 6px; align-content: start; }
+  .file { font-size: 13px; line-height: 1.4; }
+  .file code { background: transparent; border: 0; padding: 0; color: var(--ink); font-weight: 600; }
+  .file span { display: block; color: var(--ink-2); font-size: 12.5px; }
+  .pill { display: inline-block; font-size: 10.5px; font-weight: 700; letter-spacing: .04em; border-radius: 999px; padding: 1px 7px; margin-left: 4px; vertical-align: 1px; }
+  .pill.c { background: var(--you-soft); color: var(--you); }
+  .pill.n { background: var(--card); color: var(--ink-3); border: 1px solid var(--line); }
+  .pill.f { background: var(--fail-soft); color: var(--fail); }
+
+  .after { margin-top: 14px; display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; }
+  .after div { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; font-size: 14px; min-width: 0; }
+  .after b { display: block; margin-bottom: 2px; }
+
+  pre.term {
+    margin: 8px 0 0; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.55;
+    background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; overflow-x: auto;
+  }
+  pre.term .q { color: var(--ink-3); }
+  pre.term .a { color: var(--you); font-weight: 700; }
+
+  /* ---------- thread: one test case through everything ---------- */
+  .thread { margin-top: 18px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0; counter-reset: st; }
+  .station { position: relative; padding: 14px 14px 14px 0; min-width: 0; }
+  .station::before { content: ""; position: absolute; left: 0; right: 0; top: 23px; height: 2px; background: var(--line); }
+  .station .dot { position: relative; width: 20px; height: 20px; border-radius: 50%; background: var(--paper); border: 2px solid var(--accent); display: block; }
+  .station.bad .dot { border-color: var(--fail); }
+  .station.good .dot { border-color: var(--you); background: var(--you-soft); }
+  .station h3 { font-size: 13.5px; margin-top: 10px; }
+  .station p { font-size: 12.5px; color: var(--ink-2); margin-top: 3px; }
+  .station code { font-size: 11.5px; }
+
+  /* ---------- tables ---------- */
+  .tbl { margin-top: 16px; overflow-x: auto; background: var(--paper); border: 1px solid var(--line); border-radius: 12px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 14px; border-top: 1px solid var(--line); }
+  thead th { border-top: 0; background: var(--card); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+  td:first-child { font-weight: 600; white-space: nowrap; }
+
+  footer { margin-top: 48px; color: var(--ink-3); font-size: 13px; border-top: 1px solid var(--line); padding-top: 14px; }
+
+  /* ---------- narrow screens: each row stacks, with labels ---------- */
+  @media (max-width: 860px) {
+    .cols { display: none; }
+    .row { grid-template-columns: 1fr; }
+    .row > div { padding: 10px 14px; }
+    .row > div:first-child { padding-top: 14px; }
+    .row > div:last-child { padding-bottom: 16px; }
+    .cell-label { display: block; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <div class="wrap">
+    <b>QA Harness Walkthrough</b>
+    <nav aria-label="Phases">
+      <a href="#setup">Setup</a>
+      <a href="#ticket">One ticket</a>
+      <a href="#regression">Regression</a>
+      <a href="#thread">One test case</a>
+      <a href="#existing">Existing tests</a>
+      <a href="#who">Who does what</a>
+    </nav>
+  </div>
+</div>
+
+<div class="wrap">
+
+<header class="hero">
+  <p class="eyebrow">A whole testing cycle, one example</p>
+  <h1>From a new QA repo to a closed release</h1>
+  <p class="lede">What you run, what the harness asks you, and what comes out at each step. Written for someone
+  who has never tested this way, manually or automatically.</p>
+  <p class="caveat"><b>Illustration</b><span>This follows what each agent is written to do. The harness has not
+  yet been run end to end against a real application, so the first project will show where it differs.</span></p>
+
+  <div class="scenario" aria-label="The example">
+    <div class="fact"><span>Application</span><p>An online store, QA environment</p></div>
+    <div class="fact"><span>Jira</span><p>Project <code>ACME</code>, Atlassian plugin in Claude Code</p></div>
+    <div class="fact"><span>Kinds of user</span><p>Store admin, warehouse staff, customer</p></div>
+    <div class="fact"><span>Release · epic</span><p><code>2.26</code> · <code>ACME-100</code> Checkout discounts</p></div>
+    <div class="fact"><span>Ticket to test</span><p><code>ACME-1234</code> Apply a discount code at checkout — AC1 to AC4</p></div>
+    <div class="fact"><span>You bring</span><p>One QA account per kind of user, a rules PDF, last release's test cases, a bug list</p></div>
+  </div>
+
+  <div class="legend" aria-label="Legend">
+    <span><i style="background:var(--agent)"></i>The harness asks or reports</span>
+    <span><i style="background:var(--you)"></i>You answer</span>
+    <span><span class="pill c">committed</span> kept in git</span>
+    <span><span class="pill n">local</span> on your machine only</span>
+  </div>
+</header>
+
+<!-- ============================== SETUP ============================== -->
+<section class="phase" id="setup">
+  <div class="phase-head">
+    <span class="phase-tag">ONCE</span>
+    <h2>Setup: the context-builder learns the application</h2>
+    <p><code>/playwright-context-builder</code> runs once, after the files are copied into the new QA repo. It
+    stops at every checkpoint and waits for you. It runs again only when the application changes.</p>
+  </div>
+
+  <div class="sheet" role="table" aria-label="Context-builder steps">
+    <div class="cols" role="row"><div>Step</div><div>You</div><div>The harness asks</div><div>You get</div></div>
+
+    <div class="row" role="row">
+      <div class="step"><small>STEP 0</small>Roles</div>
+      <div><span class="cell-label">You</span><code class="cmd">/playwright-context-builder</code><p class="do">Have your QA test accounts to hand.</p></div>
+      <div><span class="cell-label">The harness asks</span><div class="talk">
+        <p class="say h"><b>Harness</b>The profile has the example roles admin, standardUser, readOnlyUser. Are these your application's roles?</p>
+        <p class="say u"><b>You</b>No. Store admins, warehouse staff and customers. The store admin can do everything.</p>
+        <p class="say h"><b>Harness</b>I'll use storeAdmin, warehouseStaff, customer. Add STORE_ADMIN_EMAIL, STORE_ADMIN_PASSWORD … to .env and tell me when done.</p>
+        <p class="say note">You type the passwords into <code>.env</code> yourself. The agents can never read it.</p>
+      </div></div>
+      <div class="out"><span class="cell-label">You get</span>
+        <p class="file"><code>config/projectProfile.ts</code><span>the roles and the full-access role</span></p>
+        <p class="file"><code>tests/seeds/storeAdmin.spec.ts</code> + 2 more<span>one login file per role</span></p>
+      </div>
+    </div>
+
+    <div class="row" role="row">
+      <div class="step"><small>STEP 0</small>Logins</div>
+      <div><span class="cell-label">You</span><p class="do">Nothing to run. It tries every login itself.</p></div>
+      <div><span class="cell-label">The harness asks</span><div class="talk">
+        <p class="say h"><b>Harness</b>All 3 logins failed: the login screen's selectors are still CHANGE_ME. I can fill them from the page: getByLabel('Email'), getByLabel('Password'), the Sign in button. Edit LoginPage.ts?</p>
+        <p class="say u"><b>You</b>Yes.</p>
+        <p class="say h"><b>Harness</b>All 3 roles log in now.</p>
+      </div></div>
+      <div class="out"><span class="cell-label">You get</span>
+        <p class="file"><code>pages/LoginPage.ts</code>, <code>DashboardPage.ts</code><span>working login and signed-in check</span></p>
+      </div>
+    </div>
+
+    <div class="row" role="row">
+      <div class="step"><small>STEP 0</small>Jira</div>
+      <div><span class="cell-label">You</span><p class="do">Know one ticket key that exists.</p></div>
+      <div><span class="cell-label">The harness asks</span><div class="talk">
+        <p class="say h"><b>Harness</b>The Atlassian plugin is connected. Give me one story key you know exists.</p>
+        <p class="say u"><b>You</b>ACME-1100</p>
+        <p class="say h"><b>Harness</b>Fetched it. The Jira connection works.</p>
+      </div></div>
+      <div class="out"><span class="cell-label">You get</span><p class="file">A confirmed Jira connection<span>recorded in the inventory</span></p></div>
+    </div>
+
+    <div class="row" role="row">
+      <div class="step"><small>STEP 1</small>Inventory</div>
+      <div><span class="cell-label">You</span><p class="do">Put the PDF, the test-case CSV and the bug list in <code>context/sources/</code>.</p></div>
+      <div><span class="cell-label">The harness asks</span><div class="talk">
+        <p class="say h"><b>Harness</b>Which of these exist and can I reach them: database, source code, API docs, specs and business rules, existing test cases, test data, bug history, Jira epics to digest, user guides, who to ask?</p>
+        <p class="say u"><b>You</b>No database or code. The rules, test cases and bugs are in sources. Digest epics ACME-100 and ACME-80.</p>
+      </div></div>
+      <div class="out"><span class="cell-label">You get</span><p class="file">The source table<span>you correct it before it goes on</span></p></div>
+    </div>
+
+    <div class="row" role="row">
+      <div class="step"><small>STEP 2</small>Roam the app</div>
+      <div><span class="cell-label">You</span><p class="do">Wait, then review.</p></div>
+      <div><span class="cell-label">The harness asks</span><div class="talk">
+        <p class="say h"><b>Harness</b>Signed out I saw: login, password reset, the public catalogue. As each role I mapped 6 areas. The customer has no Reports menu; warehouse staff cannot edit prices. I submitted nothing.</p>
+      </div></div>
+      <div class="out"><span class="cell-label">You get</span><p class="file">The module map<span>areas, click paths, exact labels, what each role cannot do</span></p></div>
+    </div>
+
+    <div class="row" role="row">
+      <div class="step"><small>STEP 3</small>Read the sources</div>
+      <div><span class="cell-label">You</span><p class="do">Nothing.</p></div>
+      <div><span class="cell-label">The harness asks</span><div class="talk">
+        <p class="say h"><b>Harness</b>From the PDF: 9 rules, each citing its page. From the old test cases: an Existing coverage summary. From the bug list: checkout breaks most. The PDF says codes stack with sale prices; Jira ACME-88 says they don't. I've recorded it as a known unknown.</p>
+      </div></div>
+      <div class="out"><span class="cell-label">You get</span><p class="file">Rules with their source<span>disagreements left for a person to settle</span></p></div>
+    </div>
+
+    <div class="row" role="row">
+      <div class="step"><small>STEPS 5–8</small>Write the drafts</div>
+      <div><span class="cell-label">You</span><p class="do">Approve or correct each draft.</p></div>
+      <div><span class="cell-label">The harness asks</span><div class="talk">
+        <p class="say h"><b>Harness</b>Here is the draft baseline, the roles, the vocabulary and the modules. Which areas will the first stories touch?</p>
+        <p class="say u"><b>You</b>Checkout.</p>
+      </div></div>
+      <div class="out"><span class="cell-label">You get</span>
+        <p class="file"><code>context/BASELINE.md</code> <span class="pill c">committed</span><span>what is known, and the known unknowns</span></p>
+        <p class="file"><code>context/checkout.md</code> <span class="pill c">committed</span><span>rules, states, existing coverage, caveats</span></p>
+        <p class="file"><code>specs/UserFlowsUserRolePermissions/</code> <span class="pill c">committed</span><span>click paths per role; who can do what, each cell verified or not</span></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="after">
+    <div><b>Correct the drafts</b>A wrong draft becomes a fact for every agent after it.</div>
+    <div><b>Fill what only the team knows</b>Profile section 7, the severity scale, and section 10, the exit criteria.</div>
+    <div><b>Check and commit</b><code>npm run check</code>, then <code>git init</code> and the first commit.</div>
+  </div>
+</section>
+
+<!-- ============================== ONE TICKET ============================== -->
+<section class="phase" id="ticket">
+  <div class="phase-head">
+    <span class="phase-tag">PER TICKET</span>
+    <h2>Testing one ticket: ACME-1234</h2>
+    <p>Plan, generate, run, heal, raise, then the manual cases. Each agent reads its input from disk, so the steps can
+    happen on different days.</p>
+  </div>
+
+  <div class="sheet" role="table" aria-label="Testing one ticket">
+    <div class="cols" role="row"><div>Step</div><div>You</div><div>The harness asks</div><div>You get</div></div>
+
+    <div class="row" role="row">
+      <div class="step"><small>1</small>Plan the test cases</div>
+      <div><span class="cell-label">You</span><code class="cmd">/playwright-test-planner ACME-1234</code><p class="do">Answer its 7 checkpoints. Checkpoints 1 and 4 matter most.</p></div>
+      <div><span class="cell-label">The harness asks</span><div class="talk">
+        <p class="say h"><b>Checkpoint 1</b>Fetched ACME-1234: AC1–AC4, release 2.26, epic ACME-100. AC3 says an invalid code shows an error. Do expired and unknown codes show the same message? I'll build on the 4 old checkout cases.</p>
+        <p class="say u"><b>You</b>Different messages. Expired: "This code has expired".</p>
+        <p class="say h"><b>Checkpoint 4</b>9 scenario titles: TC001 a valid code reduces the total … TC006 removing the code restores the total …</p>
+        <p class="say u"><b>You</b>Drop TC008, it duplicates TC002.</p>
+      </div></div>
+      <div class="out"><span class="cell-label">You get</span>
+        <p class="file"><code>specs/ACME-1234.plan.md</code> <span class="pill c">committed</span><span>test cases TC001–TC009: steps, expected result, priority, manual or automated</span></p>
+        <p class="file"><code>specs/ACME-1234.plan.csv</code> <span class="pill c">committed</span><span>the same, for a test tool or a spreadsheet</span></p>
+        <p class="file"><code>specs/execution/manual-results.csv</code> <span class="pill c">committed</span><span>a Not Run row per manual case</span></p>
+      </div>
+    </div>
+
+    <div class="row" role="row">
+      <div class="step"><small>2</small>Add missing test data</div>
+      <div><span class="cell-label">You</span><p class="do">Read the plan's gap table and add the keys it lists, such as <code>discountData.expiredCode</code>, to <code>data/testData.ts</code>.</p></div>
+      <div><span class="cell-label">The harness asks</span><div class="talk"><p class="say note">No agent writes test data. You know which records exist in the QA environment.</p></div></div>
+      <div class="out"><span class="cell-label">You get</span><p class="file"><code>data/testData.ts</code> <span class="pill c">committed</span></p></div>
+    </div>
+
+    <div class="row" role="row">
+      <div class="step"><small>3</small>Generate the test code</div>
+      <div><span class="cell-label">You</span><code class="cmd">/playwright-test-generator specs/ACME-1234.plan.md</code></div>
+      <div><span class="cell-label">The harness asks</span><div class="talk">
+        <p class="say note">It logs in through the role's login file and drives a real browser through every step first.</p>
+        <p class="say h"><b>Harness</b>Write to tests/stories/2.26/ACME-1234.spec.ts?</p>
+        <p class="say u"><b>You</b>Yes.</p>
+        <p class="say h"><b>Harness</b>There's no page object for the discount panel. Create DiscountPanelPage.ts with applyCode()?</p>
+        <p class="say u"><b>You</b>Yes.</p>
+      </div></div>
+      <div class="out"><span class="cell-label">You get</span>
+        <p class="file"><code>tests/stories/2.26/ACME-1234.spec.ts</code> <span class="pill c">committed</span><span>one test per automated case, titled <code>ACME-1234-TC001 Validate that…</code>, tagged @Regression @Priority1 @Checkout</span></p>
+        <p class="file"><code>pages/DiscountPanelPage.ts</code> <span class="pill c">committed</span></p>
+      </div>
+    </div>
+
+    <div class="row" role="row">
+      <div class="step"><small>4</small>Run</div>
+      <div><span class="cell-label">You</span><code class="cmd">npx playwright test tests/stories/2.26/ACME-1234.spec.ts</code></div>
+      <div><span class="cell-label">The harness asks</span><div class="talk"><p class="say h"><b>Result</b>7 passed, 2 failed: TC004, TC006.</p></div></div>
+      <div class="out"><span class="cell-label">You get</span>
+        <p class="file"><code>specs/execution/automated-results.csv</code> <span class="pill c">committed</span><span>each case's latest result, with the build</span></p>
+        <p class="file"><code>reports/cycle-summary-acme-1234-….md</code> <span class="pill n">local</span><span>written automatically as the run ends</span></p>
+        <p class="file">HTML report <span class="pill n">local</span><span><code>npm run report</code></span></p>
+      </div>
+    </div>
+
+    <div class="row" role="row">
+      <div class="step"><small>5</small>Heal the failures</div>
+      <div><span class="cell-label">You</span><code class="cmd">/playwright-test-healer ACME-1234</code><p class="do">Name what to heal: the ticket, a spec, a test case, or "what failed in the last run". If you name nothing, it lists the last run's failures and asks.</p></div>
+      <div><span class="cell-label">The harness asks</span><div class="talk">
+        <p class="say h"><b>Harness</b>Healing ACME-1234: TC004 and TC006.</p>
+        <p class="say h"><b>Harness</b>TC004: the button now reads "Redeem". Updating DiscountPanelPage. It passes now.</p>
+        <p class="say h"><b>Harness</b>TC006 expects the total to come back when the code is removed. The app keeps the discount, twice in a row, and it isn't the test. I'd call it P2 Major: wrong price, but there's a workaround. Log it as a defect?</p>
+        <p class="say u"><b>You</b>Yes, P2.</p>
+      </div></div>
+      <div class="out"><span class="cell-label">You get</span>
+        <p class="file">TC004 fixed in the page object</p>
+        <p class="file"><code>specs/defects/defect-log.json</code> <span class="pill c">committed</span><span>TC006, status pending</span></p>
+        <p class="file"><code>specs/defects/evidence/ACME-1234-TC006-…/</code> <span class="pill c">committed</span><span>the failure screenshot and page snapshot</span></p>
+      </div>
+    </div>
+
+    <div class="row" role="row">
+      <div class="step"><small>6</small>Raise the bug</div>
+      <div><span class="cell-label">You</span><code class="cmd">/playwright-defect-raiser</code><p class="do">It takes every pending defect, or only the ticket or test cases you name.</p></div>
+      <div><span class="cell-label">The harness asks</span><div class="talk">
+        <p class="say note">It first searches Jira for an open bug already labelled ACME-1234-TC006.</p>
+        <p class="say h"><b>Harness</b>Create 1 bug? "QA - discount kept after code removed in Checkout". High / Major. Test case TC006, story ACME-1234, 2 screenshots attached.</p>
+        <p class="say u"><b>You</b>Yes.</p>
+      </div></div>
+      <div class="out"><span class="cell-label">You get</span>
+        <p class="file">Jira bug <code>ACME-1302</code><span>linked to ACME-1234, labelled with the test case, steps, expected and actual results, screenshots</span></p>
+        <p class="file">TC006 marked <code>test.fixme</code><span>skipped visibly until the fix lands</span></p>
+      </div>
+    </div>
+
+    <div class="row" role="row">
+      <div class="step"><small>7</small>Run the manual cases</div>
+      <div><span class="cell-label">You</span><p class="do">Follow each manual case's steps in the plan. Fill its row: status, who, when, environment.</p></div>
+      <div><span class="cell-label">The harness asks</span><div class="talk">
+        <p class="say note">TC009 fails by hand. Tell the healer the test case ID and what happened. It confirms the severity, records the defect the same way, and the raiser files it.</p>
+      </div></div>
+      <div class="out"><span class="cell-label">You get</span><p class="file"><code>specs/execution/manual-results.csv</code> <span class="pill c">committed</span></p></div>
+    </div>
+
+    <div class="row" role="row">
+      <div class="step"><small>8</small>Report and commit</div>
+      <div><span class="cell-label">You</span><code class="cmd">npm run report:cycle -- --stories ACME-1234</code><p class="do">Then commit the plan, spec, page objects, <code>specs/execution/</code> and <code>specs/defects/</code>.</p></div>
+      <div><span class="cell-label">The harness asks</span><div class="talk">
+        <p class="say h"><b>Report</b>8 of 9 passing. AC2 is blocked by a known defect. Open P2 defects: 1, allowed 0. <span class="pill f">not met</span></p>
+        <p class="say note">Moving the story in Jira stays with people, under your team's own workflow.</p>
+      </div></div>
+      <div class="out"><span class="cell-label">You get</span><p class="file">The ticket's cycle report<span>every test case, AC coverage, open defects, exit criteria</span></p></div>
+    </div>
+
+    <div class="row" role="row">
+      <div class="step"><small>9</small>Retest the fix</div>
+      <div><span class="cell-label">You</span><code class="cmd">/playwright-test-healer retest raised defects</code></div>
+      <div><span class="cell-label">The harness asks</span><div class="talk">
+        <p class="say h"><b>Harness</b>ACME-1302 is Done in Jira. TC006 passed twice and is active again. Add a comment to ACME-1302? The transitions it offers are Verified, Reopen, Closed. Which, if any?</p>
+        <p class="say u"><b>You</b>Comment, and Verified.</p>
+      </div></div>
+      <div class="out"><span class="cell-label">You get</span><p class="file">The defect marked verified<span>the test counts again; Jira updated as you chose</span></p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== REGRESSION ============================== -->
+<section class="phase" id="regression">
+  <div class="phase-head">
+    <span class="phase-tag">PER RELEASE</span>
+    <h2>Regression and closing release 2.26</h2>
+    <p>Nothing extra to set up. Every plan records its release and epic, each release's code sits in
+    <code>tests/stories/2.26/</code>, and Priority 1 and 2 tests carry <code>@Regression</code>. It runs on your
+    own machine against the build under test.</p>
+  </div>
+
+  <div class="sheet" role="table" aria-label="Regression steps">
+    <div class="cols" role="row"><div>Step</div><div>You</div><div>The harness asks</div><div>You get</div></div>
+
+    <div class="row" role="row">
+      <div class="step"><small>1</small>Name the build</div>
+      <div><span class="cell-label">You</span><p class="do">Set <code>BUILD_UNDER_TEST=2.26.0-rc3</code> in <code>.env</code>. Retest any defect reported fixed.</p></div>
+      <div><span class="cell-label">The harness asks</span><div class="talk"><p class="say note">Every result records the build, so the closure report states which build it covers.</p></div></div>
+      <div class="out"><span class="cell-label">You get</span><p class="file">Fixed bugs no longer count as blocked</p></div>
+    </div>
+
+    <div class="row" role="row">
+      <div class="step"><small>2</small>Run the regression</div>
+      <div><span class="cell-label">You</span><code class="cmd">npm run regression</code><p class="do">For the full regression, answer <code>all</code>. Earlier releases' tests catch what this release broke.</p></div>
+      <div><span class="cell-label">The harness asks</span>
+<pre class="term"><span class="q">Releases:</span>
+  1. 2.25  (14 tickets)
+  2. 2.26  (9 tickets)
+  3. no release yet  (2 tickets)
+<span class="q">Which release? … or "all"</span> [2.26]: <span class="a">2</span>
+<span class="q">[a]ll, by [e]pic, or [t]ickets?</span> [a]: <span class="a">e</span>
+<span class="q">Which epics?</span> <span class="a">1</span>   (ACME-100)
+<span class="q">Only tests tagged @Regression?</span> [Y/n]: <span class="a">y</span>
+<span class="q">Run it?</span> [Y/n]: <span class="a">y</span></pre></div>
+      <div class="out"><span class="cell-label">You get</span>
+        <p class="file">Results per test<span>recorded, with the build</span></p>
+        <p class="file"><code>reports/cycle-summary-release-2.26-….md</code> <span class="pill n">local</span><span>for exactly that selection</span></p>
+      </div>
+    </div>
+
+    <div class="row" role="row">
+      <div class="step"><small>3</small>Heal, raise, run manual cases</div>
+      <div><span class="cell-label">You</span><code class="cmd">/playwright-test-healer what failed in the last run</code><code class="cmd" style="margin-top:6px">/playwright-defect-raiser</code></div>
+      <div><span class="cell-label">The harness asks</span><div class="talk"><p class="say h"><b>Harness</b>The last run had 3 failures: ACME-1240-TC002, ACME-1255-TC005, ACME-1255-TC007. Heal all three?</p></div></div>
+      <div class="out"><span class="cell-label">You get</span><p class="file">Fixed tests, raised bugs, manual results</p></div>
+    </div>
+
+    <div class="row" role="row">
+      <div class="step"><small>4</small>Report the whole cycle</div>
+      <div><span class="cell-label">You</span><code class="cmd">npm run report:cycle -- --release 2.26 --since 2026-10-01</code></div>
+      <div><span class="cell-label">The harness asks</span><div class="talk">
+        <p class="say note">The record keeps each case's latest result, so a test healed after the regression counts as passing. <code>--since</code> stops last cycle's passes from counting in this one.</p>
+        <p class="say h"><b>Report</b>Build 2.26.0-rc3. P1 100%, P2 96%, AC coverage 100%, open P1/P2 defects 0, not executed 0. <span class="pill c">all met</span></p>
+      </div></div>
+      <div class="out"><span class="cell-label">You get</span><p class="file">The release's report<span>each test case, pass rate per priority, AC coverage, open defects, each exit criterion</span></p></div>
+    </div>
+
+    <div class="row" role="row">
+      <div class="step"><small>5</small>Decide and keep it</div>
+      <div><span class="cell-label">You</span><code class="cmd">npm run report:cycle -- --release 2.26 --since 2026-10-01 --closure</code><p class="do">Then commit.</p></div>
+      <div><span class="cell-label">The harness asks</span><div class="talk"><p class="say note">The report states facts. Whether the release closes is a person's decision. Missing a criterion on purpose, with the reason written down, is a valid outcome.</p></div></div>
+      <div class="out"><span class="cell-label">You get</span><p class="file"><code>specs/execution/closure/…release-2.26….md</code> <span class="pill c">committed</span><span>the record of what was tested, on which build</span></p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== THREAD ============================== -->
+<section class="phase" id="thread">
+  <div class="phase-head">
+    <span class="phase-tag">TRACE</span>
+    <h2>One test case through everything: ACME-1234-TC006</h2>
+    <p>The test case ID never changes. It is what ties the ticket, the test, the result and the bug together,
+    and what lets anyone in Jira walk back to the requirement.</p>
+  </div>
+  <div class="thread">
+    <div class="station"><span class="dot"></span><h3>Requirement</h3><p>ACME-1234, AC2: removing the code restores the total</p></div>
+    <div class="station"><span class="dot"></span><h3>Test case</h3><p>Plan heading <code>ACME-1234-TC006 — Validate that…</code>, Priority 1</p></div>
+    <div class="station"><span class="dot"></span><h3>Test code</h3><p>The test title starts with <code>ACME-1234-TC006</code></p></div>
+    <div class="station bad"><span class="dot"></span><h3>Result</h3><p>Failed on build rc2, in <code>automated-results.csv</code></p></div>
+    <div class="station bad"><span class="dot"></span><h3>Defect</h3><p>Defect log entry, screenshots kept</p></div>
+    <div class="station bad"><span class="dot"></span><h3>Jira bug</h3><p>ACME-1302, label <code>ACME-1234-TC006</code>, linked to the story</p></div>
+    <div class="station good"><span class="dot"></span><h3>Retest</h3><p>Passed twice on rc3. Verified; AC2 covered again</p></div>
+  </div>
+</section>
+
+<!-- ============================== EXISTING ============================== -->
+<section class="phase" id="existing">
+  <div class="phase-head">
+    <span class="phase-tag">ALREADY HAVE</span>
+    <h2>Existing test cases and test data</h2>
+    <p>Old test cases are a head start, not a finished plan. Each one is checked against the current ticket and
+    gets a new test case ID. The plan keeps a table mapping old ID to new, so the old copy can be retired.</p>
+  </div>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>What you have</th><th>Where it goes</th><th>How it is used</th></tr></thead>
+      <tbody>
+        <tr><td>Test-case sheets, test-tool exports</td><td><code>context/sources/</code> as CSV</td><td>Summarized per area as existing coverage. Point the planner at the rows to carry them into a plan</td></tr>
+        <tr><td>An older automated suite</td><td>Stays where it is; export its list of cases</td><td>The same. Its code is not converted; the generator writes fresh code by driving the app</td></tr>
+        <tr><td>Old features with no ticket</td><td>A plan under the story or epic that introduced them, or a ticket raised for that area</td><td>One plan per area, starting with what the next release touches</td></tr>
+        <tr><td>QA test accounts</td><td><code>.env</code>, one pair per role</td><td>The login files</td></tr>
+        <tr><td>Records the tests rely on</td><td><code>data/testData.ts</code> keys</td><td>Each test case's Data field. Never typed into a test</td></tr>
+        <tr><td>Seed and reset scripts</td><td><code>data/sql_queries.ts</code>, called from <code>data/seed.ts</code></td><td>Run before every run with <code>SEED_TEST_DATA=true</code></td></tr>
+        <tr><td>Personal data, production extracts</td><td>Nowhere in the repo</td><td>Not used</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================== WHO ============================== -->
+<section class="phase" id="who">
+  <div class="phase-head">
+    <span class="phase-tag">SUMMARY</span>
+    <h2>Who does what</h2>
+    <p>The agents do the reading, driving, formatting and counting. Every decision that matters stops and waits for you.</p>
+  </div>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Stage</th><th>Run</th><th>You decide</th><th>Comes out</th></tr></thead>
+      <tbody>
+        <tr><td>Setup, once</td><td><code>/playwright-context-builder</code></td><td>Roles, sources, the drafts</td><td>What the harness knows about the app</td></tr>
+        <tr><td>Plan</td><td><code>/playwright-test-planner &lt;KEY&gt;</code></td><td>How to read the AC, which scenarios</td><td>The plan and its test case IDs</td></tr>
+        <tr><td>Generate</td><td><code>/playwright-test-generator &lt;plan&gt;</code></td><td>File path, new page objects, SQL</td><td>The test code</td></tr>
+        <tr><td>Run</td><td><code>npx playwright test …</code></td><td>Nothing</td><td>Results recorded, cycle report</td></tr>
+        <tr><td>Heal</td><td><code>/playwright-test-healer &lt;KEY&gt;</code></td><td>Is it a bug, and how bad</td><td>Fixed tests, or a defect with screenshots</td></tr>
+        <tr><td>Raise</td><td><code>/playwright-defect-raiser</code></td><td>Which bugs to file</td><td>Jira bugs, linked, with evidence</td></tr>
+        <tr><td>Manual cases</td><td>You, by hand</td><td>Each outcome</td><td>Manual results</td></tr>
+        <tr><td>Retest</td><td><code>/playwright-test-healer</code>, retest</td><td>Comment, and which transition</td><td>Test active again, Jira updated</td></tr>
+        <tr><td>Regression</td><td><code>npm run regression</code></td><td>Release, then epics or tickets</td><td>The release's cycle report</td></tr>
+        <tr><td>Closure</td><td><code>npm run report:cycle -- --closure</code></td><td>Close or not</td><td>The committed final report</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<footer>QA harness · the handbook's <em>Follow a whole cycle</em> section covers the same ground in reference form.</footer>
+
+</div>
+</body>
+</html>

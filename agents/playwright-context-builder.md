@@ -97,6 +97,7 @@ exists and whether you can reach it. Ask about every one by name — teams forge
 - the application's source, API documentation, integration contracts
 - **functional specifications and business-rule documents** — Confluence or wiki pages, Word or PDF specs
 - **existing test cases** — spreadsheets, test-management exports, earlier manual or automated suites
+- **existing test data** — data sets, seed or reset scripts, lists of known records the tests rely on
 - **known defects and their history** — a bug list, recurring problem areas
 - **Jira** — the epics and stories of recent releases to digest: read live if the tracker is connected, or
   from a CSV export in `context/sources/` if it is not
@@ -160,6 +161,10 @@ For each source the inventory confirmed:
   Summarize them per area in the *Existing coverage* section of `context/<area>.md`: which cases exist, where
   (file and IDs), and the edge cases and data worth reusing. The planner reads it so new plans build on that
   work instead of rediscovering it — and never copies a case without checking it against the story.
+- **Existing test data** — what records exist for testing and how to put an area into a known state. Write
+  the how into the area's *Recipes*, and list in the baseline which data the tests can rely on. The values
+  themselves become `data/testData.ts` keys, and seed or reset statements `data/sql_queries.ts` keys, when a
+  test first needs them — never credentials, which stay in `.env`, and never personal data.
 - **Known defects** — the areas that break most, and how. Note them under the area's *Caveats*; they are
   where a test plan should push hardest.
 - **Jira** — two ways, digested the same way. *Connected:* ask which epics, releases or JQL to digest; do

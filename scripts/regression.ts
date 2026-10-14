@@ -14,6 +14,10 @@
  *   npm run regression -- --release 2.26 --all-tests             not only tests tagged @Regression
  *   npm run regression -- --release 2.26 --browser chromium      one Playwright project (browser)
  *   npm run regression -- --release none                         tickets with no release yet
+ *   npm run regression -- --release all                          every release — the full regression
+ *
+ * A release's own tickets are what changed in it; the earlier releases' tests are what it might have
+ * broken. Picking several releases, or all of them, runs both.
  *
  * `--release` and the other list flags take comma-separated values and can be repeated. `--yes` skips the
  * final confirmation.
@@ -104,6 +108,7 @@ async function main(): Promise<void> {
 
     // ---- release
     let chosenReleases = values('--release');
+    if (chosenReleases.includes('all')) chosenReleases = releases;
     if (chosenReleases.length) {
         const unknown = chosenReleases.filter((r) => !releases.includes(r));
         if (unknown.length) fail(`no tickets in release ${unknown.join(', ')}. Known releases: ${releases.join(', ')}.`);
@@ -111,8 +116,9 @@ async function main(): Promise<void> {
         console.log('\nReleases:');
         releases.forEach((r, i) => console.log(`  ${i + 1}. ${shown(r)}  (${tickets.filter((t) => t.release === r).length} tickets)`));
         const latest = named.length ? named[named.length - 1] : releases[0];
-        const picked = await pickNumbers(`Which release? Numbers, comma-separated [${shown(latest)}]: `, releases.length);
-        chosenReleases = picked.length ? picked.map((i) => releases[i]) : [latest];
+        const answer = await ask(`Which release? Numbers, comma-separated, or "all" for every release [${shown(latest)}]: `);
+        const picked = answer.split(',').map((s) => Number(s.trim()) - 1).filter((n) => Number.isInteger(n) && n >= 0 && n < releases.length);
+        chosenReleases = answer.toLowerCase() === 'all' ? releases : picked.length ? [...new Set(picked)].map((i) => releases[i]) : [latest];
     } else {
         fail(`not a terminal, so pass the release: --release <one of ${releases.join(', ')}>.`);
     }
@@ -159,6 +165,7 @@ async function main(): Promise<void> {
     console.log(`\nRegression: ${label}`);
     console.log(`  tickets   ${pool.map((t) => t.key).join(', ')}`);
     console.log(`  tests     ${regressionOnly ? 'tagged @Regression' : 'all'}${project ? `, project ${project}` : ''}`);
+    console.log(`  build     ${process.env.BUILD_UNDER_TEST?.trim() || 'not recorded — set BUILD_UNDER_TEST in .env to name the build under test'}`);
     if (noSpec.length) console.log(`  no spec   ${noSpec.map((t) => t.key).join(', ')} — reported from manual results only`);
 
     if (rl && !flag('--yes')) {

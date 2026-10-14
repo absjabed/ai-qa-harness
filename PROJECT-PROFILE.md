@@ -166,6 +166,7 @@ A cycle may not start until these hold. The first two are checked automatically 
 - [ ] Every story in the cycle has an approved plan in `specs/<STORY-KEY>.plan.md`
 - [ ] Test data is seeded and in a known state
 - [ ] `<the build or release under test is deployed to the environment>`
+- [ ] `BUILD_UNDER_TEST` in `.env` names that build, so every result and the closure report record it
 
 ### Exit criteria
 

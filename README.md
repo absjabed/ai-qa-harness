@@ -105,8 +105,8 @@ Five agents, defined in `agents/` and run as slash commands via the `.claude/` w
 | `playwright-context-builder` | The application, plus whatever access exists | `context/BASELINE.md`, context docs, drafts of the profile and flow plans |
 | `playwright-test-planner` | A story key — fetched from the tracker if wired, otherwise the story pasted in | `specs/<KEY>.plan.md` + `specs/<KEY>.plan.csv` |
 | `playwright-test-generator` | An approved plan | A spec file, plus any page objects and fixtures it needed |
-| `playwright-test-healer` | Failing tests | Fixed tests, or a confirmed defect in `specs/temp-defects/defect-log.json` |
-| `playwright-defect-raiser` | That defect log | Bugs created in the tracker, or rows in `specs/defects.csv` + the tests marked `test.fixme()` |
+| `playwright-test-healer` | The failing tests of a story, spec or run | Fixed tests, or a confirmed defect in `specs/defects/defect-log.json` with its screenshots |
+| `playwright-defect-raiser` | The pending defects | Bugs created in the tracker, linked and with evidence, or rows in `specs/defects/defects.csv` + the tests marked `test.fixme()` |
 
 Two things distinguish this from asking an LLM to write tests:
 
@@ -177,7 +177,8 @@ specs/
   RegressionTags/                the tag registry the generator reads
   ScenarioGenerationPatterns/    page-wise / role-wise replication rules
   UserFlowsUserRolePermissions/  per-role navigation and permission plans
-  execution/                     manual test results, per TCID
+  execution/                     the cycle's results - automated and manual, per TCID - and closure reports
+  defects/                       the defect log, its evidence, and bugs to import without Jira
 tests/
   example.spec.ts                reference spec demonstrating I1-I8
   seed.spec.ts                   live-drive starting point for a signed-out scenario
@@ -186,6 +187,7 @@ tests/
 docs/
   index.html                     the handbook - `npm run docs` opens it
   qa-harness-intro.html          three-slide introduction for a QA team
+  qa-harness-walkthrough.html    one example cycle, step by step - what you run, what it asks, what comes out
   NEW-QA-REPO.md                 starting a project's QA repo - files, minimum config, checklist
 scripts/
   open-docs.js                   opens the handbook cross-platform

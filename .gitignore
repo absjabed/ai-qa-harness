@@ -29,3 +29,8 @@ dist/
 
 # Personal Claude Code settings — the shared guard rails are .claude/settings.json, which is committed.
 .claude/settings.local.json
+
+# Raw project documents for the context-builder to read — distilled into context/*.md, which is committed.
+# Remove these two lines to version the originals too.
+context/sources/*
+!context/sources/README.md

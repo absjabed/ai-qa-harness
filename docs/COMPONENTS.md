@@ -51,7 +51,10 @@ have wired up.
 **What** Everything the harness knows about your application beyond the profile. `BASELINE.md` is the
 inventory — sources, modules, roles, vocabulary, data layer, and a known-unknowns section.
 `<area>.md` documents carry per-area business rules, states and transitions, recipes and verification
-queries. `_TEMPLATE.md` is the shape; `README.md` is the convention.
+queries — and an *Existing coverage* summary of earlier test cases. `_TEMPLATE.md` is the shape;
+`README.md` is the convention. `sources/` is where the team drops existing documents for the
+context-builder to read — specs, business rules, test cases, bug lists; gitignored by default, since what is
+committed is the distillation.
 
 **Why it exists** The harness is a separate repository from the application, so it has no sight of your
 source, schema or API. This is the only durable channel for that knowledge.

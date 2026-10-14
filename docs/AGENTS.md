@@ -62,29 +62,31 @@ cover. Name an area, module or role to run it for that alone. Usually the QA lea
 | **Model** | opus, `effort: xhigh` |
 | **Tools** | Read, search and write over the repo; the Playwright browser tools; the database's read tools, if wired |
 | **Browser** | Required. It walks the application as each role, read-only, starting from each role's seed in `tests/seeds/`. |
-| **Input** | Answers to its inventory questions: what sources exist, where they are, who to ask |
+| **Input** | Answers to its inventory questions; documents in `context/sources/`; the Jira epics or releases to digest, if connected |
 | **Output** | `context/BASELINE.md`, `context/<area>.md`, drafts of PROJECT-PROFILE §2–4, navigation plans, module tags |
 
 ### Before you run it
 
-- **Must have:** the application reachable from where the agent runs; `BASE_URL` and a working credential
-  pair per role in `.env`; the role keys in `config/projectProfile.ts` and PROJECT-PROFILE §2, with the
-  baseline role named; a working login — `npx playwright test tests/seeds/` passing, one seed per role; the
-  Playwright MCP server connected.
+- **Must have:** the application reachable from where the agent runs; `BASE_URL` and a credential pair per
+  role in `.env`; the role keys in `config/projectProfile.ts` and PROJECT-PROFILE §2, with the baseline role
+  named; one login seed per role; the Playwright MCP server connected. Its preflight runs the logins itself,
+  and offers to fill the login selectors if they are still `CHANGE_ME`.
 - **It never sees a password.** Each seed logs in inside the test runner, and `.claude/settings.json`
   denies agents reading `.env`. Still use dedicated QA test accounts.
-- **Worth gathering:** a read-only database account; local paths to source, API docs, schema scripts,
-  contracts and requirement docs; who to ask about what.
+- **Worth gathering:** the project's existing knowledge — functional specs, business-rule documents,
+  existing test cases and bug history exported into `context/sources/`, and the Jira epics or releases to
+  digest; a read-only database account; local paths to source, API docs, schema scripts and contracts; who
+  to ask about what.
 - **Decide:** which environment (never production), what it should stay out of, and that you will be there
   to answer its checkpoints.
 
-The full checklist is in `docs/NEW-QA-REPO.md` section 3.
+The full checklist is in `docs/NEW-QA-REPO.md` section 4.
 
 ### How it gathers
 
 Preflight — it runs every role's login seed and reports per role what passed and what to fix, and confirms
 the Jira connection by fetching one known story → inventory what is reachable → **roam**: the signed-out
-pages (login screen, password reset, public pages), then each role page to page, read-only → read the supplied sources → introspect
+pages (login screen, password reset, public pages), then each role page to page, read-only → read what you brought — specs, business rules, existing test cases, bug history, the Jira epics you named, source and API docs → introspect
 the database, if wired → distil into the documents above, each with its provenance and date. It checkpoints
 after the preflight, after the inventory and after the roam.
 

@@ -167,18 +167,21 @@ will:
 - **roam the application**: the signed-out pages first — the login screen, password reset, public pages —
   then, as each role, page to page through every area it can reach, read-only, mapping modules,
   navigation paths and what each role can and cannot do
-- read whatever local sources you pointed it at, and introspect the database if one is wired
+- read the project's existing knowledge — functional specs, business rules, existing test cases and bug
+  history dropped in `context/sources/`, the Jira epics you name, source and API docs — and introspect the
+  database if one is wired
 - write `context/BASELINE.md`, and draft `PROJECT-PROFILE.md` sections 2–4, the navigation-flow plans, and
   the module tag table
 
 ### Before you run it
 
-Work through the checklist in [docs/NEW-QA-REPO.md](docs/NEW-QA-REPO.md) section 3 — what must be done,
+Work through the checklist in [docs/NEW-QA-REPO.md](docs/NEW-QA-REPO.md) section 4 — what must be done,
 what is worth having, and what to decide. In short: the environment reachable; `.env` with the base URL and
 one dedicated QA test account per role; the role keys in `config/projectProfile.ts` and section 2 of the
-profile; one login file per role in `tests/seeds/`; the login selectors in `pages/LoginPage.ts` and the
-logged-in check in `pages/DashboardPage.ts`; `.mcp.json` with the Playwright server connected; and someone
-available to answer its checkpoints.
+profile; one login file per role in `tests/seeds/`; the project's existing documents exported into
+`context/sources/`; `.mcp.json` with the Playwright server connected; and someone available to answer its
+checkpoints. The login selectors in `pages/LoginPage.ts` and `pages/DashboardPage.ts` can wait — its first
+step offers to fill them.
 
 **You do not need to test the logins yourself.** Its first step runs every role's login file and reports
 per role what passed and what to fix. `npx playwright test tests/seeds/` runs the same check by hand.

@@ -154,9 +154,11 @@ source, schema or API unless someone has distilled them into `context/`.
   not a blank to fill with an assumption.
 - `context/<area>.md` — where one exists for the story's area, it carries the business rules, states and
   transitions, and verification queries the scenarios should be built on. This is the difference between
-  designing a state-transition scenario from real rules and inventing plausible ones. No context document
-  for an area the story clearly depends on → say so at the first checkpoint; the
-  `playwright-context-builder` agent exists to write one.
+  designing a state-transition scenario from real rules and inventing plausible ones. Its *Existing coverage*
+  section lists what earlier test cases already cover and the edge cases worth reusing: build on them, and
+  say at the first checkpoint which you drew on — but check each against this story's acceptance criteria
+  rather than copying it. No context document for an area the story clearly depends on → say so at the
+  first checkpoint; the `playwright-context-builder` agent exists to write one.
 - `specs/UserFlowsUserRolePermissions/<role>NavigationFlow.plan.md` (index: `userFlows.plan.md`;
   cross-role matrix: `crossRoleAccessControl.plan.md`) document each role's navigation click-paths and
   permission boundaries. Check the file for every role the story implicates — infer which from the story's

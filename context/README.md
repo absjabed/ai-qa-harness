@@ -25,7 +25,9 @@ and one that has to ask you for every query.
 | Business rules the application enforces, and where they come from | Source files copied verbatim |
 | API contracts, endpoint lists, auth schemes, payload shapes | Anything with real credentials, tokens or connection strings |
 | The module map — what the application's feature areas are and how to reach them | Personal data, or a production data extract |
-| Terminology: what the business calls things, and what the UI calls them | Meeting notes, tickets, or anything not durable |
+| Terminology: what the business calls things, and what the UI calls them | Meeting notes, raw ticket text, or anything not durable |
+| Business rules distilled from specs and Jira tickets, each citing its source | Whole documents, or copied ticket descriptions |
+| What existing test cases already cover, per area | The existing test cases themselves |
 | `BASELINE.md` — the inventory of what is known and what isn't | Screenshots (paste those into the conversation instead) |
 
 ## The shape of a context document
@@ -41,6 +43,18 @@ Copy `_TEMPLATE.md`. The sections exist because each answers a question an agent
 5. **Verification** — how to confirm a state afterwards. These become `data/sql_queries.ts` keys.
 6. **Caveats** — where the documentation is thin, uncertain, or known to drift.
 
+## Existing documents and tickets — `context/sources/`
+
+A project rarely starts from nothing. Functional specifications, business-rule documents, earlier test cases,
+bug history, user guides, a glossary — export them and drop them in `context/sources/`, and the
+context-builder reads them there. With Jira connected it can also digest the epics and stories you name.
+
+What it writes is the distillation, not the documents: each rule into the *Invariants* of its area's context
+document, citing the document and section or the issue key; earlier test cases summarized under *Existing
+coverage*; bug history under *Caveats*. The originals stay in `context/sources/`, which is gitignored by
+default — raw documents can be large or confidential. Remove that line from `.gitignore` if your team wants
+them versioned.
+
 ## Provenance matters
 
 Every document states where its knowledge came from, because the three sources have different failure
@@ -51,6 +65,8 @@ modes:
 - **Introspected from the database** — accurate about structure, says nothing about intent. Introspection
   tools also misreport things like nullability; confirm anything surprising with a direct query.
 - **Observed in the running application** — accurate about behavior, but you only saw the paths you walked.
+- **Taken from a document or a ticket** — accurate about intent at the time it was written, silently stale
+  once the application or a later ticket changes it. Cite the document and section, or the issue key.
 
 Date each document. A context document with no date and no provenance is a rumor.
 

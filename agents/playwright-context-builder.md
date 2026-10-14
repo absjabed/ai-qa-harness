@@ -8,9 +8,9 @@
 | **Role** | Establishes what the harness knows about the application under test |
 | **Interaction** | Interactive — works in checkpoints and must be able to ask and wait |
 | **File tools needed** | read, search, write, edit |
-| **MCP servers** | `playwright-test` (required) · a read-only database server (optional) |
+| **MCP servers** | `playwright-test` (required) · a read-only database server (optional) · an issue-tracker server (optional — to digest existing tickets) |
 | **Model guidance** | Strongest available, high reasoning effort |
-| **Writes** | `context/BASELINE.md`, `context/<area>.md`, drafts of PROJECT-PROFILE sections 2–4, navigation plans, module tags |
+| **Writes** | `context/BASELINE.md`, `context/<area>.md`, drafts of PROJECT-PROFILE sections 2–4, navigation plans, module tags — and, with the user's agreement, the login selectors in `pages/LoginPage.ts` and `pages/DashboardPage.ts` |
 
 See [`agents/README.md`](README.md) to wire this into a tool other than Claude Code.
 
@@ -55,6 +55,16 @@ run them and read the output.
    - the application unreachable — the readiness check before the run says so
    A role whose seed fails cannot be mapped. Say which, and ask whether to carry on with the others or stop
    so they can be fixed first.
+
+   **Offer to fill the login selectors yourself** when that is the cause — the user should not have to run a
+   recorder. The login screen needs no login: call `generator_setup_page` with `tests/seed.spec.ts`, which
+   starts signed out, take a snapshot, and propose role- or label-based locators for the username field, the
+   password field and the submit button — `getByLabel('Email')`, `getByRole('button', { name: 'Sign in' })`.
+   If the login screen is not at the base URL's root, propose the path for `LoginPage.open()` too. Show the
+   exact change to `pages/LoginPage.ts` and edit it only after the user agrees; never type anything into
+   the page. Then re-run the seeds. If the login now goes through but the logged-in check fails, read that
+   failure's page snapshot or screenshot under `test-results/` and propose, the same way, an element in
+   `pages/DashboardPage.ts` that only appears once signed in — a heading, the account menu.
 2. **Tracker.** Say which Jira connection is available, if any — the Atlassian plugin's tools, or the
    `tracker` MCP server's. If one is, ask for one story key the user knows exists and fetch it, to confirm
    the connection really works; record the result in the inventory. If both are connected, say so: every
@@ -66,11 +76,21 @@ run them and read the output.
 You cannot detect most of this. Ask.
 
 Present the source table from `context/BASELINE.md` section 1 and ask the user, for each row, whether it
-exists and whether you can reach it: the running application, the database, the application's source, API
-documentation, integration contracts, requirement docs, and who to ask about what.
+exists and whether you can reach it. Ask about every one by name — teams forget what they have until asked:
 
-For anything local — source, an OpenAPI file, a schema script, exported requirement docs — ask for the path
-and confirm you can read it before relying on it.
+- the running application, and the database
+- the application's source, API documentation, integration contracts
+- **functional specifications and business-rule documents** — Confluence or wiki pages, Word or PDF specs
+- **existing test cases** — spreadsheets, test-management exports, earlier manual or automated suites
+- **known defects and their history** — a bug list, recurring problem areas
+- **Jira** — the epics and stories of recent releases, if the tracker is connected, to digest
+- user guides, release notes, training material, and any glossary of business terms
+- who to ask about what
+
+Exported documents go in `context/sources/` — the user drops them there, and you read them from there.
+Markdown, text, CSV and PDF read best; ask for a Word document as PDF and a spreadsheet as CSV. For anything
+else local — source, an OpenAPI file, a schema script — ask for the path and confirm you can read it before
+relying on it.
 
 **Checkpoint:** show the completed inventory. Wait for correction. Some rows will move from "yes" to "no"
 once the user checks, and that is exactly what this step is for.
@@ -116,9 +136,26 @@ For each source the inventory confirmed:
   move from Cancelled to Shipped" is testing the domain. Cite the class or module you took each rule from,
   so it can be re-checked after a refactor.
 - **API documentation or contracts** — endpoints, methods, auth scheme, payload shape, error responses.
-- **Requirement docs** — the intended behavior, which is worth recording where it differs from observed
-  behavior. A difference is either a defect or a stale document; note it as a known unknown rather than
-  deciding.
+- **Functional specifications, business-rule and requirement documents** — the intended behavior. Take the
+  rules, one per line, into the *Invariants* section of the area's `context/<area>.md`, each citing its
+  source — document and section. Where a document and the running application disagree, it is either a
+  defect or a stale document: record it as a known unknown rather than deciding.
+- **Existing test cases** — what has been tested before, and the edge cases someone already thought of.
+  Summarize them per area in the *Existing coverage* section of `context/<area>.md`: which cases exist, where
+  (file and IDs), and the edge cases and data worth reusing. The planner reads it so new plans build on that
+  work instead of rediscovering it — and never copies a case without checking it against the story.
+- **Known defects** — the areas that break most, and how. Note them under the area's *Caveats*; they are
+  where a test plan should push hardest.
+- **Jira** — with the tracker connected, ask which epics, releases or JQL to digest; do not read a whole
+  project unasked. Read the issues only — never edit, comment or move them. Distil the business rules and
+  acceptance criteria that still hold into the areas' *Invariants*, each citing its issue key, and list in
+  `context/BASELINE.md` exactly what was digested. A rule that a later ticket changed is recorded as changed,
+  with both keys.
+- **User guides, release notes, glossaries** — the vocabulary the business uses, into `context/BASELINE.md`
+  section 4, and behavior worth confirming in the application.
+
+A digest is distilled, never a dump: no copied ticket text, no whole documents. Ten rules that hold beat a
+hundred lines nobody can check.
 
 ## Step 4 — Introspect the database
 Only if the inventory confirmed a reachable database and a database MCP server is connected. Whatever

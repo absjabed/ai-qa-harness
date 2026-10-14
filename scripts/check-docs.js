@@ -25,8 +25,10 @@ function check(label, condition, detail) {
     failures.push(`${label}\n    ${detail}`);
 }
 
+/** Installed or generated — never documentation, whether or not .gitignore is there to say so. */
+const GENERATED = /^(node_modules|\.git|test-results|playwright-report|reports|blob-report|allure-\w+|dist|specs\/temp-defects)(\/|$)/;
 /** Never scanned when walking the tree: generated, installed, or gitignored for carrying secrets. */
-const WALK_SKIP = /^(node_modules|\.git|test-results|playwright-report|reports|blob-report|allure-\w+|dist|specs\/temp-defects)(\/|$)|^\.env(?!\.example$)|^\.mcp\.json$/;
+const WALK_SKIP = new RegExp(`${GENERATED.source}|^\\.env(?!\\.example$)|^\\.mcp\\.json$`);
 
 let inGit = true;
 let tracked;
@@ -39,9 +41,12 @@ let tracked;
 function trackedFiles() {
     if (tracked) return tracked;
     try {
-        tracked = execFileSync('git', ['ls-files'], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] })
+        // Tracked files plus untracked ones git does not ignore — so a fresh copy, whose files are not committed
+        // yet, is checked in full, while anything .gitignore excludes (.env, results) never is.
+        // Secrets are kept in the list on purpose, so the checks below can see one that is committed.
+        tracked = execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard'], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] })
             .split('\n')
-            .filter(Boolean);
+            .filter((f) => f && !GENERATED.test(f));
         if (tracked.length) return tracked;
     } catch {
         // not a git repository
@@ -220,7 +225,7 @@ const gitignore = exists('.gitignore') ? read('.gitignore').split(/\r?\n/).map((
 for (const secret of ['.env', '.mcp.json']) {
     check(`.gitignore does not ignore ${secret}`, gitignore.includes(secret), 'it carries credentials and must never be committed');
     if (inGit) {
-        check(`${secret} is tracked in git`, !trackedFiles().includes(secret), 'it carries credentials and must stay ignored');
+        check(`${secret} is tracked in git, or would be on the next commit`, !trackedFiles().includes(secret), 'it carries credentials and must stay ignored');
     }
     if (exists(secret)) notes.push(`${secret} exists locally${inGit ? ' (correctly untracked)' : ''}`);
 }

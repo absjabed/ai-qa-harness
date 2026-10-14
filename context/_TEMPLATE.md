@@ -29,8 +29,8 @@ matter. Leave out everything a test author will never touch.>`
 so they stay true through a refactor. Say what happens when one is violated — usually the answer is
 "behavior is undefined", and that is worth writing down.>`
 
-1. `<Rule.>` `<Why it matters, or what breaks without it.>`
-2. `<Rule.>`
+1. `<Rule.>` `<Why it matters, or what breaks without it.>` — `<source: observed / source module / document §n / PROJ-123>`
+2. `<Rule.>` — `<source>`
 
 ## States and transitions
 
@@ -65,6 +65,16 @@ first, in a form that can be lifted directly.>`
 ```sql
 -- <query>
 ```
+
+## Existing coverage
+
+`<What earlier test cases already cover in this area — from the spreadsheets, test-tool exports or old
+suites supplied in context/sources/. Not the cases themselves: which ones exist, where, and what is worth
+reusing.>`
+
+| Source | Cases | Edge cases and data worth reusing |
+|---|---|---|
+| `<file, sheet or suite>` | `<IDs or count>` | `<the boundary, the odd input, the role combination someone already found>` |
 
 ## Caveats
 

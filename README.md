@@ -151,6 +151,7 @@ context/
   README.md                      what project knowledge goes here, and in what shape
   BASELINE.md                    what is known about the app - and what is not
   _TEMPLATE.md                   the shape of a per-area context document
+  sources/                       existing specs, test cases, bug lists to read - gitignored
 config/
   projectProfile.ts              machine-readable mirror of PROJECT-PROFILE.md
   testConfig.ts                  env-driven config; throws on missing required vars

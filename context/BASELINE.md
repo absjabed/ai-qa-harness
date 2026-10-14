@@ -23,6 +23,11 @@ run — not that it exists somewhere in the organization.
 | API documentation | `<yes — OpenAPI / Swagger / none>` | `<yes / no>` | `<url or path>` |
 | API contracts / integration specs | `<...>` | `<...>` | `<...>` |
 | Design mockups | `<...>` | `<pasted per story>` | `<tool>` |
+| Functional specs / business-rule docs | `<yes — Confluence / Word / PDF>` | `<yes — in context/sources/ / no>` | `<which documents, which version>` |
+| Existing test cases | `<yes — spreadsheet / test tool / old suite>` | `<yes — CSV in context/sources/ / no>` | `<where, how many>` |
+| Known defects / bug history | `<...>` | `<...>` | `<where>` |
+| Jira tickets (digest) | `<yes>` | `<yes — tracker connected / no>` | `<which epics, releases or JQL were digested>` |
+| User guides / release notes / glossary | `<...>` | `<...>` | `<where>` |
 | Requirement docs / wiki | `<...>` | `<no — summarized here by hand>` | `<where>` |
 | Subject-matter contacts | n/a | n/a | `<who to ask about what>` |
 

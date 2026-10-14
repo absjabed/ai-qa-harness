@@ -663,13 +663,15 @@ td code { white-space: nowrap; }
       your database schema or your API contracts — it knows only what someone puts in front of it. Worth
       understanding before setup, because two of the setup steps exist entirely to answer this.</p>
 
-      <h3>The five channels</h3>
+      <h3>The channels</h3>
       <div class="table-wrap">
         <table>
           <thead><tr><th>Channel</th><th>Carries</th><th>Written by</th></tr></thead>
           <tbody>
             <tr><td><code>PROJECT-PROFILE.md</code></td><td>Roles, domain vocabulary, modules, severity rubric</td><td>You, from a draft</td></tr>
-            <tr><td><code>context/</code></td><td>Distilled knowledge: business rules, schema notes, API contracts, state machines, verification queries</td><td>The context-builder, then you</td></tr>
+            <tr><td><code>context/</code></td><td>Distilled knowledge: business rules, schema notes, API contracts, state machines, verification queries, what earlier test cases covered</td><td>The context-builder, then you</td></tr>
+            <tr><td>The team's existing documents</td><td>Functional specs, business rules, earlier test cases, bug history, user guides — exported into <code>context/sources/</code></td><td>You; read and distilled into <code>context/</code></td></tr>
+            <tr><td>Jira</td><td>The epics and stories you name, digested into rules with their issue keys; each story's own content when it is planned</td><td>Read via the Jira connection, if wired</td></tr>
             <tr><td><code>specs/UserFlowsUserRolePermissions/</code></td><td>Click-paths per role, permission boundaries</td><td>The context-builder, then you</td></tr>
             <tr><td>The running application</td><td>What the app actually does today</td><td>Read live via the Playwright MCP server</td></tr>
             <tr><td>The database</td><td>Real schema, real values</td><td>Read via a read-only MCP server, if wired</td></tr>
@@ -789,45 +791,109 @@ npx playwright install</code></pre></div></li>
       do afterwards: rename <code>name</code> in <code>package.json</code>, and record the harness version and
       commit in the profile.</p>
 
-      <h3>2 · Configure the minimum</h3>
-      <ol>
-        <li><b><code>.env</code></b> from <code>.env.example</code> — the keys marked REQUIRED:
-        <code>APP_NAME</code>, <code>TRACKER_PROJECT_KEY</code>, <code>BASE_URL</code>, and one
-        <code>&lt;ROLE&gt;_EMAIL</code>/<code>_PASSWORD</code> pair per role.</li>
-        <li><b>Roles</b> — the same role keys in the <code>roles</code> array of
-        <code>config/projectProfile.ts</code> and the Role key column of profile section 2, with the baseline
-        role named.</li>
-        <li><b>One login file per role</b> — <code>tests/seeds/&lt;role&gt;.spec.ts</code>: copy one, rename it,
-        change the role inside. <code>npm run check</code> fails until every role has one.</li>
-        <li><b>The login page</b> — real selectors in <code>pages/LoginPage.ts</code> and the logged-in check in
-        <code>pages/DashboardPage.ts</code>. <code>npx playwright codegen &lt;BASE_URL&gt;</code> lets you
-        click the fields to find them.</li>
-        <li><b><code>.mcp.json</code></b> from the example — keep <code>playwright-test</code>; fill
-        <code>database</code> with a read-only account or delete it; for Jira, use the Atlassian plugin in
-        Claude Code (and delete <code>tracker</code>), or keep <code>tracker</code> with another tool.</li>
-        <li><b>Open Claude Code in the new repo's folder</b>, approve its MCP servers when asked, and check
-        <code>/mcp</code> shows <code>playwright-test</code> connected.</li>
-      </ol>
+      <h3>2 · Configure the minimum — exact values</h3>
+      <h4>2a · <code>.env</code></h4>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Key</th><th>What it is</th><th>Example</th></tr></thead>
+          <tbody>
+            <tr><td><code>APP_NAME</code></td><td>The application's name, for report titles. Any text.</td><td><code>Acme Portal</code></td></tr>
+            <tr><td><code>TRACKER_PROJECT_KEY</code></td><td>Your <b>Jira project key</b> — the letters in front of the dash in every ticket ID: tickets <code>ACME-1234</code> → <code>ACME</code>. Bugs are filed into it. Read it off any ticket, or Jira → Project settings → Details → Key.</td><td><code>ACME</code></td></tr>
+            <tr><td><code>BASE_URL</code></td><td>The QA environment's address, scheme included, no trailing slash. The login screen is at it, or redirects from it.</td><td><code>https://qa.acme.example</code></td></tr>
+            <tr><td><code>&lt;ROLE&gt;_EMAIL</code> / <code>_PASSWORD</code></td><td>One pair per role (2b): the username the login form takes — email or plain username — and its password. Dedicated QA test accounts only.</td><td><code>ADMIN_EMAIL=qa.admin@acme.example</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Also write the ticket format into profile section 1 (<code>ACME-1234</code>) and tighten
+      <code>storyKeyPattern</code> in <code>config/projectProfile.ts</code> to <code>/^ACME-\d+$/</code>.</p>
 
-      <h3>3 · Checklist before <code>/playwright-context-builder</code></h3>
+      <h4>2b · Role keys</h4>
+      <p>A <b>role key</b> is a short name you choose for each <em>kind</em> of user that logs in — one per
+      distinct set of permissions, not one per person — in camelCase: <code>admin</code>,
+      <code>caseWorker</code>, <code>readOnlyUser</code>. The same key goes in four places:</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Where</th><th>For roles <code>admin</code> and <code>caseWorker</code></th></tr></thead>
+          <tbody>
+            <tr><td><code>config/projectProfile.ts</code></td><td><code>roles = ['admin', 'caseWorker']</code>, and <code>baselineRole: 'admin'</code> — the full-access role</td></tr>
+            <tr><td>Profile section 2</td><td>One row per role, the key in the Role key column; Baseline role <code>admin</code></td></tr>
+            <tr><td><code>.env</code></td><td>Capitals, <code>_</code> between words: <code>ADMIN_EMAIL</code>, <code>CASE_WORKER_EMAIL</code>, and the matching <code>_PASSWORD</code></td></tr>
+            <tr><td><code>tests/seeds/</code></td><td><code>admin.spec.ts</code>, <code>caseWorker.spec.ts</code> (2c)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>2c · One login file per role</h4>
+      <p>Copy <code>tests/seeds/admin.spec.ts</code> to <code>tests/seeds/&lt;role key&gt;.spec.ts</code> and
+      change the role in the test title and the credential:</p>
+      <pre><code>test('start as caseWorker', async ({ loginPage, dashboardPage }) =&gt; {
+    await userLogin(loginPage, dashboardPage, testUsers.caseWorker);
+});</code></pre>
+      <p>Delete the shipped files for roles you do not have. Keep each to the login; never put "seed" in the
+      name. <code>npm run check</code> fails if a role has no file, or a file has no role.</p>
+
+      <h4>2d · The login page — the context-builder can do it</h4>
+      <p>Four selectors must match the application: the username field, password field and sign-in button in
+      <code>pages/LoginPage.ts</code>, and in <code>pages/DashboardPage.ts</code> something only visible once
+      signed in. If the login screen is not at the root of <code>BASE_URL</code>, change <code>open()</code> too.</p>
+      <ul>
+        <li><b>Let the context-builder fill them</b> — leave them <code>CHANGE_ME</code>. Its first step opens the
+        login screen, which needs no login, proposes the exact change and edits once you agree.</li>
+        <li><b>Record them yourself</b> — <code>npx playwright codegen &lt;BASE_URL&gt;</code> opens a browser
+        window on <em>your</em> screen; click each field and copy its locator. It needs a person — an agent
+        cannot drive it.</li>
+        <li><b>Write them by hand</b> from the labels on screen: <code>getByLabel('Email address')</code>.</li>
+      </ul>
+
+      <h4>2e · <code>.mcp.json</code> and Claude Code</h4>
+      <p>Copy <code>.mcp.json.example</code>. Keep <code>playwright-test</code>; fill <code>database</code>
+      with a read-only account or delete it; for Jira, the Atlassian plugin in Claude Code (delete
+      <code>tracker</code>), or keep <code>tracker</code> with another tool. Open Claude Code <b>in the new
+      repo's folder</b>, approve its MCP servers when asked, and check <code>/mcp</code> shows
+      <code>playwright-test</code> connected.</p>
+
+      <h3>3 · Bring the project's existing knowledge</h3>
+      <p>The context-builder learns far more from what your team already has than from the application alone.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Bring</th><th>How</th><th>It becomes</th></tr></thead>
+          <tbody>
+            <tr><td><b>Functional specs, business-rule documents</b></td><td>export into <code>context/sources/</code></td><td>rules per area in <code>context/&lt;area&gt;.md</code>, citing document and section</td></tr>
+            <tr><td><b>Existing test cases</b></td><td>export as CSV into <code>context/sources/</code></td><td>an <em>Existing coverage</em> summary per area, which the planner builds on</td></tr>
+            <tr><td><b>Known defects, bug history</b></td><td>export into <code>context/sources/</code></td><td><em>Caveats</em> per area — where plans should push hardest</td></tr>
+            <tr><td><b>Jira tickets</b></td><td>with Jira connected, name the epics, releases or JQL to digest</td><td>rules per area, each citing its issue key; the scope listed in the baseline</td></tr>
+            <tr><td><b>User guides, release notes, glossary</b></td><td>export into <code>context/sources/</code></td><td>the vocabulary, and behavior to confirm</td></tr>
+            <tr><td><b>Source code, API docs, schema scripts</b></td><td>give it the local path</td><td>validation rules, states, endpoints</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Markdown, text, CSV and PDF read best. <code>context/sources/</code> is gitignored by default — what
+      is committed is the distilled <code>context/*.md</code>. It distils rather than copies, cites every rule's
+      source, records any disagreement between a document and the application as a known unknown, and only
+      ever reads Jira.</p>
+
+      <h3>4 · Checklist before <code>/playwright-context-builder</code></h3>
       <h4>Must be done</h4>
       <ul class="checklist">
         <li>Harness copied in; <code>npm install</code> and <code>npx playwright install</code> run</li>
         <li>The QA environment opens in a browser from this machine — VPN on if needed — and is not mid-deploy</li>
-        <li><code>.env</code> has <code>APP_NAME</code>, <code>TRACKER_PROJECT_KEY</code>, <code>BASE_URL</code></li>
-        <li>Role keys match in <code>config/projectProfile.ts</code> and profile section 2; baseline role named</li>
-        <li>One credential pair per role in <code>.env</code> — dedicated QA test accounts, never a person's own,
-        never one that works in production</li>
-        <li>One login file per role in <code>tests/seeds/</code></li>
-        <li>Login selectors filled in <code>LoginPage.ts</code>; logged-in check in <code>DashboardPage.ts</code></li>
-        <li><code>.mcp.json</code> created; <code>/mcp</code> shows <code>playwright-test</code> connected</li>
+        <li><code>.env</code> has <code>APP_NAME</code>, <code>TRACKER_PROJECT_KEY</code> (your Jira project key)
+        and <code>BASE_URL</code></li>
+        <li>Role keys chosen, the same in <code>config/projectProfile.ts</code>, profile section 2 and the
+        <code>.env</code> names; baseline role named</li>
+        <li>One credential pair per role in <code>.env</code> — dedicated QA test accounts</li>
+        <li>One login file per role in <code>tests/seeds/</code>; unused ones deleted</li>
+        <li><code>.mcp.json</code> created; Claude Code opened in the new repo; <code>/mcp</code> shows
+        <code>playwright-test</code> connected</li>
         <li><code>npm run check</code> passes</li>
       </ul>
+      <p>The login selectors may stay <code>CHANGE_ME</code> — it offers to fill them.</p>
       <h4>Worth having</h4>
       <ul class="checklist">
+        <li>Existing documents in <code>context/sources/</code> — specs, business rules, test cases, bug lists</li>
+        <li>Jira connected and signed in, one story key you know exists, and which epics or releases to digest</li>
         <li>A read-only QA database account, in <code>.mcp.json</code></li>
-        <li>Jira connected and signed in — and one story key you know exists, to test it</li>
-        <li>Local paths to the source, OpenAPI/Swagger, schema scripts, contracts, requirement docs</li>
+        <li>Local paths to the source, OpenAPI/Swagger, schema scripts, contracts</li>
         <li>Who to ask about which area</li>
       </ul>
       <h4>Decided before starting</h4>
@@ -839,17 +905,17 @@ npx playwright install</code></pre></div></li>
       </ul>
       <p>You do not need to test the logins yourself — its first step does, and tells you what to fix.</p>
 
-      <h3>4 · Does the context-builder roam the app? Yes — that is most of its job</h3>
+      <h3>5 · Does the context-builder roam the app? Yes — that is most of its job</h3>
       <div class="table-wrap">
         <table>
           <thead><tr><th>Step</th><th>What it does</th></tr></thead>
           <tbody>
-            <tr><td><b>0 · Preflight</b></td><td>Runs every role's login file and reports per role — passed, or what to fix. Says which Jira connection it found and fetches your known story.</td></tr>
-            <tr><td><b>1 · Inventory</b></td><td>Asks which sources exist and which it can reach; checks it can read each local path.</td></tr>
-            <tr><td><b>2 · Roam</b></td><td><b>Signed out</b>, it looks at the login screen, password reset and any public pages. Then <b>as each role</b> — starting already signed in, from that role's login file — it clicks through the application page to page: menus and areas, each screen it can reach, what the role can do there, what is missing compared with the full-access role, and the click path to each area.</td></tr>
-            <tr><td><b>3 · Read</b></td><td>The local sources you confirmed — source code, API docs, contracts.</td></tr>
+            <tr><td><b>0 · Preflight</b></td><td>Runs every role's login file and reports per role — passed, or what to fix; offers to fill the login selectors if they are the cause. Says which Jira connection it found and fetches your known story.</td></tr>
+            <tr><td><b>1 · Inventory</b></td><td>Asks, by name, which sources exist and which it can reach — including specs, business rules, existing test cases, bug history and Jira.</td></tr>
+            <tr><td><b>2 · Roam</b></td><td><b>Signed out</b>, the login screen, password reset and any public pages. Then <b>as each role</b> — starting already signed in, from that role's login file — page to page through the application: menus and areas, each screen it can reach, what the role can do there, what is missing compared with the full-access role, and the click path to each area.</td></tr>
+            <tr><td><b>3 · Read</b></td><td>What you brought — specs and business rules, existing test cases, bug history, the Jira epics you named, source code, API docs.</td></tr>
             <tr><td><b>4 · Introspect</b></td><td>The database schema, read-only, if one is connected.</td></tr>
-            <tr><td><b>5 · Write</b></td><td>Drafts the baseline, profile sections 2–4, a navigation plan per role, the permission matrix and the module tags — showing each before writing.</td></tr>
+            <tr><td><b>5 · Write</b></td><td>Drafts the baseline, a context document per area, profile sections 2–4, a navigation plan per role, the permission matrix and the module tags — showing each before writing.</td></tr>
           </tbody>
         </table>
       </div>
@@ -860,10 +926,37 @@ npx playwright install</code></pre></div></li>
         the application changes.</p>
       </div>
 
-      <h3>5 · Then</h3>
-      <p>Review its drafts — setup steps 4, 7 and 8 — then finish setup: page objects (5), test data (6),
-      trimming (9) and the final check (10). Your first story: give <code>/playwright-test-planner</code> its
-      Jira key.</p>
+      <h3>6 · Where everything is kept</h3>
+      <p>Yes — tests are <b>written as code from the test cases</b>, and Playwright runs that code: a Jira story
+      → the planner's test cases → the generator drives each case in the real browser, then writes the code →
+      Playwright runs it. Only <em>Automated</em> cases become code; <em>Manual</em> ones are run by a person and
+      their results recorded. Everything is files in the QA repo, reviewed and committed like any code.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>What</th><th>Produced by</th><th>Kept in</th><th>Committed</th></tr></thead>
+          <tbody>
+            <tr><td>What the harness knows about the app</td><td>context-builder</td><td><code>context/</code>, profile §2–4, <code>specs/UserFlowsUserRolePermissions/</code>, <code>specs/RegressionTags/</code></td><td>yes</td></tr>
+            <tr><td>The documents it read</td><td>you</td><td><code>context/sources/</code></td><td>no, by default</td></tr>
+            <tr><td>Test cases for a story</td><td>planner</td><td><code>specs/&lt;STORY-KEY&gt;.plan.md</code>, <code>.plan.csv</code></td><td>yes</td></tr>
+            <tr><td><b>Test code</b> — one test per automated case</td><td>generator</td><td><code>tests/stories/&lt;release&gt;/&lt;STORY-KEY&gt;.spec.ts</code></td><td>yes</td></tr>
+            <tr><td>Page objects</td><td>generator, or you</td><td><code>pages/&lt;Name&gt;Page.ts</code></td><td>yes</td></tr>
+            <tr><td>Fixtures</td><td>generator</td><td><code>lib/BaseTest.ts</code></td><td>yes</td></tr>
+            <tr><td>Test data, database queries</td><td>you, when an agent asks</td><td><code>data/testData.ts</code>, <code>data/sql_queries.ts</code></td><td>yes</td></tr>
+            <tr><td>Manual test results</td><td>you</td><td><code>specs/execution/manual-results.csv</code></td><td>yes</td></tr>
+            <tr><td>Run results, HTML report</td><td>Playwright</td><td><code>test-results/</code>, <code>playwright-report/</code></td><td>no</td></tr>
+            <tr><td>Cycle reports</td><td>after every run</td><td><code>reports/</code></td><td>your choice</td></tr>
+            <tr><td>Confirmed defects</td><td>healer, defect-raiser</td><td><code>specs/temp-defects/defect-log.json</code>, on the machine that ran it</td><td>no</td></tr>
+            <tr><td>Bugs to import, without Jira</td><td>defect-raiser</td><td><code>specs/defects.csv</code></td><td>yes</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><code>&lt;release&gt;</code> is the client release the story ships in, so each release's tests sit in
+      their own folder and <code>npm run regression</code> runs them by release, epic or ticket.</p>
+
+      <h3>7 · Then</h3>
+      <p>Review its drafts — setup steps 4, 7 and 8, and the <code>context/&lt;area&gt;.md</code> documents —
+      then finish setup: page objects (5), test data (6), trimming (9) and the final check (10). Your first
+      story: give <code>/playwright-test-planner</code> its Jira key.</p>
     </section>
 
     <!-- ================= SETUP ================= -->
@@ -991,8 +1084,9 @@ cp .mcp.json.example .mcp.json</code></pre>
             <h4 style="font-size:14px;margin:18px 0 6px">Before you run it</h4>
             <p>Work through the <a href="#new-repo">checklist in A new QA repo</a>: the environment reachable,
             <code>.env</code> with the base URL and a dedicated QA test account per role, the role keys, one
-            login file per role, the login selectors, the Playwright server connected — and someone there for
-            its checkpoints. You need not test the logins first: its first step does, and reports per role
+            login file per role, the project's existing documents in <code>context/sources/</code>, the
+            Playwright server connected — and someone there for its checkpoints. It offers to fill the login
+            selectors itself. You need not test the logins first: its first step does, and reports per role
             what to fix.</p>
             <div class="note">
               <p><strong>Passwords stay out of the AI conversation.</strong> Each login file signs in inside the

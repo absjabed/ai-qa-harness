@@ -845,9 +845,12 @@ npx playwright install</code></pre></div></li>
       name. <code>npm run check</code> fails if a role has no file, or a file has no role.</p>
 
       <h4>2d · The login page — the context-builder can do it</h4>
-      <p>Four selectors must match the application: the username field, password field and sign-in button in
-      <code>pages/LoginPage.ts</code>, and in <code>pages/DashboardPage.ts</code> something only visible once
-      signed in. If the login screen is not at the root of <code>BASE_URL</code>, change <code>open()</code> too.</p>
+      <p>These selectors must match the application: the username field, password field and sign-in button in
+      <code>pages/LoginPage.ts</code>; in <code>pages/DashboardPage.ts</code> the <code>signedInMarker</code>,
+      something <b>only a signed-in user sees</b> — the account menu, a Sign out button — never a generic
+      heading, which the login screen has too; and the Sign out control in <code>pages/common/Logout.ts</code>,
+      which tests that switch roles use. If the login screen is not at the root of <code>BASE_URL</code>,
+      change <code>open()</code> too.</p>
       <ul>
         <li><b>Let the context-builder fill them</b> — leave them <code>CHANGE_ME</code>. Its first step opens the
         login screen, which needs no login, proposes the exact change and edits once you agree.</li>
@@ -1195,8 +1198,10 @@ npx playwright test tests/example.spec.ts --grep "@Priority1"</code></pre>
             file. Then:</p>
             <pre><code>npm run db:check</code></pre>
             <p><b>Test data in a known state:</b> fill in <code>data/seed.ts</code> — reset, then seed, using
-            <code>seed…</code> and <code>reset…</code> keys — and set <code>SEED_TEST_DATA=true</code>. For data a
-            single test creates, the <code>cleanup</code> fixture removes it even when the test fails.</p>
+            <code>seed…</code> and <code>reset…</code> keys, or the application's own reset endpoint if the suite
+            cannot reach a database — and set <code>SEED_TEST_DATA=true</code>. Tests that share records also need
+            <code>resetTestData()</code> in a <code>test.beforeEach</code>, or one test's leftovers fail the next.
+            For data a single test creates, the <code>cleanup</code> fixture removes it even when the test fails.</p>
           </div>
         </li>
 
@@ -2481,7 +2486,9 @@ Run it? [Y/n]: y</code></pre>
       <div class="comp">
         <div class="comp-head"><code class="comp-name">data/seed.ts</code> · <code class="comp-name">cleanup</code><span class="comp-tag you">you fill this in</span></div>
         <p class="comp-plain">Putting test data into a known state, and taking it out again.</p>
-        <p><code>seed.ts</code> resets and seeds before a run when <code>SEED_TEST_DATA=true</code>. The
+        <p><code>seed.ts</code> resets and seeds before a run when <code>SEED_TEST_DATA=true</code> — through the
+        database, or the application's reset endpoint — and before each test where a spec calls
+        <code>resetTestData()</code> in a <code>beforeEach</code>. The
         <code>cleanup</code> fixture lets a single test register how to remove what it created — run after the
         test, pass or fail.</p>
         <p class="you-do"><b>You touch it:</b> once you know what data your tests depend on.</p>

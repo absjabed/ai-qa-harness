@@ -3,6 +3,7 @@ import { expect } from '@playwright/test';
 import { userLogin } from '@pages/common/login';
 import { defaultUsers } from '@data/auth_data';
 import { recordData } from '@data/testData';
+import { projectProfile } from '@config/projectProfile';
 
 /**
  * Reference spec — the shape every generated test follows.
@@ -28,7 +29,8 @@ import { recordData } from '@data/testData';
  */
 test.describe('Example — harness wiring check', () => {
     test.beforeEach(async ({ loginPage, dashboardPage }) => {
-        await userLogin(loginPage, dashboardPage, defaultUsers.admin);
+        // The full-access role, whatever this project calls it — `baselineRole` in config/projectProfile.ts.
+        await userLogin(loginPage, dashboardPage, defaultUsers.baseline);
     });
 
     test(
@@ -45,6 +47,7 @@ test.describe('Example — harness wiring check', () => {
         'Validate that the dashboard tiles match the records held in the database',
         { tag: ['@Regression', '@Priority2', '@CHANGE_ME_Module'] },
         async ({ dashboardPage }) => {
+            test.skip(!projectProfile.dbValidationEnabled, 'Database validation is out of scope — PROJECT-PROFILE.md section 5');
             await test.step('When the dashboard has loaded', async () => {
                 expect(await dashboardPage.isLoaded()).toBe(true);
             });

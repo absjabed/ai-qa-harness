@@ -1,4 +1,4 @@
-import { roles, type Role } from '@config/projectProfile';
+import { projectProfile, roles, type Role } from '@config/projectProfile';
 
 /**
  * Test user credentials.
@@ -53,32 +53,28 @@ export const testUsers: Record<string, UserCredentials> = new Proxy({} as Record
     getOwnPropertyDescriptor: () => ({ enumerable: true, configurable: true }),
 });
 
+/** An account that should fail authentication, for negative-path tests. */
+function invalidCredentials(): UserCredentials {
+    return {
+        email: process.env.INVALID_EMAIL || 'not-a-real-user@example.invalid',
+        password: process.env.INVALID_PASSWORD || 'not-a-real-password',
+        role: 'invalid',
+    };
+}
+
 /**
- * Named defaults for the roles the suite reaches for most often. Rename these to your own roles —
- * the AI agents read PROJECT-PROFILE.md section 2 to know which names exist, and invariant I4
- * requires every test to log in through one of these rather than a literal.
+ * The users tests log in as: `defaultUsers.<role>` for any role in `config/projectProfile.ts`,
+ * `defaultUsers.baseline` for the full-access role (`baselineRole`), and `defaultUsers.invalid` for
+ * negative-path tests. Invariant I4 requires every test to log in through one of these, or
+ * `testUsers.<role>`, rather than a literal.
  *
- * Declared as getters so an unused role never has to be configured.
+ * Derived from the profile, so renaming the roles needs no edit here. Resolved on use, so an unused
+ * role never has to be configured.
  */
-export const defaultUsers = {
-    get admin(): UserCredentials {
-        return credentialsFor('admin');
-    },
-    get standardUser(): UserCredentials {
-        return credentialsFor('standardUser');
-    },
-    get readOnlyUser(): UserCredentials {
-        return credentialsFor('readOnlyUser');
-    },
-    /** An account that should fail authentication, for negative-path tests. */
-    get invalid(): UserCredentials {
-        return {
-            email: process.env.INVALID_EMAIL || 'not-a-real-user@example.invalid',
-            password: process.env.INVALID_PASSWORD || 'not-a-real-password',
-            role: 'invalid',
-        };
-    },
-};
+export const defaultUsers = new Proxy({} as Record<string, UserCredentials> & { baseline: UserCredentials; invalid: UserCredentials }, {
+    get: (_target, prop: string) =>
+        prop === 'invalid' ? invalidCredentials() : credentialsFor(prop === 'baseline' ? projectProfile.baselineRole : prop),
+});
 
 /** Convenience alias matching the baseline role in PROJECT-PROFILE.md section 2. */
 export const defaultUser = (role: Role): UserCredentials => credentialsFor(role);

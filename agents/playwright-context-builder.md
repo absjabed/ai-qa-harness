@@ -78,8 +78,12 @@ run them and read the output.
    If the login screen is not at the base URL's root, propose the path for `LoginPage.open()` too. Show the
    exact change to `pages/LoginPage.ts` and edit it only after the user agrees; never type anything into
    the page. Then re-run the seeds. If the login now goes through but the logged-in check fails, read that
-   failure's page snapshot or screenshot under `test-results/` and propose, the same way, an element in
-   `pages/DashboardPage.ts` that only appears once signed in — a heading, the account menu.
+   failure's page snapshot or screenshot under `test-results/` and propose, the same way, the
+   `signedInMarker` in `pages/DashboardPage.ts`: an element only a signed-in user sees — the account menu, a
+   Sign out button, the user's name. Never a generic heading: the login screen has headings too, so a failed
+   login would pass. Then, from a signed-in snapshot, propose the sign-out control in
+   `pages/common/Logout.ts` — tests that switch roles sign out between them; if it sits inside a profile
+   menu, propose the menu's button too.
 3. **Tracker.** Say which Jira connection is available, if any — the Atlassian plugin's tools, or the
    `tracker` MCP server's. If one is, ask for one story key the user knows exists and fetch it, to confirm
    the connection really works; record the result in the inventory. If both are connected, say so: every

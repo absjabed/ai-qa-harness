@@ -29,8 +29,9 @@ export default class Logout extends BasePage {
         await this.signOutButton.click();
     }
 
+    /** Sign out. Opens the profile menu first only if the sign-out control is not already on screen. */
     async logout(): Promise<void> {
-        await this.openProfileMenu();
+        if (!(await this.signOutButton.isVisible())) await this.openProfileMenu();
         await this.clickSignOut();
     }
 }

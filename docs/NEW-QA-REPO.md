@@ -184,7 +184,7 @@ has no login file, or a login file has no role.
 
 ### 2d. The login page — the context-builder can do this for you
 
-The login files work once `pages/LoginPage.ts` points at the real login screen. Four things need to match the
+The login files work once `pages/LoginPage.ts` points at the real login screen. These need to match the
 application:
 
 | In | Replace | With the real |
@@ -192,7 +192,8 @@ application:
 | `pages/LoginPage.ts` | `usernameInput` — `getByLabel('CHANGE_ME_Email')` | username or email field |
 | `pages/LoginPage.ts` | `passwordInput` — `getByLabel('CHANGE_ME_Password')` | password field |
 | `pages/LoginPage.ts` | `submitButton` — `getByRole('button', { name: 'CHANGE_ME_Log in' })` | sign-in button |
-| `pages/DashboardPage.ts` | `heading` — the element that proves the login worked | something only visible once signed in — a heading, the account menu |
+| `pages/DashboardPage.ts` | `signedInMarker` — the element that proves the login worked | something **only a signed-in user sees** — the account menu, a Sign out button, the user's name. Never a generic heading: the login screen has one too, and a failed login would pass |
+| `pages/common/Logout.ts` | `signOutButton`, and `profileMenu` if sign-out sits inside a menu | the Sign out control — tests that switch roles sign out between them |
 
 If the login screen is not at the root of `BASE_URL`, also change `open()` in `LoginPage.ts` — `goto('/login')`.
 

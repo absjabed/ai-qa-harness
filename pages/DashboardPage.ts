@@ -13,7 +13,8 @@ import { sqlQueries } from '@data/sql_queries';
  */
 export default class DashboardPage extends BasePage {
     readonly heading: Locator;
-    readonly userMenu: Locator;
+    /** An element only a signed-in user sees — the account menu, a Sign out button, the user's name. */
+    readonly signedInMarker: Locator;
     readonly groupTiles: Locator;
 
     constructor(page: Page) {
@@ -21,14 +22,15 @@ export default class DashboardPage extends BasePage {
 
         // CHANGE_ME — replace with this application's real selectors.
         this.heading = page.getByRole('heading', { level: 1 });
-        this.userMenu = page.getByRole('button', { name: 'CHANGE_ME_Account' });
+        // Never a generic heading: the login screen has headings too, and a failed login would pass.
+        this.signedInMarker = page.getByRole('button', { name: 'CHANGE_ME_Account' });
         this.groupTiles = page.getByTestId('CHANGE_ME_group-tile');
     }
 
     /** True once the dashboard has rendered. Returns rather than throws so callers can branch. */
     async isLoaded(): Promise<boolean> {
         try {
-            await this.waitForVisible(this.heading);
+            await this.waitForVisible(this.signedInMarker);
             return true;
         } catch {
             return false;
@@ -40,10 +42,16 @@ export default class DashboardPage extends BasePage {
      *
      * Called by the shared `userLogin` helper, so every authenticated test gets this check for
      * free. Asserting on a landing element rather than just the URL matters: many applications
-     * redirect to the dashboard route and then render an error, which a URL check would pass.
+     * redirect to the dashboard route and then render an error, which a URL check would pass. And the
+     * element must be one only a signed-in user sees: a page heading is on the login screen too, so a
+     * failed login would pass a heading check.
      */
     async expectLoggedIn(): Promise<void> {
-        expect(await this.isLoaded()).toBe(true);
+        await expect(
+            this.signedInMarker,
+            'Not signed in: the element only a signed-in user sees (DashboardPage.signedInMarker) did not appear. ' +
+                'Either the login failed, or signedInMarker still needs pointing at the real application.'
+        ).toBeVisible({ timeout: 15_000 });
     }
 
     /**

@@ -397,8 +397,8 @@ and rotating a password means editing code instead of an environment. Nothing in
 
 | Export | Use |
 |---|---|
-| `testUsers` | Proxy keyed by role — `testUsers.admin`. Resolves lazily. |
-| `defaultUsers` | Named getters for the common roles, plus `.invalid` for negative-path tests. |
+| `testUsers` | Proxy keyed by role — `testUsers.caseWorker`. Resolves lazily. |
+| `defaultUsers` | The same for any role, plus `.baseline` — the full-access role, whatever the project calls it — and `.invalid` for negative-path tests. Derived from the profile, so renaming roles needs no edit here. |
 | `defaultUser(role)` | Typed accessor when the role is computed. |
 | `UserCredentials` | The `{ email, password, role? }` shape. |
 
@@ -573,7 +573,9 @@ specific screen, it belongs on that screen's page object.
 `example.spec.ts`. Selectors are `CHANGE_ME` placeholders.
 
 **Setup** Replace the selectors. Prefer `getByRole` / `getByLabel` over XPath where the application gives
-you the choice — they survive markup changes a positional XPath doesn't.
+you the choice — they survive markup changes a positional XPath doesn't. `DashboardPage.signedInMarker` is
+what `userLogin` checks to prove a login worked: point it at something only a signed-in user sees, never a
+generic heading, or a failed login passes.
 
 **`DashboardPage.expectGroupsMatchDatabase()`** is the reference DB-backed assertion: query from
 `sql_queries.ts`, executed through `DbConnection`, compared inside the page object. Copy this shape; a spec

@@ -324,7 +324,7 @@ export function buildCycleReport(scope: CycleScope = {}): CycleResult {
     const allMet = criteria.every((c) => c.met);
 
     // ---- write
-    let commit = 'unknown';
+    let commit = 'none yet — not a git repository';
     try { commit = execFileSync('git', ['rev-parse', '--short', 'HEAD'], { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim(); } catch { /* not a repo */ }
 
     const now = new Date();

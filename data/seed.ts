@@ -16,6 +16,10 @@
  *   refer to the same key, and changing one changes both.
  * - `context/<area>.md` recipes are the natural source: their "Recipes" sections describe exactly how to
  *   put an area into a given state.
+ * - No database the suite can reach? Reset through the application instead — a reset endpoint, an admin
+ *   API — from these same functions. Nothing else depends on them talking to a database.
+ * - Tests that share records need a reset before each test, not just each run: call `resetTestData()` from
+ *   a `test.beforeEach` in that spec (docs/WORKFLOWS.md workflow 10).
  * - This runs with the suite's own credentials from `.env`, never the agents' read-only MCP account — it
  *   writes, and the agents must not.
  */

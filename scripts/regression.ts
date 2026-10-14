@@ -164,7 +164,8 @@ async function main(): Promise<void> {
 
     console.log(`\nRegression: ${label}`);
     console.log(`  tickets   ${pool.map((t) => t.key).join(', ')}`);
-    console.log(`  tests     ${regressionOnly ? 'tagged @Regression' : 'all'}${project ? `, project ${project}` : ''}`);
+    console.log(`  tests     ${regressionOnly ? 'tagged @Regression' : 'all'}`);
+    console.log(`  browsers  ${project ?? 'every browser project in playwright.config.ts — pass --browser <name> for one'}`);
     console.log(`  build     ${process.env.BUILD_UNDER_TEST?.trim() || 'not recorded — set BUILD_UNDER_TEST in .env to name the build under test'}`);
     if (noSpec.length) console.log(`  no spec   ${noSpec.map((t) => t.key).join(', ')} — reported from manual results only`);
 

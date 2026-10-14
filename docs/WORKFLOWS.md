@@ -295,7 +295,8 @@ The STLC's last phase depends on the TCIDs being intact end to end, which is why
    - **which tickets** — all of them, those in chosen **epics**, or chosen tickets one by one;
    - **only tests tagged `@Regression`?** — yes by default; say no to run every test of those tickets.
 
-   It shows the selection, asks once more, then runs it. With an agent, or to repeat a run, give the answers
+   It shows the selection — including the browsers: every browser project in `playwright.config.ts` unless
+   you pass `--browser chromium` — asks once more, then runs it. With an agent, or to repeat a run, give the answers
    as flags instead — an agent asks you in the conversation and passes them:
 
    ```bash
@@ -362,7 +363,20 @@ the healer can only call "stale data".
    source. Make both idempotent.
 2. Call them from `data/seed.ts`: `resetTestData()` first, then `seedTestData()`.
 3. Set `SEED_TEST_DATA=true` in `.env`. `lib/globalSetup.ts` runs the pair once before every run.
-4. For data a single test creates, use the `cleanup` fixture instead, so it is removed even when the test
+   No database the suite can reach, but the application has a reset endpoint or an admin API? Call that from
+   `resetTestData()` instead — the functions are yours to fill.
+4. **When tests share records**, once per run is not enough: one test leaves a record in a state that blocks
+   the next — an open defect that stops another test's vehicle returning to service, say — and the failure
+   moves around depending on order and browser. Reset before each test in that spec:
+
+   ```ts
+   test.beforeEach(async () => {
+       await resetTestData();
+   });
+   ```
+
+   Only where a full reset is quick; otherwise give each test its own records and clean up after it.
+5. For data a single test creates, use the `cleanup` fixture instead, so it is removed even when the test
    fails:
 
    ```ts

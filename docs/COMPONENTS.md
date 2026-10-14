@@ -627,8 +627,9 @@ Each is a single test that logs in as its role through `userLogin`, inside the t
 file to `generator_setup_page` and start from the signed-in page it leaves — so no agent ever handles a
 password, and `.claude/settings.json` can deny them reading `.env`.
 
-**Adding a role** Copy a seed, rename it to the role key, change the role in it. `npm run check:docs` fails
-when a role has no seed, or a seed has no role.
+**Adding a role** Copy a seed, rename it to the role key, change the role in it — each shipped seed opens with
+those steps and example role keys. At setup the context-builder offers to do it, along with the roles array
+and the profile's rows. `npm run check:docs` fails when a role has no seed, or a seed has no role.
 
 **What to expect** They run with the rest of the suite, as a login check per role. Not traced — they are
 scaffolding, not coverage.

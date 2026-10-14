@@ -671,7 +671,7 @@ td code { white-space: nowrap; }
             <tr><td><code>PROJECT-PROFILE.md</code></td><td>Roles, domain vocabulary, modules, severity rubric</td><td>You, from a draft</td></tr>
             <tr><td><code>context/</code></td><td>Distilled knowledge: business rules, schema notes, API contracts, state machines, verification queries, what earlier test cases covered</td><td>The context-builder, then you</td></tr>
             <tr><td>The team's existing documents</td><td>Functional specs, business rules, earlier test cases, bug history, user guides — exported into <code>context/sources/</code></td><td>You; read and distilled into <code>context/</code></td></tr>
-            <tr><td>Jira</td><td>The epics and stories you name, digested into rules with their issue keys; each story's own content when it is planned</td><td>Read via the Jira connection, if wired</td></tr>
+            <tr><td>Jira</td><td>The epics and stories you name, digested into rules with their issue keys; each story's own content when it is planned</td><td>Read via the Jira connection — or, without one, from a CSV export in <code>context/sources/</code></td></tr>
             <tr><td><code>specs/UserFlowsUserRolePermissions/</code></td><td>Click-paths per role, permission boundaries</td><td>The context-builder, then you</td></tr>
             <tr><td>The running application</td><td>What the app actually does today</td><td>Read live via the Playwright MCP server</td></tr>
             <tr><td>The database</td><td>Real schema, real values</td><td>Read via a read-only MCP server, if wired</td></tr>
@@ -1015,7 +1015,8 @@ cp .mcp.json.example .mcp.json</code></pre>
             <code>&lt;ROLE&gt;_EMAIL</code>/<code>&lt;ROLE&gt;_PASSWORD</code> pair per role. The var name is
             the role key uppercased, split on the camelCase boundary: <code>caseWorker</code> →
             <code>CASE_WORKER_EMAIL</code>. Set the <code>roles</code> array in
-            <code>config/projectProfile.ts</code> to match.</p>
+            <code>config/projectProfile.ts</code> to match — or leave the roles to the context-builder, which
+            sets them up with you in its first step and tells you which <code>.env</code> names to fill.</p>
             <p>For the database, set <code>DB_ENGINE</code> to <code>mssql</code> (SQL Server) or
             <code>postgres</code> (PostgreSQL), then the <code>DB_*</code> block. Port and schema default to
             the engine's own.</p>
@@ -1296,12 +1297,13 @@ npx playwright test tests/example.spec.ts</code></pre>
         this is the part that matters, what it could not establish.</p>
 
         <h4>What it needs first</h4>
-        <p>The application reachable, a working credential pair per role in <code>.env</code>, the role
-        keys in the profile, a login seed per role in <code>tests/seeds/</code>, and the Playwright MCP
-        server connected. It checks the logins itself before anything else and tells you what to fix, so you
-        need not run them first. Database access, Jira and local sources are optional extras. It never logs
-        in by hand: it starts from each role's seed, so it never sees a password. Setup step 3 has the full
-        list.</p>
+        <p>The application reachable, <code>BASE_URL</code> in <code>.env</code>, your QA test accounts to
+        hand, and the Playwright MCP server connected. The roles — keys, one login file each, a credential pair
+        each — you can set up yourself, or it sets them up with you first; then it checks the logins and tells
+        you what to fix, offering to fill the login selectors itself. The project's existing documents in
+        <code>context/sources/</code>, Jira, a database and local sources are optional extras that widen what it
+        learns. It never logs in by hand: it starts from each role's login file, so it never sees a password.
+        The <a href="#new-repo">New QA repo</a> checklist has the full list.</p>
 
         <h4>When to run it</h4>
         <p><b>Not for every story.</b> It runs once at setup, before filling in the profile by hand — it
@@ -1342,16 +1344,22 @@ npx playwright test tests/example.spec.ts</code></pre>
 
         <h4>How it gathers</h4>
         <ol>
-          <li><b>Preflight</b> — runs every role's login seed and reports per role what passed and what to
-          fix; checks which Jira connection exists and fetches one known story to confirm it works.</li>
-          <li><b>Inventory</b> — it asks what exists and what is reachable. It cannot detect most of this,
-          and rows routinely move from "yes" to "no" once someone checks.</li>
+          <li><b>Preflight</b> — confirms the roles with you and, if they need changing, sets them up and tells
+          you which <code>.env</code> names to fill; runs every role's login seed and reports per role what to
+          fix, offering to fill the login selectors itself; checks which Jira connection exists and fetches one
+          known story to confirm it works.</li>
+          <li><b>Inventory</b> — it asks, by name, what exists and what is reachable: the application, the
+          database, source, API docs, functional specs and business rules, existing test cases, bug history,
+          Jira, user guides, people. It cannot detect most of this, and rows routinely move from "yes" to "no"
+          once someone checks.</li>
           <li><b>Roam</b> — first signed out (login screen, password reset, public pages), then as each role,
           starting from that role's login file, it walks the application page to page, read-only, mapping
           modules, entry paths, and what is visibly absent for one role compared with another. That absence is
           the permission boundary.</li>
-          <li><b>Read</b> — whatever local sources you confirmed: application source (for validation rules,
-          enum values, state machines), API documentation, contracts, requirement docs.</li>
+          <li><b>Read</b> — what you brought: functional specs and business rules (into each area's rules,
+          citing the document), existing test cases (into an <em>Existing coverage</em> summary the planner
+          builds on), bug history, the Jira epics you named — live or from a CSV export — and application source,
+          API documentation, contracts.</li>
           <li><b>Introspect</b> — the database, read-only, if a server is wired.</li>
           <li><b>Distil</b> — into the documents above, each with its provenance and date.</li>
         </ol>
@@ -1414,8 +1422,9 @@ npx playwright test tests/example.spec.ts</code></pre>
         <h4>Release and epic</h4>
         <p>Every plan records the client <b>release</b> the story ships in and, if there is one, its
         <b>epic</b> — the fields <code>npm run regression</code> selects by. With Jira connected it takes them
-        from the ticket's fix version and parent epic; otherwise it asks at the first checkpoint. The release is
-        the project's own, as the team names it — never the harness's version.</p>
+        from the ticket's fix version and parent epic; otherwise it asks at the first checkpoint. <em>No
+        release yet</em> is a valid answer — the story is then listed as <em>no release</em> until it gets one.
+        The release is the project's own, as the team names it — never the harness's version.</p>
 
         <h4>The seven checkpoints</h4>
         <div class="table-wrap">
@@ -1494,9 +1503,11 @@ npx playwright test tests/example.spec.ts</code></pre>
 
         <h4>Two blocking checkpoints</h4>
         <p><b>Target file path.</b> It will not assume a path from the scenario name, even when one seems
-        obvious. It proposes one from the plan's release and story key — asking for the release only if the
-        plan has none — assembles it per profile section 8, and has you confirm it. It checks the folder
-        exists — <code>generator_write_test</code> can't create parent folders.</p>
+        obvious. It proposes one from the plan and has you confirm it: with a release,
+        <code>tests/stories/2.26/ACME-1234.spec.ts</code>; with no release yet — after asking once whether one is
+        known — under the epic, <code>tests/stories/ACME-100/ACME-1234.spec.ts</code>, or directly in
+        <code>tests/stories/</code> with no epic either. It checks the folder exists —
+        <code>generator_write_test</code> can't create parent folders.</p>
         <p><b>New page objects.</b> Before implementing it tells you which file it's about to touch and
         waits — "this page already exists, I'm going to implement <code>addRecord</code> on
         <code>RecordListPage.ts</code>".</p>
@@ -1505,7 +1516,8 @@ npx playwright test tests/example.spec.ts</code></pre>
         <ul>
           <li><b>Title = TCID + the plan's summary, verbatim</b> —
           <code>test('PROJ-1234-TC004 Validate that…', …)</code> — so a failure traces back to its plan row</li>
-          <li>One test per TCID, in <code>tests/stories/&lt;release&gt;/&lt;STORY-KEY&gt;.spec.ts</code></li>
+          <li>One test per TCID, in <code>tests/stories/&lt;release&gt;/&lt;STORY-KEY&gt;.spec.ts</code> — or the
+          epic's folder while the story has no release</li>
           <li><code>import test from '@lib/BaseTest'</code>, <code>expect</code> from <code>@playwright/test</code></li>
           <li>Every plan step wrapped in its own <code>test.step(...)</code></li>
           <li><code>test.beforeEach</code> calling <code>userLogin</code> for anything authenticated</li>
@@ -1789,8 +1801,9 @@ npx playwright test tests/example.spec.ts</code></pre>
       <p>Regression runs per client release, on a QA team member's machine. It asks which release, then which
       of its tickets — all, by epic, or one by one — and whether to run only <code>@Regression</code>-tagged
       tests; then runs the selection. Releases and epics come from each plan's <code>Release</code> and
-      <code>Epic</code> fields — the project's own releases, never the harness's version. With an agent, the
-      answers go in as flags: <code>--release 2.26 --epics PROJ-100 --yes</code>.</p>
+      <code>Epic</code> fields — the project's own releases, never the harness's version. Stories not yet
+      scheduled are offered as <em>no release</em>. With an agent, the answers go in as flags:
+      <code>--release 2.26 --epics PROJ-100 --yes</code>, or <code>--release none</code>.</p>
       <p>As the run ends, the cycle report is written for exactly that selection — and after any other run,
       for the stories it ran. <code>npm run report:cycle</code> rebuilds it by hand, for example after
       recording manual results. It reads the plans, the latest run, the manual results and the defect log,
@@ -1943,7 +1956,9 @@ npx playwright test tests/example.spec.ts</code></pre>
         <p><code>BASELINE.md</code> is the inventory: which sources exist and are reachable, the module map,
         each role's authority, the domain vocabulary, the data layer — and a known-unknowns section that is
         the most useful part of the file. Alongside it, one document per area of the application carrying
-        its business rules, its states and transitions, and the queries that verify them.</p>
+        its business rules — each citing its source — its states and transitions, what earlier test cases
+        already cover, and the queries that verify them. <code>sources/</code> holds the documents those came
+        from — specs, business rules, test cases, bug lists, Jira exports — committed with the QA repo.</p>
         <p>Distilled, never dumped. A schema dump buries the four facts that matter about a table under ten
         thousand that don't.</p>
         <p class="you-do"><b>You touch it:</b> the context-builder writes the first pass; you correct it,
@@ -2148,9 +2163,10 @@ npx playwright test tests/example.spec.ts</code></pre>
       <div class="comp">
         <div class="comp-head"><code class="comp-name">scripts/regression.ts</code><span class="comp-tag">you run it</span></div>
         <p class="comp-plain">Regression for a client release, on the tickets you choose.</p>
-        <p><code>npm run regression</code> asks for the release, then all of its tickets, some epics, or
-        chosen tickets, and whether to stick to <code>@Regression</code>-tagged tests. It runs them, and the
-        cycle report for that selection is written as the run ends.</p>
+        <p><code>npm run regression</code> asks for the release — or <em>no release</em>, for stories not yet
+        scheduled — then all of its tickets, some epics, or chosen tickets, and whether to stick to
+        <code>@Regression</code>-tagged tests. It runs them, and the cycle report for that selection is written
+        as the run ends.</p>
         <p class="you-do"><b>You touch it:</b> every release.</p>
       </div>
 
@@ -2225,7 +2241,8 @@ npx playwright test tests/example.spec.ts</code></pre>
         what lets <code>.claude/settings.json</code> deny agents reading <code>.env</code>. They also run with
         the suite, as a login check per role.</p>
         <p class="you-do"><b>You touch it:</b> when you add a role — copy a seed, rename it to the role,
-        change the role inside. <code>npm run check:docs</code> fails if a role has no seed.</p>
+        change the role inside; each shipped file opens with these steps and example role keys. At setup the
+        context-builder offers to do it for you. <code>npm run check:docs</code> fails if a role has no seed.</p>
       </div>
 
       <p style="margin-top:22px"><a href="COMPONENTS.md">Deeper reference — extension points, exports and failure modes →</a></p>
@@ -2344,9 +2361,9 @@ npx playwright test tests/example.spec.ts</code></pre>
               <td>Pass the answers as flags — <code>--release 2.26</code>, optionally <code>--epics</code> / <code>--stories</code>, and <code>--yes</code>.</td>
             </tr>
             <tr>
-              <td><code>regression: no releases found</code></td>
-              <td>No plan has a <code>**Release:**</code>, and no spec sits in <code>tests/stories/&lt;release&gt;/</code></td>
-              <td>Fill each plan's Release — the planner asks for it, or takes Jira's fix version.</td>
+              <td>A story is missing from the release you picked</td>
+              <td>Its plan has no <code>**Release:**</code> yet, so it is listed under <em>no release</em></td>
+              <td>Run it with <code>--release none</code>, or add the Release line to its plan — the planner takes it from Jira's fix version when connected — and move its spec into that release's folder.</td>
             </tr>
             <tr>
               <td>A seed in <code>tests/seeds/</code> fails</td>

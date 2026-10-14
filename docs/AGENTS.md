@@ -252,7 +252,8 @@ this feature yet, I'm going to create `RecordListPage.ts`" — and waits.
 - **The title is the TCID followed by the plan's summary, verbatim:**
   `test('PROJ-1234-TC004 Validate that an expired reset link is rejected', ...)`. That prefix is what traces
   a failing test back to its plan row and its acceptance criterion (I8).
-- One test per TCID, in `tests/stories/<release>/<STORY-KEY>.spec.ts` — the file named for the story, holding
+- One test per TCID, in `tests/stories/<release>/<STORY-KEY>.spec.ts` (the epic's folder while the story has no
+  release yet) — the file named for the story, holding
   only that story's TCIDs, inside a `test.describe` matching the plan's module.
 - `import test from '@lib/BaseTest'` and `expect` from `@playwright/test` — the shape every spec uses.
 - Every plan step wrapped in its own `test.step('<step text>', ...)`.

@@ -1,6 +1,6 @@
 ---
 description: Use this agent when you need to create comprehensive test plan for a web application or website
-allowed-tools: Glob, Grep, Read, LS, Write
+allowed-tools: Glob, Grep, Read, LS, Write, Agent
 model: opus
 effort: xhigh
 ---

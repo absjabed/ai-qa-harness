@@ -16,8 +16,8 @@ See [`agents/README.md`](README.md) to wire this into a tool other than Claude C
 
 ---
 
-You establish what the harness knows about the application under test. The other three authoring agents
-read what you write; a story planned against a thin baseline produces thin tests, and a story planned
+You establish what the harness knows about the application under test. The other agents read what you
+write; a story planned against a thin baseline produces thin tests, and a story planned
 against a wrong baseline produces tests that are confidently incorrect.
 
 This harness is a separate repository from the application. It has no automatic sight of the source, the
@@ -154,8 +154,8 @@ For each source the inventory confirmed:
   so it can be re-checked after a refactor.
 - **API documentation or contracts** — endpoints, methods, auth scheme, payload shape, error responses.
 - **Functional specifications, business-rule and requirement documents** — the intended behavior. Take the
-  rules, one per line, into the *Invariants* section of the area's `context/<area>.md`, each citing its
-  source — document and section. Where a document and the running application disagree, it is either a
+  rules, one per line, into the *Invariants* section of the area's `context/<area>.md`, each ending with
+  its source — `— source: <document> §<section>`; `npm run check` fails a rule without one. Where a document and the running application disagree, it is either a
   defect or a stale document: record it as a known unknown rather than deciding.
 - **Existing test cases** — what has been tested before, and the edge cases someone already thought of.
   Summarize them per area in the *Existing coverage* section of `context/<area>.md`: which cases exist, where
@@ -244,7 +244,8 @@ Verification queries you write here should be liftable directly into `data/sql_q
 - **Nothing invented.** Every rule, constraint, permission and vocabulary entry traces to something you
   read, queried, or observed. Anything else sits in "known unknowns".
 - **Provenance recorded.** Every context document says where its knowledge came from and when, specifically
-  enough to re-verify.
+  enough to re-verify — and every rule under *Invariants* ends with `— source: …`: the document and section,
+  the issue key, the module, or `observed` with the role and date. `npm run check` fails a rule without one.
 - **Introspection surprises confirmed.** Any structural fact that contradicts expectation was checked with
   a direct query, and the document says so.
 - **Nothing was written to the application or the database.** No forms submitted, no rows changed, no

@@ -48,12 +48,12 @@ version number, marked **Adopt**, **Optional** or **New copies only**.
 
 ## 1.0.0 — pre-release
 
-A Playwright + TypeScript test harness driven by five agents, application-agnostic by construction: every
+A Playwright + TypeScript test harness driven by six agents, application-agnostic by construction: every
 project-specific value lives in `PROJECT-PROFILE.md`, `.env`, `.mcp.json` and `context/`.
 
 **What it contains**
 
-- **Five agent definitions** in `agents/`, canonical and vendor-neutral. Claude Code wrappers in
+- **Six agent definitions** in `agents/`, canonical and vendor-neutral. Claude Code wrappers in
   `.claude/commands/` carry no instructions, so they cannot drift. `agents/README.md` covers porting to
   another agentic tool.
   - `playwright-context-builder` — learns the application once at setup, writes the baseline the rest read;
@@ -61,7 +61,9 @@ project-specific value lives in `PROJECT-PROFILE.md`, `.env`, `.mcp.json` and `c
     scoped to one area, when it goes stale
   - `playwright-test-planner` — story to reviewed test plan, seven blocking checkpoints; fetches the story
     from Jira by its key when the tracker is connected
-  - `playwright-test-generator` — plan to spec, driving the real browser first
+  - `playwright-test-generator` — plan to spec, driving the real browser first; has every spec reviewed
+  - `playwright-test-reviewer` — an independent second reader in a fresh context: a plan against its ticket
+    (offered by the planner), a spec against its plan (always, after the generator writes it). Read-only
   - `playwright-test-healer` — triages the failures of the story, spec or run it is pointed at, confirms
     genuine defects with a person — including ones a tester found by hand — keeps their screenshots, retests
     fixed ones and records the result on the bug
@@ -105,7 +107,7 @@ project-specific value lives in `PROJECT-PROFILE.md`, `.env`, `.mcp.json` and `c
   its guards produce the right messages, and its PostgreSQL path has been tested against a real server —
   but no agent has been observed running end to end, and the Jira integration and permission rules have not
   been exercised against a live Jira site. Treat the first project as the real test of it.
-- Four of the five agents are interactive by design. The suite runs on QA team members' own machines; there
+- Five of the six agents are interactive by design. The suite runs on QA team members' own machines; there
   is no CI pipeline, and `npm run check` is run by hand before pushing.
 - The documentation restates things the code owns, so it drifts. `npm run check:docs` catches the
   countable cases; the rest is habit.

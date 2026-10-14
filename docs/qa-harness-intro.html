@@ -238,7 +238,8 @@
           our app notes, flags gaps in the acceptance criteria, designs cases with standard techniques (boundaries, roles, errors). Each case gets an
           ID linked to its criterion, e.g. <code>PROJ-123-TC001</code>.</div>
         <div class="cell agent"><span class="who">/test-generator</span>Performs every step in a <b>real browser</b>
-          first, then writes the Playwright test from what actually happened, not from guesses.</div>
+          first, then writes the Playwright test from what actually happened, not from guesses. A reviewer then checks
+          each test really proves what the plan expects.</div>
         <div class="cell agent"><span class="who">test suite</span>Checks the environment is up, then runs every test,
           across browsers and roles. Regression is one command.</div>
         <div class="cell agent"><span class="who">/test-healer</span>Fixes broken tests (selectors, timing) in up to 3

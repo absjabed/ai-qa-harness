@@ -359,6 +359,9 @@
         <p class="say u"><b>You</b>Different messages. Expired: "This code has expired".</p>
         <p class="say h"><b>Checkpoint 4</b>9 scenario titles: TC001 a valid code reduces the total … TC006 removing the code restores the total …</p>
         <p class="say u"><b>You</b>Drop TC008, it duplicates TC002.</p>
+        <p class="say h"><b>Before saving</b>An independent reviewer can check this plan against the ticket. A few minutes. Run it?</p>
+        <p class="say u"><b>You</b>Yes.</p>
+        <p class="say h"><b>Review</b>1 must fix: AC4 has no case that would fail if it broke. A case for it is added before saving.</p>
       </div></div>
       <div class="out"><span class="cell-label">You get</span>
         <p class="file"><code>specs/ACME-1234.plan.md</code> <span class="pill c">committed</span><span>test cases TC001–TC009: steps, expected result, priority, manual or automated</span></p>
@@ -383,6 +386,7 @@
         <p class="say u"><b>You</b>Yes.</p>
         <p class="say h"><b>Harness</b>There's no page object for the discount panel. Create DiscountPanelPage.ts with applyCode()?</p>
         <p class="say u"><b>You</b>Yes.</p>
+        <p class="say h"><b>Review, always</b>TC003 only checks the banner appears, not the new total. Fixed: it now asserts the total drops by 10%.</p>
       </div></div>
       <div class="out"><span class="cell-label">You get</span>
         <p class="file"><code>tests/stories/2.26/ACME-1234.spec.ts</code> <span class="pill c">committed</span><span>one test per automated case, titled <code>ACME-1234-TC001 Validate that…</code>, tagged @Regression @Priority1 @Checkout</span></p>
@@ -407,7 +411,7 @@
       <div><span class="cell-label">The harness asks</span><div class="talk">
         <p class="say h"><b>Harness</b>Healing ACME-1234: TC004 and TC006.</p>
         <p class="say h"><b>Harness</b>TC004: the button now reads "Redeem". Updating DiscountPanelPage. It passes now.</p>
-        <p class="say h"><b>Harness</b>TC006 expects the total to come back when the code is removed. The app keeps the discount, twice in a row, and it isn't the test. I'd call it P2 Major: wrong price, but there's a workaround. Log it as a defect?</p>
+        <p class="say h"><b>Harness</b>TC006 expects the total to come back when the code is removed. The app keeps the discount, twice in a row, and the plan agrees with the test, so I won't change what it expects. I'd call it P2 Major: wrong price, but there's a workaround. Log it as a defect?</p>
         <p class="say u"><b>You</b>Yes, P2.</p>
       </div></div>
       <div class="out"><span class="cell-label">You get</span>
@@ -583,7 +587,8 @@
       <tbody>
         <tr><td>Setup, once</td><td><code>/playwright-context-builder</code></td><td>Roles, sources, the drafts</td><td>What the harness knows about the app</td></tr>
         <tr><td>Plan</td><td><code>/playwright-test-planner &lt;KEY&gt;</code></td><td>How to read the AC, which scenarios</td><td>The plan and its test case IDs</td></tr>
-        <tr><td>Generate</td><td><code>/playwright-test-generator &lt;plan&gt;</code></td><td>File path, new page objects, SQL</td><td>The test code</td></tr>
+        <tr><td>Generate</td><td><code>/playwright-test-generator &lt;plan&gt;</code></td><td>File path, new page objects, SQL</td><td>The test code, reviewed against the plan</td></tr>
+        <tr><td>Review</td><td>Automatic after generating; offered before saving a plan</td><td>Whether to review the plan; which suggestions to take</td><td>Findings, fixed or shown to you</td></tr>
         <tr><td>Run</td><td><code>npx playwright test …</code></td><td>Nothing</td><td>Results recorded, cycle report</td></tr>
         <tr><td>Heal</td><td><code>/playwright-test-healer &lt;KEY&gt;</code></td><td>Is it a bug, and how bad</td><td>Fixed tests, or a defect with screenshots</td></tr>
         <tr><td>Raise</td><td><code>/playwright-defect-raiser</code></td><td>Which bugs to file</td><td>Jira bugs, linked, with evidence</td></tr>

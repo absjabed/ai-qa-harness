@@ -29,6 +29,8 @@ matter. Leave out everything a test author will never touch.>`
 so they stay true through a refactor. Say what happens when one is violated — usually the answer is
 "behavior is undefined", and that is worth writing down.>`
 
+Every rule ends with its source — `npm run check` fails one without `source:`.
+
 1. `<Rule.>` `<Why it matters, or what breaks without it.>` — `<source: observed / source module / document §n / PROJ-123>`
 2. `<Rule.>` — `<source>`
 

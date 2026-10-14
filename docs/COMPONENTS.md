@@ -11,7 +11,7 @@ Ordered by how often you touch it — configuration first, then the layers a tes
 
 ### `agents/`
 
-**What** The five agent definitions, canonical and vendor-neutral — plain markdown with no tool's
+**What** The six agent definitions, canonical and vendor-neutral — plain markdown with no tool's
 frontmatter and no tool's tool names. Each opens with a header stating its role, interaction model, file
 access, MCP servers and model guidance.
 
@@ -76,7 +76,7 @@ agent will act on it confidently. Fix the document in the same change as the tes
 `.mcp.json.example`; gitignored, because the database entry carries a password.
 
 **The required entry** `playwright-test` — `npx playwright run-test-mcp-server`, which ships with
-`@playwright/test`, nothing extra to install. Three of the five agents cannot work without it.
+`@playwright/test`, nothing extra to install. Three of the six agents cannot work without it.
 
 **The optional entries**
 - `database` — `@executeautomation/database-server`, PostgreSQL or SQL Server, version pinned. Biggest
@@ -230,7 +230,7 @@ private. The template's README records the full reasoning.
 modules, data layer, API layer, severity rubric, file layout, knowledge sources, test strategy (scope,
 entry and exit criteria), setup checklist.
 
-**Who reads it** All five agents, every run, before doing anything else. You, when onboarding.
+**Who reads it** All six agents, every run, before doing anything else. You, when onboarding.
 
 **How to use** Fill in every `<...>` placeholder. Delete rows that don't apply. Never delete a section
 heading — the agents look sections up by name and number.

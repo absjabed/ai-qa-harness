@@ -131,6 +131,19 @@ for (const w of wrappers) {
     );
 }
 
+// Sub-agents (.claude/agents/) are how one agent starts another in a fresh context — the reviewer, today.
+// Same rule as the wrappers: a pointer at the canonical definition, nothing more.
+const subagentDir = '.claude/agents';
+const subagents = exists(subagentDir) ? fs.readdirSync(path.join(root, subagentDir)).filter((f) => f.endsWith('.md')) : [];
+for (const s of subagents) {
+    const body = read(path.join(subagentDir, s)).split(/^---$/m).slice(2).join('---').trim();
+    const canonical = `agents/${s}`;
+    check(`${subagentDir}/${s} has no canonical definition`, agentFiles.includes(s), `expected ${canonical}`);
+    check(`${subagentDir}/${s} does not point at its canonical definition`, body.includes(canonical), `expected a reference to ${canonical}`);
+    check(`${subagentDir}/${s} has grown instructions of its own`, body.split('\n').filter((l) => l.trim()).length <= 8,
+        `sub-agents stay thin so they cannot drift from agents/. Move the prose into ${canonical}.`);
+}
+
 // ---------------------------------------------------------------- profile sections
 
 const profile = read('PROJECT-PROFILE.md');
@@ -257,6 +270,26 @@ for (const seed of seeds) {
     const role = seed.replace(/\.spec\.ts$/, '');
     check(`${seedDir}/${seed} is for a role the profile does not list`, profileRoles.includes(role),
         'rename it to match a role in config/projectProfile.ts, or delete it');
+}
+
+// ---------------------------------------------------------------- context rules cite their source
+
+// A rule in context/<area>.md with no source is indistinguishable from a guess, and every agent downstream
+// trusts it. Each numbered rule under "## Invariants" must say where it came from: `source: <document §n /
+// issue key / observed / module>`. The template and the guides are exempt; placeholders are skipped.
+const CONTEXT_EXEMPT = ['README.md', '_TEMPLATE.md', 'BASELINE.md'];
+const contextDocs = exists('context') ? fs.readdirSync(path.join(root, 'context')).filter((f) => f.endsWith('.md') && !CONTEXT_EXEMPT.includes(f)) : [];
+for (const doc of contextDocs) {
+    const text = read(`context/${doc}`);
+    const section = text.split(/^## /m).find((s) => /^Invariants\b/.test(s));
+    if (!section) continue;
+    const rules = section.split(/^(?=\d+\.\s)/m).filter((r) => /^\d+\.\s/.test(r));
+    for (const rule of rules) {
+        const first = rule.split('\n')[0].trim();
+        if (/^\d+\.\s+`?</.test(first)) continue; // template placeholder
+        check(`context/${doc}: invariant "${first.slice(0, 60)}" names no source`, /source:/i.test(rule),
+            'end each rule with — source: <document §n | issue key | observed | module>');
+    }
 }
 
 // ---------------------------------------------------------------- harness version

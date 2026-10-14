@@ -1,13 +1,13 @@
 # Agent Reference
 
-Five agents, defined in [`agents/`](../agents/) as vendor-neutral markdown and wired into Claude Code by
-thin wrappers in `.claude/commands/`. They form a pipeline but each runs alone.
+Six agents, defined in [`agents/`](../agents/) as vendor-neutral markdown and wired into Claude Code by
+thin wrappers in `.claude/commands/` — and the reviewer also as a sub-agent in `.claude/agents/`. They form a pipeline but each runs alone.
 
 Not using Claude Code? [`agents/README.md`](../agents/README.md) covers porting — it is a one-line wrapper
 per agent, plus frontmatter translation.
 
 `playwright-context-builder` runs first and rarely: it establishes what the harness knows about the
-application, which the other four then read. See the handbook's **How it learns your application** section
+application, which the others then read. See the handbook's **How it learns your application** section
 for why a separate repository needs this at all.
 
 ```
@@ -28,7 +28,11 @@ story ──▶ planner ──▶ plan.md + plan.csv ──▶ generator ──�
                                                     tracker bug (or defects.csv) + test.fixme()
 ```
 
-All five read `PROJECT-PROFILE.md` first. Three of them also read
+**Reviews.** `playwright-test-reviewer` checks work it did not write, in a fresh context: every spec the
+generator writes, always; a plan before the planner saves it, when you agree. The healer has its own guard
+on top: it never changes what a test expects without the plan agreeing or you approving.
+
+All six read `PROJECT-PROFILE.md` first. Four of them also read
 `TEST-AUTHORING-INVARIANTS.md` and cite invariants by number rather than restating them — one file,
 so a convention has a single place to change.
 
@@ -210,6 +214,12 @@ scenario, so manual cases are counted at cycle closure rather than forgotten.
 Invent a story key. Guess a selector for an element with no page object. Name a data key that doesn't
 exist. Dictate which spec file a scenario lands in — that's the generator's blocking checkpoint.
 
+### An independent review, if you want one
+
+At the "before saving" checkpoint it offers to have `playwright-test-reviewer` check the plan against the
+ticket, in a fresh context — recommended for a story with many ACs, several roles, or rules from `context/`.
+Say yes and it folds the `must fix` findings in and shows you the rest before saving; say no and it saves.
+
 ---
 
 ## `/playwright-test-generator`
@@ -275,6 +285,49 @@ test for a step it never drove. Assume a file path. Invent a module tag — it a
 row into `regression-tags.md` itself. Invent SQL. Write a role name into a `test.describe` title as a
 substitute for a tag (`--grep` matches full title strings, which produces false positives).
 
+### Reviewed before it finishes
+
+Once the spec is written, the generator starts `playwright-test-reviewer` in a fresh context on the plan and
+the spec — every time, unless you asked it not to. It fixes every `must fix` (a test that would pass with the
+feature broken, an Expected Result nothing asserts, a missing step), re-driving the step live if it needs a
+new assertion, and has the changed tests reviewed once more; `consider` findings it shows you. Its summary
+says what the review found and what changed.
+
+---
+
+## `/playwright-test-reviewer`
+
+An independent second reader. Did not write what it reviews, never edits, never asks.
+
+| | |
+|---|---|
+| **Model** | opus |
+| **Tools** | Glob, Grep, Read — read-only; the tracker's read tools, if wired, for the ticket |
+| **Input** | Plan review: the ticket's AC and the draft plan. Test review: the plan and the spec, with the page objects it calls |
+| **Output** | Findings, most serious first — `must fix` or `consider`, each with the TCID, where, what, the source it fails against, and a suggested change |
+| **Started by** | The generator, after every spec it writes — skipped only when you ask. The planner, before saving, when you say yes. You, any time: `/playwright-test-reviewer` |
+
+### Why a separate agent
+
+Each authoring agent already audits its own work, but against its own checklist and its own reading of the
+source. The reviewer starts fresh, from the ticket or the plan, with none of the author's reasoning — so it
+finds what the author never thought to look for.
+
+### What it looks for
+
+- **Plan review** — every AC covered by a case that would fail if the AC broke; Expected Results a person
+  with no context can judge; nothing contradicting `context/`, a permission boundary or the ticket; no known
+  unknown quietly settled by assumption; the cases a careful tester would add.
+- **Test review** — per TCID: an assertion that proves the plan's Expected Result, not just that the page
+  loaded; whether the test would still pass with the feature broken; one step per plan line; a real starting
+  state; nothing that makes a pass meaningless — fixed sleeps, unexplained skips, literals, ambiguous
+  locators.
+
+### What happens to its findings
+
+The agent that started it fixes every `must fix` and shows you each `consider` with a recommendation. The
+generator re-reviews what it changed once, then shows you whatever still fails rather than looping.
+
 ---
 
 ## `/playwright-test-healer`
@@ -337,6 +390,21 @@ harness deliberately declines to reach a conclusion.
 
 Its database access is read-only twice over: a read-only account, and `.claude/settings.json` denying the
 database server's write tools.
+
+### It never changes what a test expects on its own
+
+Selectors, waits and locator scoping it fixes without asking. A change to *what the test expects* — an
+expected value or text, a test-data value an assertion compares against, an assertion removed or loosened —
+is held back: it reads the plan row for that TCID first.
+
+| The plan's Expected Result… | It concludes | It does |
+|---|---|---|
+| says what the test was checking | The application changed, against the plan | Treats it as a defect candidate — never edits the assertion |
+| differs — the test misread the plan | The test is wrong | Shows old and new assertion and the plan line; edits on your yes |
+| is itself out of date — a later ticket changed the behavior | Nobody decides alone | Says so and asks; the planner revises the plan, the test follows |
+
+It never resolves a failure with `test.skip`, `test.fixme` or by deleting the test. This guard is always on:
+a healer that makes tests pass by expecting what the application now does turns real bugs into green runs.
 
 ### It never changes a TCID
 

@@ -30,6 +30,9 @@ Work its seven checkpoints. Two are worth real attention:
 - **Checkpoint 4** — scenario titles only. This is the cheapest redirect in the whole pipeline. Trimming
   here costs a sentence; trimming at checkpoint 6 means re-reviewing a full plan.
 
+Before saving it offers an independent review of the plan against the ticket by `playwright-test-reviewer`.
+Say yes for a story with many acceptance criteria, several roles, or rules from `context/`.
+
 Out: `specs/<KEY>.plan.md` and `specs/<KEY>.plan.csv`.
 
 ### Step 2 — Read the plan's gap table
@@ -48,7 +51,11 @@ Point it at the plan file. It will drive the browser, then stop twice: once to c
 (proposed from the plan's release and story key — or, with no release yet, its epic's folder), once for each
 new page object it's about to create. Answer both.
 
-Out: the spec, plus new page object methods and fixtures, implemented and wired.
+Before it finishes, `playwright-test-reviewer` checks every test against the plan in a fresh context — does
+each assertion prove the Expected Result, would the test fail if the feature broke. The generator fixes the
+`must fix` findings and shows you the rest.
+
+Out: the spec, plus new page object methods and fixtures, implemented, wired and reviewed.
 
 ### Step 4 — Run
 

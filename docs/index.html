@@ -569,7 +569,7 @@ td code { white-space: nowrap; }
     <option value="#knowledge">How it learns your app</option>
     <option value="#new-repo">New QA repo — step by step</option>
     <option value="#setup">Setup — 10 steps</option>
-    <option value="#agents">The five agents</option>
+    <option value="#agents">The six agents</option>
     <option value="#lifecycle">Testing lifecycle</option>
     <option value="#invariants">Invariants I1–I8</option>
     <option value="#components">Components</option>
@@ -587,7 +587,7 @@ td code { white-space: nowrap; }
       <span class="brand-mark">QA</span>
       <span class="brand-name">Harness Handbook</span>
     </div>
-    <p class="brand-sub">playwright · typescript · 5 agents</p>
+    <p class="brand-sub">playwright · typescript · 6 agents</p>
 
     <nav class="nav" id="nav">
       <a href="#orientation"><span class="ord">·</span> Orientation</a>
@@ -600,7 +600,7 @@ td code { white-space: nowrap; }
       <a href="#cycle"><span class="ord">→</span> Follow a whole cycle</a>
 
       <div class="nav-group">Reference</div>
-      <a href="#agents"><span class="ord">5</span> The agents</a>
+      <a href="#agents"><span class="ord">6</span> The agents</a>
       <a href="#lifecycle"><span class="ord">·</span> Testing lifecycle</a>
       <a href="#invariants"><span class="ord">I1–8</span> Invariants</a>
       <a href="#components"><span class="ord">·</span> Components</a>
@@ -620,7 +620,7 @@ td code { white-space: nowrap; }
     <section id="orientation">
       <p class="eyebrow">Handbook</p>
       <h1>AI-driven QA test harness</h1>
-      <p class="lede">Five agents learn your application, plan, generate, heal, and file defects against a Playwright + TypeScript
+      <p class="lede">Six agents learn your application, plan, generate, review, heal, and file defects against a Playwright + TypeScript
       suite built on the Page Object / Page Factory pattern. Everything project-specific lives in two files —
       <code>PROJECT-PROFILE.md</code> and <code>.env</code>. Nothing in the agents, the config, or the
       fixtures names an application.</p>
@@ -768,12 +768,12 @@ npx playwright install</code></pre></div></li>
         <table>
           <thead><tr><th>Folder / file</th><th>What it is</th><th>In the new repo you…</th></tr></thead>
           <tbody>
-            <tr><td><code>.claude/</code> — 5 commands, <code>settings.json</code></td><td>The agents' Claude Code commands; the guard rails</td><td>leave</td></tr>
+            <tr><td><code>.claude/</code> — 6 commands, the reviewer sub-agent, <code>settings.json</code></td><td>The agents' Claude Code commands; the guard rails</td><td>leave</td></tr>
             <tr><td><code>.env.example</code>, <code>.mcp.json.example</code></td><td>Every suite setting; the agents' browser, database and Jira connections</td><td>copy to <code>.env</code> / <code>.mcp.json</code> and fill in</td></tr>
             <tr><td><code>.gitignore</code>, <code>.gitattributes</code></td><td>Keep passwords and results out of git</td><td>leave — never skip <code>.gitignore</code></td></tr>
             <tr><td><code>PROJECT-PROFILE.md</code></td><td>The project's roles, vocabulary, modules, strategy</td><td>fill in</td></tr>
             <tr><td><code>SETUP.md</code>, <code>TEST-AUTHORING-INVARIANTS.md</code>, <code>docs/</code></td><td>The setup reference, the eight test rules, this handbook and the references</td><td>read</td></tr>
-            <tr><td><code>agents/</code></td><td>The five agent definitions</td><td>leave</td></tr>
+            <tr><td><code>agents/</code></td><td>The six agent definitions</td><td>leave</td></tr>
             <tr><td><code>config/</code></td><td>Settings, roles, the database connection</td><td>set the roles</td></tr>
             <tr><td><code>context/</code></td><td>Where the context-builder writes what it learns</td><td>review</td></tr>
             <tr><td><code>data/</code></td><td>Credentials lookup, test data, queries, seeding</td><td>fill in as you go</td></tr>
@@ -1275,7 +1275,8 @@ npx playwright test tests/example.spec.ts</code></pre>
         data key is listed, add it to <code>data/testData.ts</code> yourself; the generator flags data keys
         but doesn't author them.</li>
         <li><b>Generate</b> with <code>/playwright-test-generator</code>. It drives the browser, then stops
-        twice: for the target file path, and for each new page object.</li>
+        twice: for the target file path, and for each new page object. Before it finishes, an independent
+        reviewer checks every test against the plan.</li>
         <li><b>Run</b> the spec.</li>
         <li><b>Heal</b> what fails with <code>/playwright-test-healer &lt;KEY&gt;</code> — name the story, a
         spec or a TCID; name nothing and it lists the last run's failures and asks.</li>
@@ -1360,7 +1361,8 @@ npx playwright test tests/example.spec.ts</code></pre>
         <code>ACME-100</code> from Jira, gaps such as "AC3: which error message for an expired code?", and the
         existing coverage it will build on — <em>answer here; this matters most</em>. <b>4</b>: scenario titles
         only — <em>cut or add here; the cheapest place to change course</em>. The rest: conventions, reusable
-        page objects, anything new, the full plan, the CSV. <br><b>Out:</b> <code>specs/ACME-1234.plan.md</code>
+        page objects, anything new, the full plan, the CSV. Before saving it offers an independent review of the
+        plan against the ticket — say yes for a big or rule-heavy story. <br><b>Out:</b> <code>specs/ACME-1234.plan.md</code>
         and <code>.plan.csv</code> with TC001–TC009, and a <code>Not Run</code> row in
         <code>specs/execution/manual-results.csv</code> for each manual case.</li>
         <li><b>Fill the gap table.</b> A data key the plan needs, such as <code>discountData.expiredCode</code>,
@@ -1368,7 +1370,9 @@ npx playwright test tests/example.spec.ts</code></pre>
         <li><b>Generate — <code>/playwright-test-generator specs/ACME-1234.plan.md</code>.</b> For each automated
         case it logs in through the role's login file and drives the real browser, step by step. It asks:
         "Write to <code>tests/stories/2.26/ACME-1234.spec.ts</code>?"; "No page object for the discount panel —
-        create <code>DiscountPanelPage.ts</code>?"; for SQL it needs; for a module tag's name.
+        create <code>DiscountPanelPage.ts</code>?"; for SQL it needs; for a module tag's name. Then the reviewer
+        checks each test proves its Expected Result — "TC003 only checks the banner appears, not the new total"
+        — and the generator fixes it before finishing.
         <br><b>Out:</b> one test per TCID, titled <code>ACME-1234-TC001 Validate that…</code>, tagged
         <code>@Regression @Priority1 @Checkout</code>, plus the new page objects.</li>
         <li><b>Run — <code>npx playwright test tests/stories/2.26/ACME-1234.spec.ts</code>.</b> Say 7 pass and 2
@@ -1378,7 +1382,8 @@ npx playwright test tests/example.spec.ts</code></pre>
         a TCID, or "what failed in the last run"; name nothing and it lists the last run's failures and asks.
         A test problem it fixes and says how: "TC004 — the button now reads <em>Redeem</em>; updating
         <code>DiscountPanelPage</code>". A real bug — reproduced twice, test-side causes ruled out — it stops
-        on: "TC006 expects the total to return after the code is removed; it keeps the discount. Severity
+        on: "TC006 expects the total to return after the code is removed; it keeps the discount — the plan says
+        the same, so I won't change the test. Severity
         <b>P2 Major</b>. Log it?" You confirm or correct the severity. <br><b>Out:</b> fixed tests; a
         <code>pending</code> entry in <code>specs/defects/defect-log.json</code>, its screenshots kept in
         <code>specs/defects/evidence/</code>; the healed spec re-run so the record holds the final results.</li>
@@ -1440,7 +1445,8 @@ Run it? [Y/n]: y</code></pre>
           <tbody>
             <tr><td>Setup, once</td><td><code>/playwright-context-builder</code></td><td>Roles, sources, the drafts</td><td><code>context/</code>, profile 2–4, navigation plans, tags</td></tr>
             <tr><td>Plan</td><td><code>/playwright-test-planner &lt;KEY&gt;</code></td><td>The AC reading, the scenario list</td><td>The plan, its CSV, manual rows</td></tr>
-            <tr><td>Generate</td><td><code>/playwright-test-generator &lt;plan&gt;</code></td><td>Path, new page objects, SQL</td><td><code>tests/stories/&lt;release&gt;/&lt;KEY&gt;.spec.ts</code></td></tr>
+            <tr><td>Generate</td><td><code>/playwright-test-generator &lt;plan&gt;</code></td><td>Path, new page objects, SQL</td><td><code>tests/stories/&lt;release&gt;/&lt;KEY&gt;.spec.ts</code>, reviewed against the plan</td></tr>
+            <tr><td>Review</td><td>automatic after generating; offered before saving a plan</td><td>Which <code>consider</code> findings to take</td><td>Findings, fixed or shown to you</td></tr>
             <tr><td>Run</td><td><code>npx playwright test …</code></td><td>—</td><td>Results recorded; cycle report</td></tr>
             <tr><td>Heal</td><td><code>/playwright-test-healer &lt;KEY&gt;</code></td><td>Is it a bug? Its severity</td><td>Fixed tests, or a defect with screenshots</td></tr>
             <tr><td>Raise</td><td><code>/playwright-defect-raiser</code></td><td>Which to file</td><td>Jira bug, linked, evidence attached; <code>test.fixme</code></td></tr>
@@ -1456,14 +1462,16 @@ Run it? [Y/n]: y</code></pre>
     <!-- ================= AGENTS ================= -->
     <section id="agents">
       <p class="eyebrow">Reference</p>
-      <h2>The five agents</h2>
-      <p class="lede">Think of them as five roles on a QA team: someone who learns the product, an analyst who plans, an
-      engineer who automates, an engineer who triages failures, and an administrator who files the
-      paperwork. Each
+      <h2>The six agents</h2>
+      <p class="lede">Think of them as six roles on a QA team: someone who learns the product, an analyst who plans, an
+      engineer who automates, a reviewer who checks work they did not do, an engineer who triages failures,
+      and an administrator who files the paperwork. Each
       hands off to the next, but each also works alone and reads its input from disk — a plan reviewed on
       Monday generates fine on Wednesday.</p>
-      <p>You are the sixth role, and not an optional one. The first three stop and ask for your approval at
-      every decision that would be expensive to get wrong; the fourth asks before calling anything a defect.
+      <p>You are the seventh role, and not an optional one. The first three stop and ask for your approval at
+      every decision that would be expensive to get wrong; the reviewer checks the generator's every spec, and
+      the planner's plan when you agree; the healer asks before calling anything a defect, and before changing
+      what a test expects.
       None of them is designed to be left running unattended — not even the last, which makes no judgments
       at all but still shows you the batch and asks once before filing anything.</p>
 
@@ -1648,6 +1656,11 @@ Run it? [Y/n]: y</code></pre>
         cross-feature interaction was never asked about. A different failure mode from the self-audit —
         that only catches gaps against ACs already named.</p>
 
+        <h4>An independent review, if you want one</h4>
+        <p>Before saving, it offers to have <code>/playwright-test-reviewer</code> check the plan against the
+        ticket in a fresh context — recommended for many ACs, several roles, or rules from
+        <code>context/</code>. Yes: it folds in the <code>must fix</code> findings and shows you the rest.</p>
+
         <h4>What it will not do</h4>
         <ul>
           <li>Invent a story key</li>
@@ -1716,6 +1729,11 @@ Run it? [Y/n]: y</code></pre>
           <li>Any new page object wired into <code>lib/BaseTest.ts</code> — implemented, not left as a comment</li>
         </ul>
 
+        <h4>Reviewed before it finishes</h4>
+        <p>Once the spec is written it has <code>/playwright-test-reviewer</code> check it against the plan, in
+        a fresh context — every time, unless you asked it not to. It fixes every <code>must fix</code>,
+        re-driving the step live if a new assertion is needed, and shows you each <code>consider</code>.</p>
+
         <h4>What it will not do</h4>
         <ul>
           <li>Mint a TCID — a scenario with no plan row goes back to the plan first</li>
@@ -1726,6 +1744,40 @@ Run it? [Y/n]: y</code></pre>
           <li>Invent SQL</li>
           <li>Write a role name into a describe title as a substitute for a tag</li>
         </ul>
+      </article>
+
+      <!-- reviewer -->
+      <article class="agent">
+        <div class="agent-head">
+          <span class="agent-name">/playwright-test-reviewer</span>
+          <span class="agent-role">plan vs ticket · test vs plan → findings</span>
+        </div>
+        <div class="pills">
+          <span class="pill on-accent">opus</span>
+          <span class="pill">no browser</span>
+          <span class="pill">read-only</span>
+          <span class="pill">fresh context</span>
+        </div>
+
+        <p class="agent-plain"><b>The role it plays:</b> the colleague who reviews work they did not do. Each
+        agent already checks its own output, but against its own reading of the ticket. The reviewer starts
+        from the ticket or the plan, with none of the author's reasoning, and asks whether the work really
+        answers it. It never edits and never asks you anything — it hands back findings.</p>
+
+        <h4>When it runs</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Review</th><th>When</th><th>It checks</th></tr></thead>
+            <tbody>
+              <tr><td><b>Test review</b></td><td><b>Always</b> — the generator starts it after every spec it writes; skipped only if you ask</td><td>Each test proves its plan's Expected Result; it would fail if the feature broke; one step per plan line; a real starting state; no sleeps, unexplained skips, literals or ambiguous locators</td></tr>
+              <tr><td><b>Plan review</b></td><td><b>Offered</b> — the planner asks before saving; recommended for many ACs, several roles, or rules from <code>context/</code></td><td>Every AC covered by a case that would fail if it broke; Expected Results anyone can judge; nothing contradicting <code>context/</code> or the ticket; no known unknown settled by assumption</td></tr>
+              <tr><td>Any time</td><td>You run <code>/playwright-test-reviewer</code> on a plan or a spec</td><td>Either of the above</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Findings are <code>must fix</code> — fixed by the agent that started it — or <code>consider</code> —
+        shown to you with a recommendation. Each names the TCID and the source it fails against. A finding it
+        cannot tie to the ticket, the plan, a context rule or an invariant is taste, and it leaves it out.</p>
       </article>
 
       <!-- healer -->
@@ -1805,6 +1857,24 @@ Run it? [Y/n]: y</code></pre>
           <p style="margin-top:8px">Its access is read-only twice over: a read-only account, and
           <code>.claude/settings.json</code> denying the database server's write tools.</p>
         </div>
+        <h4>It never changes what a test expects on its own</h4>
+        <p>Selectors, waits and locator scoping it fixes without asking. A change to <em>what the test
+        expects</em> — an expected value, a test-data value an assertion compares against, an assertion removed
+        or loosened — it holds back and checks against the plan row for that TCID:</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>The plan's Expected Result…</th><th>It does</th></tr></thead>
+            <tbody>
+              <tr><td>says what the test was checking</td><td>Treats it as a defect candidate — the app changed, against the plan. Never edits the assertion</td></tr>
+              <tr><td>differs — the test misread the plan</td><td>Shows old and new assertion with the plan line; edits on your yes</td></tr>
+              <tr><td>is out of date — a later ticket changed the behavior</td><td>Says so and asks; the planner revises the plan, the test follows</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Always on. A healer that makes tests pass by expecting what the application now does turns real bugs
+        into green runs. It never resolves a failure with <code>test.skip</code>, <code>test.fixme</code> or by
+        deleting the test.</p>
+
         <h4>It never changes a TCID</h4>
         <p>A fix may reword a title's summary; the <code>&lt;STORY-KEY&gt;-TC&lt;NNN&gt;</code> prefix stays
         exactly as it was. A failing test with no TCID is reported as a suite defect, not logged against the
@@ -1932,7 +2002,7 @@ Run it? [Y/n]: y</code></pre>
           <tbody>
             <tr><td><b>Requirement analysis</b></td><td><code>playwright-context-builder</code>; the planner's first checkpoint, which must flag ambiguous or missing acceptance criteria</td><td><code>context/BASELINE.md</code>; each plan's AC traceability table</td></tr>
             <tr><td><b>Test planning</b></td><td><code>PROJECT-PROFILE.md</code> section 10 — the test types in scope, and the entry and exit criteria</td><td>A strategy every story's test design serves</td></tr>
-            <tr><td><b>Test case design</b></td><td><code>playwright-test-planner</code> — equivalence partitioning, boundary values, decision tables, state transitions, pairwise, error guessing</td><td><code>specs/&lt;KEY&gt;.plan.md</code> and <code>.plan.csv</code>, one TCID per case</td></tr>
+            <tr><td><b>Test case design</b></td><td><code>playwright-test-planner</code> — equivalence partitioning, boundary values, decision tables, state transitions, pairwise, error guessing; <code>playwright-test-reviewer</code> checks the plan against the ticket when you agree, and every generated test against its plan</td><td><code>specs/&lt;KEY&gt;.plan.md</code> and <code>.plan.csv</code>, one TCID per case</td></tr>
             <tr><td><b>Environment setup</b></td><td><code>.env</code>, <code>.mcp.json</code>, and the readiness check in <code>lib/globalSetup.ts</code>; <code>data/seed.ts</code> for a known data state</td><td>An environment verified reachable before any test runs</td></tr>
             <tr><td><b>Test execution</b></td><td>Playwright, with <code>playwright-test-generator</code> automating each case against the live app and <code>playwright-test-healer</code> triaging failures; regression per client release with <code>npm run regression</code>; manual cases recorded in <code>specs/execution/</code></td><td><code>automated-results.csv</code> — each case's latest result across runs, with the build — and <code>manual-results.csv</code></td></tr>
             <tr><td><b>Defect management</b></td><td>Healer confirms with a person — for automated failures and for defects found by hand → <code>playwright-defect-raiser</code> files it → the healer retests once fixed</td><td>A bug in the tracker, linked to the story with screenshots, or <code>specs/defects/defects.csv</code> to import; the committed defect log with each defect's status</td></tr>
@@ -2188,7 +2258,7 @@ Run it? [Y/n]: y</code></pre>
       <div class="comp">
         <div class="comp-head"><code class="comp-name">.mcp.json</code><span class="comp-tag you">you fill this in</span></div>
         <p class="comp-plain">How agents reach the browser and, optionally, the database and the tracker.</p>
-        <p>The Playwright entry is required — three of the five agents cannot work without a browser. The
+        <p>The Playwright entry is required — three of the six agents cannot work without a browser. The
         database entry is optional and is the single biggest reduction in friction available: with it,
         agents read your schema instead of asking you for every query. Use a read-only account against QA —
         the example server has no read-only mode of its own. The tracker entry connects Jira, so stories are
@@ -2427,7 +2497,7 @@ Run it? [Y/n]: y</code></pre>
         <div class="comp-head"><code class="comp-name">specs/UserFlowsUserRolePermissions/</code><span class="comp-tag you">highest value</span></div>
         <p class="comp-plain">How each role moves through the application, and what each one is not allowed to do.</p>
         <p>One document per role, plus a matrix comparing them. This is the most valuable thing you can
-        write here. All three authoring agents read it before working out a navigation path themselves, and
+        write here. The planner, the generator and the reviewer read it before working out a navigation path themselves, and
         the healer checks it before deciding a blocked button is a bug. Leave it empty and the healer will
         eventually file a working permission rule as a defect.</p>
         <p class="you-do"><b>You touch it:</b> at setup for the main role's happy path, then grow it as you

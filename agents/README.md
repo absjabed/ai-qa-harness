@@ -1,6 +1,6 @@
 # `agents/` — the canonical agent definitions
 
-The five agents live here as plain markdown, with no vendor's frontmatter and no vendor's tool names.
+The six agents live here as plain markdown, with no vendor's frontmatter and no vendor's tool names.
 Everything under `.claude/` is a thin wrapper that points at these files.
 
 **Edit these. Never edit a wrapper's prose** — a wrapper that carries instructions of its own is a second
@@ -11,8 +11,9 @@ copy waiting to drift.
 | [`playwright-context-builder`](playwright-context-builder.md) | Learns the application | Yes | Yes |
 | [`playwright-test-planner`](playwright-test-planner.md) | Story → reviewed test plan | No | Yes |
 | [`playwright-test-generator`](playwright-test-generator.md) | Plan → spec, driven live | Yes | Yes |
-| [`playwright-test-healer`](playwright-test-healer.md) | Triages failures | Yes | Asks once |
-| [`playwright-defect-raiser`](playwright-defect-raiser.md) | Files confirmed defects | No | No |
+| [`playwright-test-reviewer`](playwright-test-reviewer.md) | Independent check: plan against ticket, test against plan | No | No — returns findings |
+| [`playwright-test-healer`](playwright-test-healer.md) | Triages failures | Yes | At decisions |
+| [`playwright-defect-raiser`](playwright-defect-raiser.md) | Files confirmed defects | No | Asks once |
 
 ---
 
@@ -116,9 +117,16 @@ thing to suspect — not the prompt.
 
 ## Interaction model
 
-All five need to ask a question and wait for an answer, so none is CI-shaped on any vendor.
-`playwright-defect-raiser` asks the least: it makes no judgments, and asks once — which pending defects to
-file — before filing anything.
+Five of the six need to ask a question and wait for an answer, so none of those is CI-shaped on any vendor.
+`playwright-defect-raiser` asks the least of them: it makes no judgments, and asks once — which pending
+defects to file — before filing anything.
+
+`playwright-test-reviewer` asks nothing. Other agents start it — the generator after every spec it writes,
+the planner when the user agrees — and it must start **in a fresh context**, seeing only the files it is
+named, never the author's conversation: that independence is its whole value. In Claude Code it is a
+sub-agent, `.claude/agents/playwright-test-reviewer.md`, as well as a command a person can run. In another
+tool, wire it as whatever starts a separate session or sub-agent; if the tool has neither, run it yourself
+in a new session and paste its findings back.
 
 ## Relationship to `npx playwright init-agents`
 

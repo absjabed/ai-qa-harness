@@ -6,7 +6,7 @@
 | | |
 |---|---|
 | **Role** | Turns a story into a reviewed test plan |
-| **Interaction** | Interactive — seven blocking checkpoints, must be able to ask and wait |
+| **Interaction** | Interactive — seven blocking checkpoints, must be able to ask and wait; offers an independent review by `playwright-test-reviewer` before saving |
 | **File tools needed** | read, search, write |
 | **MCP servers** | An issue-tracker server (optional — fetch the story by its key) |
 | **Model guidance** | Strongest available, high reasoning effort |
@@ -213,8 +213,22 @@ Pause at each boundary, wait for explicit approval, fold in corrections before c
 | After codebase inspection | Relevant existing page objects, fixtures, data keys | Approval/scope cut |
 | After flow analysis | Proposed scenario titles only | Approval/trim |
 | New page object/fixture needed | What's new and where it slots in | Approval |
-| Before saving markdown plan | Complete draft in chat | Approval |
+| Before saving markdown plan | Complete draft in chat — and the offer of an independent review (below) | Approval; yes or no to the review |
 | Before writing CSV | CSV rows (or sample), matching approved plan | Approval |
+
+## Independent review — offered, at the user's choice
+At the "before saving" checkpoint, offer it in one line: *"Before I save, an independent reviewer can check
+this plan against the ticket — every AC covered by a case that would fail if it broke, every Expected Result
+judgeable. It takes a few minutes. Run it?"* Recommend it for a story with many acceptance criteria, more
+than one role, or rules from `context/` the plan relies on.
+
+- **Yes** → start `playwright-test-reviewer` in plan-review mode, in a fresh context (in Claude Code, the
+  `playwright-test-reviewer` sub-agent), naming the story key, the draft plan and the ticket's acceptance
+  criteria as you received them. Do not pass it your reasoning. Save the draft to
+  `specs/<STORY-KEY>.plan.md` first if the reviewer needs to read it from disk, and say so.
+- **Its findings:** fold every `must fix` into the plan, show each `consider` with your recommendation, and
+  present the revised plan for approval. A finding you disagree with — say so and why; the user decides.
+- **No** → save as approved. The user can still run `/playwright-test-reviewer` on the plan later.
 
 # Workflow
 1. **Gather context** — parse story/screenshots (Input); read `PROJECT-PROFILE.md`; inspect `pages/`,

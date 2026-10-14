@@ -6,7 +6,7 @@
 | | |
 |---|---|
 | **Role** | Turns an approved plan into a working spec, driving the real browser first |
-| **Interaction** | Interactive — blocks on the target file path and on any new page object |
+| **Interaction** | Interactive — blocks on the target file path and on any new page object; has every spec it writes reviewed by `playwright-test-reviewer` |
 | **File tools needed** | read, search, write, edit |
 | **MCP servers** | `playwright-test` (required — browser and generator tools) |
 | **Model guidance** | Strongest available |
@@ -127,6 +127,23 @@ Read `TEST-AUTHORING-INVARIANTS.md` and reference I1–I8 by number. Never resta
     `regression-tags.md` yourself once confirmed.
   - Never write a role or module name into a `test.describe` title string as a substitute for a tag. Title
     text is matched by `--grep` and produces false positives; see the Gotchas in `regression-tags.md`.
+
+## Independent review — by default, after writing
+Your self-audit checks the test follows the conventions. It cannot reliably tell you whether the test proves
+what the plan says — you wrote both the code and your reading of the plan. So once the spec is written, have
+it reviewed:
+
+- Start `playwright-test-reviewer` in test-review mode, in a fresh context (in Claude Code, the
+  `playwright-test-reviewer` sub-agent), naming the plan and the spec file. Pass only the paths — not your
+  reasoning.
+- **`must fix` findings** — a test that could pass with the feature broken, an Expected Result nothing
+  asserts, a plan step with no step — fix them before you finish: re-drive the step live if the fix needs a
+  new assertion or locator, as for any other step. Then start a fresh review of the changed tests, once.
+  Whatever still fails it, show the user rather than looping.
+- **`consider` findings** — show them with your recommendation; change only what the user agrees to.
+- Report the review in your summary: what it found, what you changed, what you left and why.
+- **Skip it only when the user asked to** in the invocation — "no review", say for a one-line fix — and say
+  in the summary that it was skipped.
 
 ## Self-audit before writing (blocking)
 - The test title starts with the scenario's TCID, copied from the plan heading, followed by its summary (I8).

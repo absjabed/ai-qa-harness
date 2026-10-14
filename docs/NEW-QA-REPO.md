@@ -47,7 +47,7 @@ step 9, which says what to edit when you remove something.
 
 | Folder / file | What it is | In the new repo you… |
 |---|---|---|
-| `.claude/commands/` (5 files) | The five agents' Claude Code commands | leave as they are |
+| `.claude/commands/` (6 files), `.claude/agents/` | The six agents' Claude Code commands, and the reviewer as a sub-agent | leave as they are |
 | `.claude/settings.json` | Guard rails — what agents may never do | leave, unless you rename an MCP server |
 | `.env.example` | Every setting the suite reads, labelled required/optional | copy to `.env` and fill in |
 | `.mcp.json.example` | Browser, database and Jira connections for the agents | copy to `.mcp.json` and fill in |

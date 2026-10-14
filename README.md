@@ -1,7 +1,7 @@
 # AI Test Harness — Playwright + TypeScript
 
-An AI-driven test automation harness. Five agents learn your application, plan, generate, heal, and file
-defects against a Playwright + TypeScript suite built on the Page Object / Page Factory pattern.
+An AI-driven test automation harness. Six agents learn your application, plan, generate, review, heal,
+and file defects against a Playwright + TypeScript suite built on the Page Object / Page Factory pattern.
 
 The agents are defined in [`agents/`](agents/) as plain, vendor-neutral markdown. Claude Code wrappers ship
 in `.claude/`; adding another tool is a one-line wrapper each — see [`agents/README.md`](agents/README.md).
@@ -12,7 +12,7 @@ Nothing in `.claude/`, `config/`, or `lib/` names an application, a role, or a d
 ## Start here — the handbook
 
 **[`docs/index.html`](docs/index.html)** is the single page that explains the whole harness: how it learns
-your application, the ten setup steps, what each of the five agents does and refuses to do, every component
+your application, the ten setup steps, what each of the six agents does and refuses to do, every component
 in plain language, the workflows, and troubleshooting. Read it before the rest of this README.
 
 It is a self-contained page — no build step, no server, no network beyond its webfonts. From a clone:
@@ -70,7 +70,7 @@ application stays in your copy. That is the line that keeps this template reusab
 | **[docs/NEW-QA-REPO.md](docs/NEW-QA-REPO.md)** | **Starting a project's QA repo** — the files copied into it, the minimum to configure, and the checklist before the context-builder |
 | [SETUP.md](SETUP.md) | The ten setup steps, with the reasoning behind each |
 | [docs/COMPONENTS.md](docs/COMPONENTS.md) | Every file: purpose, usage, extension points, failure modes |
-| [docs/AGENTS.md](docs/AGENTS.md) | The five agents: inputs, outputs, checkpoints, what to expect, what they refuse |
+| [docs/AGENTS.md](docs/AGENTS.md) | The six agents: inputs, outputs, checkpoints, what to expect, what they refuse |
 | [docs/WORKFLOWS.md](docs/WORKFLOWS.md) | End-to-end recipes — first story, healing a regression, onboarding, porting |
 | [docs/MCP.md](docs/MCP.md) | Wiring the browser, database and Jira MCP servers, and the guard rails |
 | [docs/qa-harness-intro.html](docs/qa-harness-intro.html) | Three slides for introducing the harness to a QA team: how they test today, how they will with it |
@@ -98,13 +98,14 @@ and every defect carries it — so a failure leads back to the acceptance criter
 
 ## What the AI layer does
 
-Five agents, defined in `agents/` and run as slash commands via the `.claude/` wrappers. They hand off in sequence but each works alone.
+Six agents, defined in `agents/` and run as slash commands via the `.claude/` wrappers. They hand off in sequence but each works alone.
 
 | Agent | Input | Output |
 |---|---|---|
 | `playwright-context-builder` | The application, plus whatever access exists | `context/BASELINE.md`, context docs, drafts of the profile and flow plans |
 | `playwright-test-planner` | A story key — fetched from the tracker if wired, otherwise the story pasted in | `specs/<KEY>.plan.md` + `specs/<KEY>.plan.csv` |
-| `playwright-test-generator` | An approved plan | A spec file, plus any page objects and fixtures it needed |
+| `playwright-test-generator` | An approved plan | A spec file, plus any page objects and fixtures it needed — reviewed against the plan before it finishes |
+| `playwright-test-reviewer` | A plan and its ticket, or a spec and its plan — started by the planner (if you agree) and the generator (always) | Findings: `must fix` and `consider`, each tied to a TCID and its source. Edits nothing |
 | `playwright-test-healer` | The failing tests of a story, spec or run | Fixed tests, or a confirmed defect in `specs/defects/defect-log.json` with its screenshots |
 | `playwright-defect-raiser` | The pending defects | Bugs created in the tracker, linked and with evidence, or rows in `specs/defects/defects.csv` + the tests marked `test.fixme()` |
 
@@ -141,10 +142,11 @@ authoring agents so a convention has a single place to change.
 ## Layout
 
 ```
-agents/                          the five agent definitions - canonical, vendor-neutral
+agents/                          the six agent definitions - canonical, vendor-neutral
   README.md                      porting them to another tool
 .claude/
   commands/                      thin Claude Code wrappers - one line each, no instructions
+  agents/                        the reviewer as a sub-agent, so other agents start it in a fresh context
   settings.json                  guard rails: no .env reads, no DB writes, ask before tracker writes
 TEST-AUTHORING-INVARIANTS.md     I1-I8, the single source of truth
 context/

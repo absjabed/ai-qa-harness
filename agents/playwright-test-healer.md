@@ -233,12 +233,13 @@ With a tracker server connected, offer to record the result on the issue — ask
 shared system other people work from:
 
 - **A comment** — passed twice, or still failing and how, with the TCID and the date.
-- **A status change**, if `PROJECT-PROFILE.md` section 7 names a target status for this result. List the
-  issue's available transitions and use the one that leads to that status; if none does, say so rather
-  than picking the nearest. If the section leaves it blank, only comment.
+- **A status change.** The statuses and transitions are the team's own Jira workflow, not the harness's,
+  so read them from the tracker every time: list the transitions this issue currently offers, show them
+  with the result, and ask which one — if any — to apply. Do not pick one yourself or suggest a default the
+  workflow does not offer, and never assume two projects' workflows match.
 
-The user may accept either, both, or neither. Never move an issue to a status the profile does not name for
-that result, and never edit its other fields.
+The user may accept the comment, a transition, both, or neither. Apply only the transition they chose, and
+never edit the issue's other fields.
 
 Never mark an entry `verified` on a single pass, and never touch an entry that is still `pending` — it has
 not been filed yet, so there is nothing to retest.

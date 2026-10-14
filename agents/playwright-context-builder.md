@@ -40,6 +40,28 @@ Never describe a role's permissions from one session as though you had tested al
 
 # Workflow
 
+## Step 0 — Preflight: can every role log in, and is the tracker connected?
+Run these checks yourself, before anything else, and report what you found. The user should not have to
+run them and read the output.
+
+1. **Logins.** Run the role seeds — `test_run` on `tests/seeds/`, one test per role. For each role, report
+   whether it passed, and for a failure, the cause as the failure shows it:
+   - credentials not configured — the error names the `<ROLE>_EMAIL` / `<ROLE>_PASSWORD` variable to set.
+     The user sets it; you never read `.env`.
+   - an element not found on the login screen — `pages/LoginPage.ts` still has `CHANGE_ME` selectors, or
+     the screen has changed
+   - the logged-in check failing — `pages/DashboardPage.ts`
+   - login rejected — a wrong, locked or expired account
+   - the application unreachable — the readiness check before the run says so
+   A role whose seed fails cannot be mapped. Say which, and ask whether to carry on with the others or stop
+   so they can be fixed first.
+2. **Tracker.** Say which Jira connection is available, if any — the Atlassian plugin's tools, or the
+   `tracker` MCP server's. If one is, ask for one story key the user knows exists and fetch it, to confirm
+   the connection really works; record the result in the inventory. If both are connected, say so: every
+   Jira tool then appears twice, and the team should keep one.
+
+**Checkpoint:** show the preflight results. Continue only once the user has seen them.
+
 ## Step 1 — Inventory what is available
 You cannot detect most of this. Ask.
 

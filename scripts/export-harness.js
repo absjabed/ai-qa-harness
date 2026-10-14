@@ -8,7 +8,7 @@
  * describe the template rather than a project.
  *
  * It also does what step 0 of SETUP.md otherwise asks of a person: names the package after the project,
- * and records in PROJECT-PROFILE.md section 1 which template version and commit the copy came from.
+ * and records in PROJECT-PROFILE.md section 1 which harness version and commit the copy came from.
  *
  * It never overwrites. If any file it would write already exists in the target, it lists them and
  * writes nothing.
@@ -78,18 +78,11 @@ if (dirty) commit += '-dirty';
 // word — say which.
 const untracked = git('ls-files', '--others', '--exclude-standard').split('\n').filter(Boolean);
 
-const templatePkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
-
-// A copy should start from a release. Releases are tagged `v<version>`; anything else is work in progress,
-// which is allowed but recorded as such, so nobody later mistakes it for the release of the same number.
-let releaseTag = null;
-try {
-    releaseTag = git('describe', '--tags', '--exact-match', 'HEAD');
-} catch {
-    // not on a tag
-}
-const released = !dirty && releaseTag === `v${templatePkg.version}`;
-const templateVersion = released ? templatePkg.version : `${templatePkg.version} (unreleased)`;
+// The harness's version is written in one place: the newest entry in CHANGELOG.md. It is the harness's
+// own, and never the project's — a copy's release versions are its client's, in tests/stories/<release>/.
+const changelog = fs.readFileSync(path.join(root, 'CHANGELOG.md'), 'utf8');
+const harnessVersion = changelog.match(/^## (\d+\.\d+\.\d+)\b/m)?.[1];
+if (!harnessVersion) fail('CHANGELOG.md has no "## <version>" entry, so there is no harness version to record.');
 
 // ---------------------------------------------------------------- plan the copy
 
@@ -116,12 +109,12 @@ for (const f of toCopy) {
     fs.copyFileSync(path.join(root, f), dest);
 }
 
-// package.json — the project's own name, and no export script (a copy has nothing to export).
+// package.json — the project's own name, and no export script (a copy has nothing to export). Its version
+// is left alone: the harness's version is recorded in the profile, not here, so the two never get mixed up.
 const pkgPath = path.join(target, 'package.json');
 const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
 pkg.name = projectName;
-pkg.version = '0.1.0';
-pkg.description = `Playwright QA suite, built from the AI QA harness template ${templateVersion} (${commit}).`;
+pkg.description = 'Playwright QA suite.';
 delete pkg.scripts.export;
 fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
 
@@ -142,8 +135,8 @@ if (fs.existsSync(lockPath)) {
 const profilePath = path.join(target, 'PROJECT-PROFILE.md');
 let profile = fs.readFileSync(profilePath, 'utf8');
 const provenance = [
-    [/(\| Template version this copy started from \| )`[^`]*`[^|]*\|/, `$1\`${templateVersion}\` |`],
-    [/(\| Template commit this copy started from \| )`[^`]*`[^|]*\|/, `$1\`${commit}\` |`],
+    [/(\| Harness version this copy started from \| )`[^`]*`[^|]*\|/, `$1\`${harnessVersion}\` |`],
+    [/(\| Harness commit this copy started from \| )`[^`]*`[^|]*\|/, `$1\`${commit}\` |`],
 ];
 let recorded = 0;
 for (const [pattern, replacement] of provenance) {
@@ -157,7 +150,8 @@ fs.writeFileSync(profilePath, profile);
 if (writeReadme) {
     fs.writeFileSync(path.join(target, 'README.md'), `# ${projectName}
 
-Playwright QA suite, built on the AI QA harness — template ${templateVersion}, commit \`${commit}\`.
+Playwright QA suite, built on the AI QA harness — harness ${harnessVersion}, commit \`${commit}\`. That is the
+harness's version, not this project's: the project's releases are its client's, in \`tests/stories/<release>/\`.
 
 ## Start here
 
@@ -188,7 +182,7 @@ Credentials live in \`.env\` and MCP servers in \`.mcp.json\`. Both are gitignor
 
 // ---------------------------------------------------------------- verify
 
-// Run the copy's own consistency check against the copy, so a missing file shows up now rather than in CI.
+// Run the copy's own consistency check against the copy, so a missing file shows up now rather than later.
 let verified = true;
 try {
     execFileSync('node', [path.join(target, 'scripts', 'check-docs.js')], { cwd: target, stdio: 'pipe' });
@@ -203,7 +197,7 @@ const skipped = TEMPLATE_ONLY.filter((f) => files.includes(f));
 console.log(`
 export: copied ${toCopy.length} files into ${target}
   package name     ${projectName}
-  template         ${templateVersion} (${commit})${recorded === 2 ? ' — recorded in PROJECT-PROFILE.md section 1' : ''}
+  harness          ${harnessVersion} (${commit})${recorded === 2 ? ' — recorded in PROJECT-PROFILE.md section 1' : ''}
   left behind      ${skipped.join(', ')}
   README.md        ${writeReadme ? 'written for the project' : 'already existed — left as it was'}
   check:docs       ${verified ? 'passed in the copy' : 'FAILED in the copy — see above'}
@@ -213,14 +207,8 @@ if (untracked.length) {
     untracked.forEach((f) => console.log(`        ${f}`));
     console.log('');
 }
-if (!released) {
-    console.log(
-        `  note: HEAD is not the release tag v${templatePkg.version}, so this copy is recorded as unreleased.\n` +
-        `        For a release, check out its tag first — git checkout v${templatePkg.version} — and export again.\n`
-    );
-}
 if (recorded !== 2) {
-    console.log('  note: could not find the template version/commit rows in PROJECT-PROFILE.md section 1 — fill them by hand.\n');
+    console.log('  note: could not find the harness version/commit rows in PROJECT-PROFILE.md section 1 — fill them by hand.\n');
 }
 console.log(`Next, in ${target}:
 

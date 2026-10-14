@@ -41,6 +41,9 @@ export default defineConfig({
         ['html', { outputFolder: 'playwright-report' }],
         ['list'],
         ['json', { outputFile: 'test-results/results.json' }],
+        /* After the JSON reporter, which it reads: writes the cycle report for the stories that ran.
+           AUTO_CYCLE_REPORT=false turns it off. */
+        ['./lib/cycleReporter.ts'],
     ],
 
     use: {

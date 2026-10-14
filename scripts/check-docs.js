@@ -254,16 +254,16 @@ for (const seed of seeds) {
         'rename it to match a role in config/projectProfile.ts, or delete it');
 }
 
-// ---------------------------------------------------------------- release version
+// ---------------------------------------------------------------- harness version
 
-// The changelog's newest entry is the version being released; a copy records it, so the two must agree.
-if (isTemplate && exists('CHANGELOG.md')) {
-    const pkgVersion = JSON.parse(read('package.json')).version;
-    const latest = read('CHANGELOG.md').match(/^## (\d+\.\d+\.\d+)\b/m)?.[1];
+// The harness's version is written in exactly one place — the newest CHANGELOG.md entry — and
+// `npm run export` reads it from there. No tags, and not package.json, so it cannot be mistaken for a
+// project's release version.
+if (isTemplate) {
     check(
-        `package.json version ${pkgVersion} is not the newest CHANGELOG.md entry`,
-        latest === pkgVersion,
-        `the newest entry is ${latest ?? 'missing'} — bump one to match the other`
+        'CHANGELOG.md has no harness version',
+        exists('CHANGELOG.md') && /^## \d+\.\d+\.\d+\b/m.test(read('CHANGELOG.md')),
+        'expected a "## <major>.<minor>.<patch> — ..." entry; npm run export records it in each copy'
     );
 }
 

@@ -8,6 +8,8 @@
 
 **Key:** `<STORY-KEY>` — the ticket's issue key, verbatim. Required: no key, no plan (I8)
 **Title:** `<Story title>`
+**Release:** `<client release>` — the project's release this story ships in (Jira's fix version), e.g. `2.26`. Never the harness's version
+**Epic:** `<EPIC-KEY>` — the epic the story belongs to, if any. Optional; lets regression be selected by epic
 
 **Acceptance Criteria:**
 - **AC1** — `<...>`

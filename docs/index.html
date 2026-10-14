@@ -722,13 +722,13 @@ td code { white-space: nowrap; }
         point the copy at your application, and that copy becomes your project's test suite — the template
         itself never gains application-specific content.</p>
         <p style="margin-top:10px"><b>Recommended: export it</b> into the project's QA repository — an empty
-        folder or a fresh clone. From the template at a release tag, no install needed:</p>
-        <pre style="margin-top:8px"><code>git checkout v&lt;version&gt;          # the latest release; `git tag` lists them
-npm run export -- ../&lt;app&gt;-qa</code></pre>
+        folder or a fresh clone. From the template, no install needed:</p>
+        <pre style="margin-top:8px"><code>npm run export -- ../&lt;app&gt;-qa</code></pre>
         <p style="margin-top:10px">It copies every file the harness needs, dotfiles included, and leaves
         behind the three that describe the template — <code>README.md</code>, <code>CHANGELOG.md</code> and
         the export script. It names the package after the folder, writes a starter README, records the
-        template version and commit in <code>PROJECT-PROFILE.md</code> section 1, and runs
+        <em>harness</em> version and commit in <code>PROJECT-PROFILE.md</code> section 1 — never mixed up
+        with the project's own release versions — and runs
         <code>check:docs</code> against the copy. It never overwrites: if the target already has any of its
         files, it lists them and writes nothing.</p>
         <p style="margin-top:10px"><b>Copying by hand?</b> Take every file <code>git ls-files</code> lists
@@ -736,7 +736,7 @@ npm run export -- ../&lt;app&gt;-qa</code></pre>
         <b><code>.gitignore</code></b>: without it, <code>.env</code> and its passwords are committed on the
         first push. Then do what the export would: rename <code>name</code> in <code>package.json</code>
         (while it reads <code>ai-qa-harness</code>, <code>check:docs</code> treats the copy as the template
-        and fails on your application's name), and record the template version and commit in profile
+        and fails on your application's name), and record the harness version and commit in profile
         section 1. <code>SETUP.md</code> step 0 has the full list, and the GitHub-template route.</p>
         <p style="margin-top:10px">Recording the version and commit is what lets you tell later whether a
         difference is yours or just the template having moved on. The template's changelog marks each entry
@@ -786,11 +786,12 @@ cp .mcp.json.example .mcp.json</code></pre>
               cannot work without a browser.</li>
               <li><b><code>database</code> — optional, high value.</b> Agents read your schema instead of
               asking you for every query. PostgreSQL in the example, SQL Server flags in its comment.</li>
-              <li><b><code>tracker</code> — optional.</b> Jira, through Atlassian's MCP server: the planner
-              fetches stories by key, the defect-raiser creates the bugs, the healer reads their status for
-              retests and records the result. Sign in with <code>/mcp</code>. Keep <code>?tools=all</code> and
-              the key <code>tracker</code> — or use the Atlassian plugin for Claude Code instead, and delete
-              this entry so Jira is not connected twice.</li>
+              <li><b><code>tracker</code> — optional.</b> Jira: the planner fetches stories by key, the
+              defect-raiser creates the bugs, the healer reads their status for retests and records the
+              result. Use whichever connection the team already has. In Claude Code the Atlassian plugin is
+              the simple route — install it and delete this entry; with another tool, keep this entry, with
+              <code>?tools=all</code> and the key <code>tracker</code>. Sign in with <code>/mcp</code>. The
+              context-builder confirms it works at setup by fetching one known story.</li>
             </ul>
             <div class="note warn">
               <p><strong>Use a read-only database account, against QA.</strong> An agent with write access
@@ -868,8 +869,9 @@ cp .mcp.json.example .mcp.json</code></pre>
                     drafts the rest of the row, but cannot guess which accounts exist.<br>
                     <b>A working login per role.</b> The agent starts from each role's seed,
                     <code>tests/seeds/&lt;role&gt;.spec.ts</code>, so do the login half of step 5 now — real
-                    selectors in <code>LoginPage.ts</code> and the logged-in check — then
-                    <code>npx playwright test tests/seeds/</code> must pass.<br>
+                    selectors in <code>LoginPage.ts</code> and the logged-in check. You need not test them
+                    first: the agent's first step runs every seed and reports per role what passed and what to
+                    fix. (<code>npx playwright test tests/seeds/</code> runs the same check by hand.)<br>
                     The Playwright MCP server connected (<code>/mcp</code>), browsers installed.</td></tr>
                   <tr><td><b>Worth gathering</b></td><td>
                     A read-only QA database account, wired in <code>.mcp.json</code> (step 2).<br>
@@ -1036,7 +1038,8 @@ npx playwright test tests/example.spec.ts</code></pre>
         <li><b>Run</b> the spec.</li>
         <li><b>Heal</b> what fails with <code>/playwright-test-healer</code>.</li>
         <li><b>File</b> confirmed defects with <code>/playwright-defect-raiser</code>.</li>
-        <li><b>Close the cycle</b> with <code>npm run report:cycle</code>.</li>
+        <li><b>Read the cycle report</b> — written to <code>reports/</code> as the run ends, for the stories
+        that ran. For a release's regression, <code>npm run regression</code>.</li>
       </ol>
 
       <div class="note">
@@ -1124,6 +1127,8 @@ npx playwright test tests/example.spec.ts</code></pre>
 
         <h4>How it gathers</h4>
         <ol>
+          <li><b>Preflight</b> — runs every role's login seed and reports per role what passed and what to
+          fix; checks which Jira connection exists and fetches one known story to confirm it works.</li>
           <li><b>Inventory</b> — it asks what exists and what is reachable. It cannot detect most of this,
           and rows routinely move from "yes" to "no" once someone checks.</li>
           <li><b>Roam</b> — logs in as each role and walks the application read-only, mapping modules,
@@ -1514,7 +1519,7 @@ npx playwright test tests/example.spec.ts</code></pre>
         writes them that way; the healer never alters the prefix.</li>
         <li><b>Every defect records its TCID and story key</b>, and a defect that can't be traced is not filed.</li>
       </ul>
-      <p>This is invariant I8, and <code>npm run check:trace</code> enforces the mechanical parts on every push:
+      <p>This is invariant I8, and <code>npm run check:trace</code> enforces the mechanical parts before every push:
       TCIDs well-formed and unique, every story test titled with one, every one present in its plan and not
       retired.</p>
 
@@ -1551,10 +1556,17 @@ npx playwright test tests/example.spec.ts</code></pre>
       <p>The retest matters more than it looks. Without it a <code>fixme</code>'d test stays skipped long after
       its bug was fixed, and the suite quietly loses coverage nobody notices is gone.</p>
 
-      <h3>Closing a cycle</h3>
-      <pre><code>npm run report:cycle</code></pre>
-      <p>Reads the plans, the latest run, the manual results and the defect log, and writes
-      <code>reports/cycle-summary-&lt;date&gt;.md</code>: every test case's outcome — Passed, Flaky, Failed,
+      <h3>Regression for a release, and closing the cycle</h3>
+      <pre><code>npm run regression</code></pre>
+      <p>Regression runs per client release, on a QA team member's machine. It asks which release, then which
+      of its tickets — all, by epic, or one by one — and whether to run only <code>@Regression</code>-tagged
+      tests; then runs the selection. Releases and epics come from each plan's <code>Release</code> and
+      <code>Epic</code> fields — the project's own releases, never the harness's version. With an agent, the
+      answers go in as flags: <code>--release 2.26 --epics PROJ-100 --yes</code>.</p>
+      <p>As the run ends, the cycle report is written for exactly that selection — and after any other run,
+      for the stories it ran. <code>npm run report:cycle</code> rebuilds it by hand, for example after
+      recording manual results. It reads the plans, the latest run, the manual results and the defect log,
+      and writes <code>reports/cycle-summary-&lt;scope&gt;-&lt;time&gt;.md</code>: every test case's outcome — Passed, Flaky, Failed,
       Blocked by a known defect, Skipped, or Not Run — pass rates by priority, acceptance-criteria coverage
       per story, open defects, traceability gaps, and each exit criterion marked met or not.</p>
       <div class="note">
@@ -1893,7 +1905,7 @@ npx playwright test tests/example.spec.ts</code></pre>
       </div>
 
       <div class="comp">
-        <div class="comp-head"><code class="comp-name">scripts/check-trace.ts</code><span class="comp-tag">runs in CI</span></div>
+        <div class="comp-head"><code class="comp-name">scripts/check-trace.ts</code><span class="comp-tag">in npm run check</span></div>
         <p class="comp-plain">The guard on the traceability thread.</p>
         <p>Fails when a story test has no TCID, uses one from another story, uses one no plan assigned, reuses
         one, or tests a retired case. Warns when an acceptance criterion has no test case at all.</p>
@@ -1901,11 +1913,22 @@ npx playwright test tests/example.spec.ts</code></pre>
       </div>
 
       <div class="comp">
-        <div class="comp-head"><code class="comp-name">scripts/cycle-report.ts</code><span class="comp-tag">you run it</span></div>
-        <p class="comp-plain">The end-of-cycle summary.</p>
+        <div class="comp-head"><code class="comp-name">scripts/regression.ts</code><span class="comp-tag">you run it</span></div>
+        <p class="comp-plain">Regression for a client release, on the tickets you choose.</p>
+        <p><code>npm run regression</code> asks for the release, then all of its tickets, some epics, or
+        chosen tickets, and whether to stick to <code>@Regression</code>-tagged tests. It runs them, and the
+        cycle report for that selection is written as the run ends.</p>
+        <p class="you-do"><b>You touch it:</b> every release.</p>
+      </div>
+
+      <div class="comp">
+        <div class="comp-head"><code class="comp-name">The cycle report</code><span class="comp-tag">automatic</span></div>
+        <p class="comp-plain">The end-of-cycle summary — written after every run, no step to remember.</p>
         <p>Turns the plans, the latest run, the manual results and the defect log into one report with every
-        exit criterion evaluated. <code>npm run report:cycle</code>.</p>
-        <p class="you-do"><b>You touch it:</b> at the end of each cycle.</p>
+        exit criterion evaluated, scoped to what ran. <code>lib/cycleReporter.ts</code> writes it as a run
+        ends; <code>npm run report:cycle</code> rebuilds it by hand, for any scope;
+        <code>AUTO_CYCLE_REPORT=false</code> turns the automatic one off.</p>
+        <p class="you-do"><b>You touch it:</b> you read it.</p>
       </div>
 
       <div class="comp">
@@ -1914,15 +1937,6 @@ npx playwright test tests/example.spec.ts</code></pre>
         <p>Manual cases have no runner, so their outcomes live in <code>manual-results.csv</code>. The planner
         seeds a <code>Not Run</code> row for each; testers update them; the report counts them.</p>
         <p class="you-do"><b>You touch it:</b> every time you execute a manual case.</p>
-      </div>
-
-      <div class="comp">
-        <div class="comp-head"><code class="comp-name">.github/workflows/</code><span class="comp-tag">reference</span></div>
-        <p class="comp-plain">What runs automatically on every push.</p>
-        <p><code>checks.yml</code> runs typecheck, docs and traceability checks — none of which need the
-        application. The suite itself is not run here, by design: regression runs on QA team members' own
-        machines against the release under test, so no pipeline holds environment credentials.</p>
-        <p class="you-do"><b>You touch it:</b> rarely.</p>
       </div>
 
       <h3>Specs — plans, conventions and tests</h3>
@@ -2056,12 +2070,14 @@ npx playwright test tests/example.spec.ts</code></pre>
       <p>Skip the agents until after that. Someone who doesn't know the conventions can't review agent
       output — and reviewing agent output is most of the job.</p>
 
-      <h3>Closing a test cycle</h3>
+      <h3>Regression for a release</h3>
       <ol>
-        <li>Update <code>specs/execution/manual-results.csv</code> with every manual case's real outcome.</li>
-        <li>Run the suite so the latest results reflect the build being closed.</li>
         <li>Retest anything reported fixed, so fixed bugs don't count as blocked coverage.</li>
-        <li><code>npm run report:cycle</code>, then decide — with the numbers in front of you.</li>
+        <li><code>npm run regression</code> — pick the release, then its tickets or epics. The cycle report
+        for that selection is written as the run ends.</li>
+        <li>Update <code>specs/execution/manual-results.csv</code> with every manual case's real outcome,
+        then <code>npm run report:cycle -- --release &lt;release&gt;</code> to rebuild the report.</li>
+        <li>Decide — with the numbers in front of you.</li>
       </ol>
 
       <h3>Retesting a fixed defect</h3>
@@ -2069,8 +2085,8 @@ npx playwright test tests/example.spec.ts</code></pre>
       fixed bugs itself, from their status; without one, tell it which, and make sure each defect-log entry
       has its <code>trackerKey</code>. It un-<code>fixme</code>s the test, runs it twice, and either marks
       the entry <code>verified</code> or restores the <code>fixme</code> and reports that the fix didn't
-      hold. With a tracker it offers, asking first, to comment the result on the bug and move it to the
-      status the profile names for that result.</p>
+      hold. With a tracker it offers, asking first, to comment the result on the bug and to move it — listing
+      the transitions your team's Jira workflow offers on that bug and applying only the one you pick.</p>
     </section>
 
     <!-- ================= TROUBLESHOOTING ================= -->
@@ -2169,7 +2185,8 @@ npx playwright test tests/example.spec.ts</code></pre>
           <thead><tr><th>Command</th><th>Does</th></tr></thead>
           <tbody>
             <tr><td><code>npm test</code></td><td>Full suite</td></tr>
-            <tr><td><code>npm run test:regression</code></td><td><code>--grep "@Regression"</code></td></tr>
+            <tr><td><code>npm run regression</code></td><td>A client release's regression — choose its tickets or epics; writes the cycle report</td></tr>
+            <tr><td><code>npm run test:regression</code></td><td>Every test tagged <code>@Regression</code>, no selection</td></tr>
             <tr><td><code>npm run test:headed</code></td><td>Watched</td></tr>
             <tr><td><code>npm run test:debug</code></td><td>Stepped through the inspector</td></tr>
             <tr><td><code>npm run test:ui</code></td><td>Interactive UI mode</td></tr>
@@ -2178,8 +2195,8 @@ npx playwright test tests/example.spec.ts</code></pre>
             <tr><td><code>npm run typecheck</code></td><td><code>tsc --noEmit</code></td></tr>
             <tr><td><code>npm run check:docs</code></td><td>Assert the docs still match the repository</td></tr>
             <tr><td><code>npm run check:trace</code></td><td>Every story test traceable to its test case (I8)</td></tr>
-            <tr><td><code>npm run check</code></td><td>All three of the above — what CI runs on every push</td></tr>
-            <tr><td><code>npm run report:cycle</code></td><td>Test-cycle closure report; <code>-- --strict</code> to gate on exit criteria</td></tr>
+            <tr><td><code>npm run check</code></td><td>All three of the above — run it before pushing</td></tr>
+            <tr><td><code>npm run report:cycle</code></td><td>Rebuild the cycle report by hand — <code>--release</code>, <code>--stories</code>, <code>--strict</code></td></tr>
             <tr><td><code>npm run report</code></td><td>Open the last HTML report</td></tr>
             <tr><td><code>npm run setup</code></td><td><code>playwright install</code></td></tr>
             <tr><td><code>npm run export -- &lt;dir&gt;</code></td><td>Template only: copy the harness into a project's QA repository</td></tr>
@@ -2192,7 +2209,7 @@ npx playwright test tests/example.spec.ts</code></pre>
         things the code owns — how many agents there are, which directories exist, what the profile's
         sections are — and those claims go stale silently. The check asserts the mechanical ones: agent
         rosters, section totals, directory coverage, broken links, vendor neutrality, and that secrets
-        stayed untracked. CI runs it on every push. Prose still needs a reader.</p>
+        stayed untracked. Prose still needs a reader.</p>
       </div>
 
       <h3>Tag filtering</h3>

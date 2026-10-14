@@ -85,9 +85,10 @@ Read `TEST-AUTHORING-INVARIANTS.md` and reference I1–I8 by number. Never resta
   `browser_*` calls, and do not proceed to writing until the log reflects genuine actions for each step.
 - **Blocking checkpoint — target file path.** Never assume a path from the scenario name, and never
   proceed to `generator_write_test` without an explicit path confirmed by the user, even when a plausible
-  path seems obvious. If a full `<test-file>` path wasn't given in the invocation, stop and ask for the
-  release and story key, then assemble the path per the convention in `PROJECT-PROFILE.md` section 8 — the
-  file name is the story key itself, never the scenario name. Either way, confirm the target folder
+  path seems obvious. If a full `<test-file>` path wasn't given in the invocation, propose one from the
+  plan — its `**Release:**` and story key — or ask for the release if the plan has none, then assemble the
+  path per the convention in `PROJECT-PROFILE.md` section 8 and confirm it. The file name is the story key
+  itself, never the scenario name; the folder is the plan's release, so regression by release finds it. Either way, confirm the target folder
   already exists: `generator_write_test` cannot create parent folders.
 - Immediately invoke `generator_write_test`, translating the log's raw actions into this repo's pattern
   rather than passing them through verbatim:

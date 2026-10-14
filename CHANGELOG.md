@@ -31,27 +31,18 @@ it up.
 
 ## Versioning (template maintainers)
 
-**Pre-release, for now.** The template stays at **1.0.0** until it has been set up and used by a real
-project's QA team. Until then:
+**The harness's version is the newest entry in this file — nowhere else.** No git tags, and not
+`package.json`, whose version stays `0.0.0`. `npm run export` reads it from here and records it, with the
+commit, in each copy's `PROJECT-PROFILE.md` section 1 as the *harness* version.
 
-- the version is not bumped and changes are not listed here — git history has them;
-- the `v1.0.0` tag follows `main`: after pushing, move it to the new commit —
+**It is never a project's version.** A project's releases are its client's — the `**Release:**` in each
+plan and the `tests/stories/<release>/` folders, which regression and the cycle report run by. The two
+numbers never share a field.
 
-  ```bash
-  git tag -fa v1.0.0 -m "1.0.0" && git push -f origin v1.0.0
-  ```
-
-- a copy taken in this period is identified by the **commit** recorded in its profile, not the version.
-
-**After that first real use**, releases become fixed. Every change gets an entry at the top of this file
-and a version bump; every release is a new tag that is never moved:
-
-1. Add the entry and set `version` in `package.json` to match — `npm run check:docs` fails until the two
-   agree.
-2. `npm run check`.
-3. Commit, then tag and push both: `git tag -a v<version> -m "<version>"`, `git push origin main v<version>`.
-4. Copies come from a tag: `git checkout v<version>`, then `npm run export -- <dir>`. Exporting from
-   anywhere else works, but the copy records the version as *unreleased*.
+**For now it stays 1.0.0, pre-release,** until the harness has been set up and used by a real project's QA
+team: changes are not listed here — git history has them — and a copy is identified by the commit recorded
+in its profile. After that first real use, every change gets an entry at the top of this file with a new
+version number, marked **Adopt**, **Optional** or **New copies only**.
 
 ---
 
@@ -66,7 +57,8 @@ project-specific value lives in `PROJECT-PROFILE.md`, `.env`, `.mcp.json` and `c
   `.claude/commands/` carry no instructions, so they cannot drift. `agents/README.md` covers porting to
   another agentic tool.
   - `playwright-context-builder` — learns the application once at setup, writes the baseline the rest read;
-    re-run, scoped to one area, when it goes stale
+    first checks every role can log in and the Jira connection works, and reports what to fix; re-run,
+    scoped to one area, when it goes stale
   - `playwright-test-planner` — story to reviewed test plan, seven blocking checkpoints; fetches the story
     from Jira by its key when the tracker is connected
   - `playwright-test-generator` — plan to spec, driving the real browser first
@@ -78,7 +70,10 @@ project-specific value lives in `PROJECT-PROFILE.md`, `.env`, `.mcp.json` and `c
   its test's title and travels with any defect. `npm run check:trace` enforces it.
 - **Testing-lifecycle coverage** — entry and exit criteria (`PROJECT-PROFILE.md` section 10), a readiness
   check before every run, test-data seeding, manual results per test case, defect retest, and a cycle
-  closure report (`npm run report:cycle`).
+  closure report written automatically as every run ends (`npm run report:cycle` rebuilds it by hand).
+- **Regression per client release** — `npm run regression` asks for the release, then all of its tickets,
+  some epics, or chosen tickets, runs them, and reports on exactly that selection. Each plan records its
+  release and epic — from Jira's fix version and parent epic when the tracker is connected.
 - **A knowledge layer** — `context/` for distilled project knowledge, `PROJECT-PROFILE.md` for identity,
   `specs/UserFlowsUserRolePermissions/` for navigation and permissions.
 - **The suite** — Page Factory fixtures, `BasePage` with an accessibility check, two wired page-object
@@ -88,9 +83,11 @@ project-specific value lives in `PROJECT-PROFILE.md`, `.env`, `.mcp.json` and `c
 - **Agents never handle a password** — one login seed per role in `tests/seeds/`, which logs in inside the
   test runner.
 - **Guard rails** — `.claude/settings.json` denies agents reading `.env` and `.mcp.json` and calling the
-  database server's write tools, asks before any write to Jira, and denies Jira deletes and admin tools.
+  database server's write tools, asks before any write to Jira — creating, editing, moving, commenting —
+  and denies Jira deletes and admin tools. A bug's status is only ever moved to a transition the team's own
+  Jira workflow offers, chosen by a person.
 - **MCP servers** — Playwright (required), a database server (optional, read-only account), and Jira through
-  Atlassian's server or plugin (optional).
+  whichever connection the team already has: the Atlassian plugin in Claude Code, or the MCP server entry.
 - **Copying** — `npm run export -- <dir>` copies exactly the files a project needs, dotfiles included, and
   records where the copy came from.
 - **Documentation** — a self-contained handbook at `docs/index.html` (`npm run docs`), component, agent,
@@ -103,7 +100,7 @@ project-specific value lives in `PROJECT-PROFILE.md`, `.env`, `.mcp.json` and `c
   its guards produce the right messages, and its PostgreSQL path has been tested against a real server —
   but no agent has been observed running end to end, and the Jira integration and permission rules have not
   been exercised against a live Jira site. Treat the first project as the real test of it.
-- Four of the five agents are interactive by design and are not CI-shaped on any vendor. The suite runs on
-  QA team members' own machines; CI runs only the checks.
+- Four of the five agents are interactive by design. The suite runs on QA team members' own machines; there
+  is no CI pipeline, and `npm run check` is run by hand before pushing.
 - The documentation restates things the code owns, so it drifts. `npm run check:docs` catches the
   countable cases; the rest is habit.

@@ -90,6 +90,17 @@ the format set in `PROJECT-PROFILE.md` section 1.
 - Extract the key verbatim once confirmed; it goes in the `Story` field of every scenario, in the plan's
   filename, and in every TCID.
 
+### Release and epic
+Each plan records the **release** the story ships in and, if it has one, its **epic** — the `**Release:**`
+and `**Epic:**` fields at the top of the plan. Regression is chosen by them: a QA team runs a client release,
+narrowed to some of its tickets or epics, so a plan without a release cannot be selected.
+
+- **With a tracker connected**, take them from the issue: its fix version is the release, its parent epic
+  the epic. Show both at the first checkpoint. Several fix versions → ask which one this plan is for.
+- **Without one**, ask for the release at the first checkpoint, and the epic if there is one.
+- The release is the **project's** — the client release, as the team names it. It is never the harness's
+  version; never write one where the other belongs.
+
 ### Test case IDs — assigned here and nowhere else (I8)
 - **Format:** `<STORY-KEY>-TC<NNN>` — e.g. `PROJ-1234-TC004`. Three digits, zero-padded, sequential within
   the story from `001`.

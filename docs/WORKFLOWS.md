@@ -251,33 +251,52 @@ before merging anything upstream.
 
 ---
 
-## 8. Closing a test cycle
+## 8. Regression for a release, and closing the cycle
 
-The STLC's last phase. It needs the TCIDs to be intact end to end, which is why I8 exists.
+Regression runs per **client release**, on a QA team member's own machine, against the build under test.
+Each release has its tickets — the plans whose `**Release:**` names it — and you choose which of them to run.
+The STLC's last phase depends on the TCIDs being intact end to end, which is why I8 exists.
 
-1. **Record manual results.** Update `specs/execution/manual-results.csv` — every `Manual` case the planner
-   seeded as `Not Run` needs its real outcome.
-2. **Run the suite** so `test-results/results.json` reflects the build being closed:
-
-   ```bash
-   npm run test:regression
-   ```
-
-3. **Retest anything reported fixed** (workflow 9) — a defect fixed in the tracker but still `fixme`'d here
+1. **Retest anything reported fixed** (workflow 9) — a defect fixed in the tracker but still `fixme`'d here
    counts as blocked coverage.
-4. **Produce the report:**
+2. **Run the regression:**
 
    ```bash
-   npm run report:cycle
+   npm run regression
    ```
 
-   It writes `reports/cycle-summary-<date>.md`: every test case's outcome, pass rates by priority,
-   acceptance-criteria coverage per story, open defects, traceability gaps, and each exit criterion from
-   `PROJECT-PROFILE.md` section 10 marked met or not.
+   It asks, in turn:
+   - **which release** — every release that has tickets is listed, newest last, the default;
+   - **which tickets** — all of them, those in chosen **epics**, or chosen tickets one by one;
+   - **only tests tagged `@Regression`?** — yes by default; say no to run every test of those tickets.
+
+   It shows the selection, asks once more, then runs it. With an agent, or to repeat a run, give the answers
+   as flags instead — an agent asks you in the conversation and passes them:
+
+   ```bash
+   npm run regression -- --release 2.26 --epics PROJ-100 --yes
+   npm run regression -- --release 2.26 --stories PROJ-12,PROJ-15 --all-tests --yes
+   ```
+
+   Tickets with no spec yet are kept in the report — their manual results, or *not executed*.
+3. **The report is written as the run ends** — `reports/cycle-summary-release-<release>-<time>.md`, covering
+   exactly the selection: each test case's outcome, pass rates by priority, acceptance-criteria coverage per
+   story, open defects, traceability gaps, and each exit criterion from `PROJECT-PROFILE.md` section 10
+   marked met or not.
+4. **Record manual results** in `specs/execution/manual-results.csv` — every `Manual` case the planner
+   seeded as `Not Run` — then rebuild the report by hand for the same scope:
+
+   ```bash
+   npm run report:cycle -- --release 2.26
+   ```
+
 5. **Decide.** The report states facts; closing the cycle is a person's call. A criterion missed knowingly —
    with a reason written down — is a legitimate outcome. One missed because nobody looked is not.
 
-`npm run report:cycle -- --strict` exits non-zero when any criterion is unmet, for use as a pipeline gate.
+**The report after every run.** Any `playwright test` run — one spec, a whole folder — writes a cycle report
+for the stories it ran, without being asked. `AUTO_CYCLE_REPORT=false` in `.env` turns that off.
+`npm run report:cycle` is always there to build one by hand: for everything, `--release`, or `--stories`, and
+`--strict` to exit non-zero when a criterion is unmet.
 
 ---
 
@@ -297,8 +316,8 @@ A `test.fixme` is only correct while its bug is open. Once it is fixed, the skip
 3. For each, it un-`fixme`s the test and runs it twice. Passes both → active again, entry marked `verified`.
    Fails either → `fixme` restored exactly, entry stays `raised`, retest recorded — worth telling whoever
    marked the ticket fixed. With a tracker it offers, asking first, to comment the result on the bug and
-   to move it to the status `PROJECT-PROFILE.md` section 7 names for that result — leave those rows blank
-   and it only comments.
+   to move it: it lists the transitions your team's Jira workflow offers on that bug, and applies only the
+   one you pick.
 
 ---
 

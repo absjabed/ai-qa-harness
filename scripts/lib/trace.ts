@@ -30,6 +30,12 @@ export interface PlannedCase {
 export interface Plan {
     storyKey: string;
     file: string;
+    /** The story's title, from `**Title:**`. */
+    title: string | null;
+    /** The client release the story ships in, from `**Release:**` — the project's own version, never the harness's. */
+    release: string | null;
+    /** The epic the story belongs to, from `**Epic:**`. Optional. */
+    epic: string | null;
     cases: PlannedCase[];
     /** AC label (e.g. `AC1`) → TCIDs linked to it in the plan's traceability table. */
     acceptanceCriteria: Map<string, string[]>;
@@ -90,11 +96,37 @@ function parseTestType(text: string): TestType {
     return 'Unknown';
 }
 
+/**
+ * A story-level field — `**Release:** 2.26`. Backticks and anything after an em dash are dropped; a value
+ * still shaped like a template placeholder (`<...>`) counts as unset.
+ */
+function storyField(lines: string[], name: string): string | null {
+    const line = lines.find((l) => l.startsWith(`**${name}:**`));
+    if (!line) return null;
+    const value = line.slice(name.length + 5).replace(/`/g, '').split(/\s+—\s+/)[0].trim();
+    return value && !value.startsWith('<') ? value : null;
+}
+
+/** Release a story spec lives under — `tests/stories/<release>/<STORY-KEY>.spec.ts` — or null. */
+export function releaseOfSpec(file: string): string | null {
+    const parts = rel(file).split('/');
+    return parts[0] === 'tests' && parts[1] === 'stories' && parts.length === 4 ? parts[2] : null;
+}
+
 export function parsePlan(file: string): Plan {
     const storyKey = storyKeyOf(file, '.plan.md');
     const text = fs.readFileSync(file, 'utf8').replace(/\r\n/g, '\n');
     const lines = text.split('\n');
-    const plan: Plan = { storyKey, file: rel(file), cases: [], acceptanceCriteria: new Map(), problems: [] };
+    const plan: Plan = {
+        storyKey,
+        file: rel(file),
+        title: storyField(lines, 'Title'),
+        release: storyField(lines, 'Release'),
+        epic: storyField(lines, 'Epic'),
+        cases: [],
+        acceptanceCriteria: new Map(),
+        problems: [],
+    };
     const seen = new Set<string>();
 
     // Scenario headings: `### PROJ-1234-TC004 — Validate that ...` (backticks tolerated, any dash).

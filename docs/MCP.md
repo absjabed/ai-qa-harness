@@ -93,7 +93,7 @@ person, or `playwright-context-builder` — explores it once and writes down the
 
 | | |
 |---|---|
-| Used by | `playwright-test-planner` to fetch a story by its key · `playwright-defect-raiser` to create bugs · `playwright-test-healer` to see which bugs are fixed, and to record the retest result — a comment, and a status change if the profile names one |
+| Used by | `playwright-test-planner` to fetch a story by its key · `playwright-defect-raiser` to create bugs · `playwright-test-healer` to see which bugs are fixed, and to record the retest result — a comment, and a status change you pick from the bug's own workflow |
 | Without it | Stories are pasted into the conversation, defects become `specs/defects.csv` for someone to import, and the retest needs telling which bugs were fixed. Everything still works; there is just more copying by hand. |
 
 The example is Jira, through Atlassian's remote MCP server. Connect it **one** of two ways — not both, or
@@ -107,9 +107,13 @@ every Jira tool appears twice:
 | Permission rules | Per operation | Per operation for the direct tools; per tier for the rest |
 | Shared with the team | Yes — each person copies `.mcp.json.example` | Each person installs the plugin |
 
-Either way, sign in by running `/mcp` in Claude Code — it is OAuth, so no token goes in a file. The
-`tracker` entry gives the finer control, which is why it is the example. If you use it, keep `?tools=all`
-on the URL and the key `tracker`: the rules name its tools that way.
+Either way, sign in by running `/mcp` in Claude Code — it is OAuth, so no token goes in a file.
+
+**Which one:** whichever the team already has, and that works for the project. In Claude Code the plugin is
+the simple route — one install, maintained by Atlassian — and its read/write/destructive tiers are enough
+for the rules below. With another agentic tool, use the `tracker` entry; if you do, keep `?tools=all` on the
+URL and the key `tracker`, since the rules name its tools that way. The context-builder's preflight confirms
+the choice at setup: it reports which connection it found and fetches one story you know exists.
 
 ### What agents may do in the tracker
 
@@ -122,9 +126,9 @@ on the URL and the key `tracker`: the rules name its tools that way.
 | **Denied** | delete anything, worklogs, sprints, boards, versions, project admin; the plugin's `executeDestructive` | Nothing in the harness needs them |
 
 The agents' instructions say the same: the planner only reads; the defect-raiser asks before creating a
-batch; the healer asks before commenting a retest result or moving a bug — and moves it only to the status
-`PROJECT-PROFILE.md` section 7 names for that result. Editing a bug's other fields is permitted by the rules
-for the team's own use; no agent does it. The rules make it hold when an instruction is missed.
+batch; the healer asks before commenting a retest result or moving a bug — reading the transitions from
+the team's own Jira workflow and applying only the one the person picks. Editing a bug's other fields is
+permitted by the rules for the team's own use; no agent does it. The rules make it hold when an instruction is missed.
 
 Another tracker works the same way if it has an MCP server: wire it under the key `tracker` and replace the
 tool names in `.claude/settings.json`. The agents describe what they need — fetch an issue, search, create a

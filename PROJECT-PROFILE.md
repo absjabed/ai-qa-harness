@@ -20,8 +20,8 @@ look them up by name.
 | Base URL | Read from `BASE_URL` in `.env` — never written literally anywhere |
 | Issue tracker project key | `<e.g. PROJ>` |
 | Issue key format | `<e.g. PROJ-1234>` — **required on every story.** Agents validate story keys against it and ask when one is missing (I8) |
-| Template version this copy started from | `<e.g. 1.0.0>` — see the template's CHANGELOG |
-| Template commit this copy started from | `<short sha>` — from `git rev-parse --short HEAD`, run right after cloning |
+| Harness version this copy started from | `<e.g. 1.0.0>` — the harness's own version, from its CHANGELOG; never this project's release version |
+| Harness commit this copy started from | `<short sha>` — the template's commit; `npm run export` fills both |
 
 ## 2. Roles
 
@@ -103,14 +103,6 @@ to tracker columns. Replace the examples with your own quality plan's wording; k
 | P2 | High | Major |
 | P3 | Medium | Minor |
 | P4 | Low | Low |
-
-**Tracker workflow after a retest** — the status the healer offers to move a bug to once its retest is in.
-It always asks first; leave a row blank and it only comments.
-
-| Retest result | Move the bug to |
-|---|---|
-| Passed twice — fix confirmed | `<e.g. Done / Verified / Closed>` |
-| Still failing | `<e.g. Reopened / In Progress>` |
 
 ## 8. Test file layout
 
@@ -194,7 +186,7 @@ so knowingly — the report exists so that the decision is made with the numbers
 
 ## 11. Setup checklist
 
-- [ ] Sections 1–10 above filled in, no `<...>` placeholders left (including the template version and commit in section 1)
+- [ ] Sections 1–10 above filled in, no `<...>` placeholders left (including the harness version and commit in section 1)
 - [ ] `config/projectProfile.ts` updated to match sections 1, 2 and 5
 - [ ] `.env` created from `.env.example` and populated
 - [ ] `.mcp.json` created from `.mcp.json.example`; Playwright MCP connected; unused servers removed

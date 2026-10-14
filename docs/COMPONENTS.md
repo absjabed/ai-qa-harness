@@ -124,14 +124,16 @@ pairing, thin wrappers, section and invariant totals, links, and that `.gitignor
 | `export-harness.js` | `npm run export -- <dir>` | Copies the harness into a project's QA repository |
 | `check-docs.js` | `npm run check:docs` | Asserts the docs still match the repository |
 | `check-trace.ts` | `npm run check:trace` | Enforces I8 — TCIDs present, planned, unique, not retired |
-| `cycle-report.ts` | `npm run report:cycle` | Writes the test-cycle closure report |
-| `lib/trace.ts` | — | The one parser both of the above share, so they cannot disagree about what a TCID is |
+| `regression.ts` | `npm run regression` | Regression for a client release, on the tickets or epics you choose |
+| `cycle-report.ts` | `npm run report:cycle` | Rebuilds the test-cycle closure report by hand, for any scope |
+| `lib/cycle.ts` | — | Builds the cycle report — used by the two above and by `lib/cycleReporter.ts` |
+| `lib/trace.ts` | — | The one parser all of them share, so they cannot disagree about what a TCID is |
 
 ---
 
 ### `scripts/check-trace.ts`
 
-**What** `npm run check:trace` — enforcement for I8, traceability. Part of `npm run check` and CI.
+**What** `npm run check:trace` — enforcement for I8, traceability. Part of `npm run check`.
 
 **Checks** Plan files are named for a valid story key; plan TCIDs are well-formed, unique and belong to
 their story; every AC in a plan's traceability table links to real scenarios; every story spec has a plan;
@@ -145,10 +147,28 @@ outside `tests/stories/` carrying no TCID — allowed, but invisible to AC cover
 
 ---
 
+### `scripts/regression.ts`
+
+**What** `npm run regression` — regression for a client release. Asks which release, then which of its
+tickets — all, by epic, or one by one — and whether to run only tests tagged `@Regression`; shows the
+selection, runs it, and the cycle report for exactly that selection is written as the run ends.
+
+**Where releases and epics come from** Each plan's `**Release:**` and `**Epic:**` — filled by the planner,
+from Jira's fix version and parent epic when the tracker is connected. A story with no `**Release:**` falls
+back to the folder its spec lives in, `tests/stories/<release>/`. These are the project's own releases; the
+harness's version never appears in them.
+
+**Without a terminal** Pass the answers as flags — `--release`, `--epics`, `--stories`, `--all-tests`,
+`--browser`, `--yes`. An agent asks you in the conversation, then runs it that way.
+
+---
+
 ### `scripts/cycle-report.ts`
 
-**What** `npm run report:cycle` — the STLC test-cycle closure report, written to
-`reports/cycle-summary-<date>.md`.
+**What** `npm run report:cycle` — the STLC test-cycle closure report, by hand. The same report is written
+automatically when any run ends (`lib/cycleReporter.ts`), scoped to the stories that ran; use this to
+rebuild it after recording manual results, or for another scope: `--release 2.26`, `--stories PROJ-12,PROJ-15`,
+or nothing for every story. Written to `reports/cycle-summary-<scope>-<time>.md`.
 
 **Reads** Plans, the latest `test-results/results.json`, `specs/execution/manual-results.csv` and the defect
 log — all optional; it says plainly which were missing.
@@ -171,8 +191,9 @@ is not copied, since a copy has nothing to export.
 hand-made copy most often misses `.gitignore`, and without it `.env` is committed on the first push.
 
 **Also** Names the package after the target folder, writes a starter README if the target has none,
-records the template version and commit in PROJECT-PROFILE.md section 1 — *unreleased* unless HEAD is the
-release tag `v<version>` — and runs `check:docs` against the copy.
+records the harness version — the newest `CHANGELOG.md` entry — and commit in PROJECT-PROFILE.md section 1,
+and runs `check:docs` against the copy. The copy's `package.json` version is left at `0.0.0`: the harness's
+version is not the project's, and nothing should suggest it is.
 
 **What to expect** It never overwrites — any existing file it would write stops it before it writes
 anything. It refuses a template with uncommitted changes unless given `--allow-dirty`, which records the
@@ -317,7 +338,7 @@ project matches only it and launches no browser.
 
 **Defaults and why** `fullyParallel: false` and `workers: 1` — tests share application state and seed data,
 and parallelising before the data is isolated per test turns failures unreadable. Headed by default
-(`HEADLESS=true` in CI), because this suite is normally watched while it runs.
+(`HEADLESS=true` for an unattended run), because this suite is normally watched while it runs.
 
 **Extend** Add a project per browser channel or device profile. Delete the `api` project if the project has
 no API surface.
@@ -471,6 +492,19 @@ environment. Does not fire on `--list`.
 
 ---
 
+### `lib/cycleReporter.ts`
+
+**What** A Playwright reporter that writes the test-cycle closure report as soon as a run ends, scoped to the
+stories that ran — run one ticket's spec and the report covers that ticket, not every plan with the rest
+marked *Not Run*. `npm run regression` hands it its own scope: the release and tickets you selected.
+
+**Why after the JSON reporter** It reads `test-results/results.json`, and Playwright finishes reporters in
+the order listed, so it is listed last in `playwright.config.ts`.
+
+**Escape hatch** `AUTO_CYCLE_REPORT=false`. A failure to write the report is printed and never fails the run.
+
+---
+
 ### `lib/api/ApiClient.ts`
 
 **What** Thin API client. The `apiClient` fixture hands it a request context with auth already attached, so
@@ -565,16 +599,6 @@ at closure counts against the exit criteria exactly as an automated one would.
 
 ---
 
-### `.github/workflows/`
-
-**What** `checks.yml` runs `typecheck`, `check:docs` and `check:trace` on every push — none of which need a
-live environment.
-
-**What it deliberately does not do** Run the suite. Regression runs on QA team members' own machines,
-against the release under test — `npm run test:regression`, then `npm run report:cycle` — so there is no
-pipeline holding environment credentials, and no runner that needs to reach the QA environment.
-
----
 
 ## Tests layer
 
@@ -615,16 +639,17 @@ helpers from `tests/common/`, and keeping two implementations in sync is a bug w
 | Command | Does |
 |---|---|
 | `npm test` | Full suite |
-| `npm run test:regression` | `--grep "@Regression"` |
+| `npm run regression` | Regression for a client release — choose its tickets or epics; writes the cycle report |
+| `npm run test:regression` | Every test tagged `@Regression`, no selection |
 | `npm run test:headed` / `test:debug` / `test:ui` | Watched, stepped, interactive |
 | `npm run test:api` | The `api` project only |
 | `npm run db:check` | Database connectivity |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run check:docs` | Docs still match the repository |
 | `npm run check:trace` | I8 traceability holds |
-| `npm run check` | All three of the above — what CI runs |
+| `npm run check` | All three of the above — run it before pushing |
 | `npm run report` | Open the last HTML report |
-| `npm run report:cycle` | Write the test-cycle closure report (`--strict` to gate on exit criteria) |
+| `npm run report:cycle` | Rebuild the cycle report by hand — `--release`, `--stories`, `--strict` |
 | `npm run docs` | Open the handbook |
 | `npm run export -- <dir>` | Copy the harness into a project's QA repository (template only) |
 | `npm run setup` | `playwright install` |

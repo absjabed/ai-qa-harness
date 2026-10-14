@@ -82,9 +82,10 @@ cover. Name an area, module or role to run it for that alone. Usually the QA lea
 
 ### How it gathers
 
-Inventory what is reachable → roam the application as each role → read the supplied sources → introspect
+Preflight — it runs every role's login seed and reports per role what passed and what to fix, and confirms
+the Jira connection by fetching one known story → inventory what is reachable → roam the application as each role → read the supplied sources → introspect
 the database, if wired → distil into the documents above, each with its provenance and date. It checkpoints
-after the inventory and after the roam.
+after the preflight, after the inventory and after the roam.
 
 ### What it will not do
 
@@ -327,10 +328,9 @@ shows as done — and says which it found. Without one, tell it which were fixed
 - **passes both times** → keeps it active, removes the defect comment, marks the log entry `verified`
 - **fails either time** → restores the `fixme` exactly, leaves the entry `raised`, records the retest
 
-With a tracker, it offers to record the result on the bug — asking first: a comment, and a status change
-if `PROJECT-PROFILE.md` section 7 names a target status for that result (say *Done* when it passes,
-*Reopened* when it still fails). It moves a bug only to the status the profile names, and edits nothing
-else on it.
+With a tracker, it offers to record the result on the bug — asking first: a comment, and a status change.
+The statuses come from your team's own Jira workflow: it lists the transitions that bug currently offers and
+asks which one, if any, to apply. It never picks one itself, and edits nothing else on the bug.
 
 Without this step a `fixme`'d test stays skipped forever, long after its bug was fixed, and the suite quietly
 loses coverage.

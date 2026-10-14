@@ -52,7 +52,7 @@ gh repo create <you>/<app>-tests --private --template <you>/ai-qa-harness --clon
 ```
 
 The export copies exactly the files a project needs — dotfiles included — leaves the template-only ones
-behind, names the package, and records which template version and commit the copy came from. Copying by
+behind, names the package, and records which harness version and commit the copy came from. Copying by
 hand works too; [SETUP.md](SETUP.md) step 0 lists what not to miss.
 
 Then work through **[SETUP.md](SETUP.md)** — about an hour, and the copy is testing your application.
@@ -76,7 +76,7 @@ application stays in your copy. That is the line that keeps this template reusab
 | [PROJECT-PROFILE.md](PROJECT-PROFILE.md) | The file you fill in per project |
 | [TEST-AUTHORING-INVARIANTS.md](TEST-AUTHORING-INVARIANTS.md) | I1–I8, the conventions every test follows |
 | [agents/README.md](agents/README.md) | Using these agents with a tool other than Claude Code |
-| [CHANGELOG.md](CHANGELOG.md) | What changed between template versions, and whether a copy should adopt it |
+| [CHANGELOG.md](CHANGELOG.md) | The harness version, and what changed between harness versions |
 
 ## Coverage of the testing lifecycle
 
@@ -88,7 +88,7 @@ application stays in your copy. That is the line that keeps this template reusab
 | Environment setup | `.env`, `.mcp.json`, and the readiness check in `lib/globalSetup.ts`; `data/seed.ts` |
 | Execution | Playwright; `playwright-test-generator` automates, `playwright-test-healer` triages; manual results in `specs/execution/` |
 | Defect management | healer → defect log → `playwright-defect-raiser` → a bug in the tracker (or a CSV to import); retest confirms the fix |
-| Cycle closure | `npm run report:cycle` — metrics, AC coverage and exit criteria |
+| Cycle closure | The cycle report — written after every run, and by `npm run regression` for a release's chosen tickets: metrics, AC coverage and exit criteria |
 
 Traceability holds it together: every test case is `<STORY-KEY>-TC<NNN>`, that ID starts every test's title,
 and every defect carries it — so a failure leads back to the acceptance criterion it breaks. The handbook's
@@ -163,6 +163,7 @@ data/
 lib/
   BaseTest.ts                    the Page Factory - one fixture per page object, plus `cleanup`
   globalSetup.ts                 entry-criteria check before every run; optional seeding
+  cycleReporter.ts               writes the cycle report as each run ends
   api/ApiClient.ts               optional API client
 pages/
   BasePage.ts                    shared navigation, waiting, table-reading, DB comparison
@@ -187,10 +188,10 @@ scripts/
   export-harness.js              copies the harness into a project's QA repo
   check-docs.js                  asserts the docs still match the repo
   check-trace.ts                 enforces I8 - TCIDs present, planned, unique
-  cycle-report.ts                STLC test-cycle closure report
-  lib/trace.ts                   the parser the two above share
-.github/workflows/
-  checks.yml                     typecheck + docs + traceability on every push (the suite runs locally)
+  regression.ts                  regression for a client release - pick its tickets or epics
+  cycle-report.ts                rebuild the cycle report by hand
+  lib/cycle.ts                   builds the cycle report
+  lib/trace.ts                   the parser all of them share
 PROJECT-PROFILE.md               the one file you fill in per project
 .env.example                     copy to .env
 .mcp.json.example                copy to .mcp.json - browser + optional database access
@@ -203,7 +204,8 @@ npm install && npx playwright install
 npm run docs                  # open the handbook
 npm run export -- <dir>       # copy the harness into a project's QA repo
 npm test                      # everything
-npm run test:regression       # --grep "@Regression"
+npm run regression            # a client release: pick its tickets or epics, run, report
+npm run test:regression       # every test tagged @Regression
 npm run test:headed
 npm run test:ui
 npm run test:api              # the api project only
@@ -213,7 +215,7 @@ npm run check:docs            # docs still match the repo
 npm run check:trace           # every test traceable to its test case (I8)
 npm run check                 # all three of the above
 npm run report                # open the last HTML report
-npm run report:cycle          # test-cycle closure report
+npm run report:cycle          # rebuild the cycle report by hand (it is also written after every run)
 ```
 
 Filter by tag:

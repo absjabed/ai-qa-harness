@@ -18,10 +18,9 @@ application-specific content so the next project can start clean.
 
 ### Recommended: export into the project's QA repository
 
-From a checkout of the template, at a release tag — no `npm install` needed for this step:
+From a checkout of the template — no `npm install` needed for this step:
 
 ```bash
-git checkout v<version>          # the latest release; `git tag` lists them
 npm run export -- ../<app>-qa
 ```
 
@@ -31,9 +30,10 @@ The target can be an empty folder or a fresh clone of the QA repository. The exp
   above all — and leaves behind the three that describe the template: `README.md`, `CHANGELOG.md` and the
   export script itself
 - names the package after the target folder, and writes a starter `README.md` if the target has none
-- records the template version and commit in `PROJECT-PROFILE.md` section 1 — marked *unreleased* if you
-  exported from anything but a release tag
-- runs `check:docs` against the copy, so anything missing shows up now rather than in CI
+- records the **harness** version (the newest entry in its `CHANGELOG.md`) and commit in
+  `PROJECT-PROFILE.md` section 1 — kept apart from the project's own release versions, which are the
+  client's and live in `tests/stories/<release>/` and each plan's `**Release:**`
+- runs `check:docs` against the copy, so anything missing shows up now rather than later
 
 It never overwrites. If any file it would write already exists in the target, it lists them and writes
 nothing. It also refuses to run from a template with uncommitted changes, because the commit it records
@@ -48,17 +48,17 @@ missed:
 
 - **`.gitignore`** — without it, `.env` and its passwords are committed on the first push
 - `.gitattributes`, `.env.example`, `.mcp.json.example`
-- `.claude/` and `.github/`
+- `.claude/`
 - `tests/stories/.gitkeep` — the generator cannot create that folder itself
 
 Then do by hand what the export does:
 
 1. **Rename `name` in `package.json`.** While it is `ai-qa-harness`, `check:docs` treats the copy as the
    template and fails the moment your application's name appears in a file.
-2. **Record where the copy came from**, in `PROJECT-PROFILE.md` section 1: the template version from its
-   `CHANGELOG.md`, and its commit from `git rev-parse --short HEAD` run in the template. This is the only
-   moment it is free, and it is what lets you tell later whether a difference is yours or just the
-   template having moved on.
+2. **Record where the copy came from**, in `PROJECT-PROFILE.md` section 1: the harness version — the
+   newest entry in the template's `CHANGELOG.md` — and its commit, from `git rev-parse --short HEAD` run in
+   the template. This is the only moment it is free, and it is what lets you tell later whether a
+   difference is yours or just the harness having moved on.
 
 ### Or the whole repository, as a GitHub template
 
@@ -135,12 +135,14 @@ Three entries. Delete the ones you will not use.
 - **`database` — optional, high value.** With it, agents read your schema instead of asking you for every
   query. The example is PostgreSQL; the comment above it gives the SQL Server flags. This server has no
   read-only mode, so use a **read-only** account against a QA database, never production.
-- **`tracker` — optional.** Jira, through Atlassian's remote MCP server. The planner then fetches a story
-  from its key, the defect-raiser creates bugs instead of writing a CSV to import, and the healer reads bug
-  status to know what to retest, then records the result. Sign in by running `/mcp` in Claude Code. Keep
-  `?tools=all` on the URL and the server key `tracker` — the guard rails below depend on both. Prefer the
-  Atlassian plugin for Claude Code instead? That works too; delete this entry so Jira is not connected
-  twice. [docs/MCP.md](docs/MCP.md) compares the two.
+- **`tracker` — optional.** Jira: the planner then fetches a story from its key, the defect-raiser creates
+  bugs instead of writing a CSV to import, and the healer reads bug status to know what to retest, then
+  records the result. **Use whichever connection the team already has and that works.** In Claude Code,
+  the Atlassian plugin is the simple route — `/plugin install atlassian@claude-plugins-official`, then
+  delete this entry. With another agentic tool, keep this entry; keep `?tools=all` on the URL and the key
+  `tracker`, which the guard rails depend on. Either way, sign in with `/mcp` (or your tool's equivalent).
+  The context-builder confirms the connection works at setup, by fetching one story you know exists.
+  [docs/MCP.md](docs/MCP.md) compares the two.
 
 [docs/MCP.md](docs/MCP.md) has the reasoning and the caveats.
 
@@ -222,14 +224,15 @@ thin.
 - **A working login for each role.** The agent never logs in by hand — it starts from each role's seed,
   `tests/seeds/<role>.spec.ts`, which logs in inside the test runner. So do the login half of step 5 now:
   replace the `CHANGE_ME` selectors in `pages/LoginPage.ts` and the logged-in check in
-  `pages/DashboardPage.ts`. Then, with one seed per role (copy one and change the role), this must pass:
+  `pages/DashboardPage.ts`, and keep one seed per role (copy one and change the role).
+
+  **You do not need to check them yourself first.** The context-builder's first step runs every seed and
+  reports per role — passed, or what failed and what to fix: a variable missing from `.env`, a selector
+  still `CHANGE_ME`, an account rejected. To check before involving the agent, run it yourself:
 
   ```bash
   npx playwright test tests/seeds/
   ```
-
-  A seed that fails here is a role the agent cannot map — and a locked or expired account found now is
-  cheaper than one found halfway through the run.
 - **The Playwright MCP server connected** — confirm with `/mcp` in Claude Code before starting.
 - **Browsers installed** — `npx playwright install`, from step 1.
 
@@ -402,8 +405,10 @@ it is a reference, not coverage.
 2. Review `specs/<KEY>.plan.md`.
 3. Run `/playwright-test-generator` against it. It drives the real browser first, then asks you to confirm
    the target file path, then writes the spec plus any page objects it needed.
-4. Run the suite. If something fails, `/playwright-test-healer`.
-5. At the end of the cycle, `npm run report:cycle` — see `docs/WORKFLOWS.md` workflow 8.
+4. Run the suite. If something fails, `/playwright-test-healer`. The cycle report for the stories that
+   ran is written as soon as the run ends, in `reports/`.
+5. For a release's regression, `npm run regression` — pick the release, then its tickets or epics. See
+   `docs/WORKFLOWS.md` workflow 8.
 
 ## Keeping the knowledge current
 

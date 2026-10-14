@@ -246,16 +246,16 @@
         <div class="cell agent"><span class="who">/defect-raiser</span>Creates the bug in Jira, with steps, expected vs
           actual and test ID, linked to the story, after checking it isn't already filed. Parks the test until the
           fix lands; the healer retests it.</div>
-        <div class="cell agent"><span class="who">report:cycle</span>Builds the closure report: pass rates by priority,
-          criteria coverage, open bugs, and whether each exit criterion was met.</div>
+        <div class="cell agent"><span class="who">cycle report</span>Written the moment a run ends: pass rates by
+          priority, criteria coverage, open bugs, and whether each exit criterion was met.</div>
 
         <div class="lane-label you">You<br>do</div>
         <div class="cell you"><span class="who">you</span>Give it the story's <b>Jira key</b> and confirm what it fetched
           is complete. Approve the plan at each checkpoint.</div>
         <div class="cell you"><span class="who">you</span>Confirm where the test goes and any new page it needs. Run the
           manual-only cases.</div>
-        <div class="cell you"><span class="who">you</span><code>npm test</code>, or <code>npm run test:regression</code>
-          before a release.</div>
+        <div class="cell you"><span class="who">you</span><code>npm run regression</code>: pick the client
+          release, then its tickets or epics.</div>
         <div class="cell you"><span class="who">you</span>Confirm whether it's a real bug. Nothing is filed on the
           agent's word alone.</div>
         <div class="cell you"><span class="who">you</span>Approve the batch before anything is created in Jira. Ask for
@@ -287,7 +287,7 @@
         <div class="col">
           <h2><span class="dot" style="background:var(--accent)"></span>Gets easier</h2>
           <ul>
-            <li><b>Regression is a command</b>, not a week. Every automated case runs, every release.</li>
+            <li><b>Regression is a command</b>, not a week. Pick the release and its tickets; it runs them and reports.</li>
             <li><b>Bug reports arrive complete</b>: steps, expected vs actual, test ID, story key.</li>
             <li><b>Traceability is automatic.</b> A CI check fails any story test that is missing its case ID.</li>
             <li><b>Knowledge is written down.</b> Modules, roles, permissions and data are recorded once and kept current.</li>

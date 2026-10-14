@@ -1,7 +1,7 @@
 {
   "name": "ai-qa-harness",
-  "version": "1.0.0",
-  "description": "AI-driven Playwright test harness. Configure per project via PROJECT-PROFILE.md.",
+  "version": "0.0.0",
+  "description": "AI-driven Playwright test harness. Configure per project via PROJECT-PROFILE.md. Harness version: CHANGELOG.md.",
   "private": true,
   "scripts": {
     "test": "playwright test",
@@ -11,6 +11,7 @@
     "test:debug": "playwright test --debug",
     "test:ui": "playwright test --ui",
     "test:regression": "playwright test --grep \"@Regression\"",
+    "regression": "ts-node -r tsconfig-paths/register scripts/regression.ts",
     "test:api": "playwright test --project=api",
     "report": "playwright show-report",
     "report:cycle": "ts-node -r tsconfig-paths/register scripts/cycle-report.ts",

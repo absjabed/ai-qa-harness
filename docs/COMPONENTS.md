@@ -93,6 +93,21 @@ with a direct query before writing it into a context document. Full reasoning in
 
 ---
 
+### `examples/`
+
+**What** Practice material, never copied into a project's QA repo. `examples/fleetkeep/` holds a small
+fictional fleet-maintenance app (`demo-app/`, `node server.js`, one planted defect), and two layers for a
+practice repo: `qa-setup/` — roles, login files, selectors, data reset, `.env.example` with the demo
+accounts — and `worked-cycle/` — one ticket's plan, spec, results, defect and closure report.
+
+**How to use** `npm run export -- <dir> --example fleetkeep` builds a practice repo with `qa-setup` applied
+and `.env` written; add `--worked` for the worked cycle too. See `examples/fleetkeep/README.md`.
+
+**Why layers** Each layer is an `overlay.json` of exact changes to harness files plus the project's own new
+files — never a copy of a harness file — so the example keeps up as the template improves.
+`scripts/lib/overlay.js` applies them; `npm run check:docs` fails when a template change stops one
+applying, naming the change.
+
 ### `docs/`
 
 **What** The documentation set. `index.html` is the handbook — a self-contained page covering setup, the

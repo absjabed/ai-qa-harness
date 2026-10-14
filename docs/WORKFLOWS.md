@@ -232,6 +232,9 @@ Give them this order:
 4. `tests/example.spec.ts` — the conventions in working code
 5. Their first task: add one page object by hand (workflow 3). Faster to understand the Page Factory by
    wiring one than by reading about it.
+6. Then a practice cycle on the FleetKeep demo app — `npm run export -- <dir> --example fleetkeep`, see
+   `examples/fleetkeep/README.md` — before they touch the real project: one ticket, all the agents, and a
+   planted defect to find.
 
 Skip the agents until after that. Someone who doesn't know the conventions can't review agent output, and
 reviewing agent output is most of the job.

@@ -1,0 +1,186 @@
+{
+  "description": "The practice QA repo after setup: FleetKeep's roles, one login file each, the login, signed-in and sign-out selectors, demo data reset through the app, and .env.example filled with the demo accounts.",
+  "copy": [
+    {
+      "from": "tests/seeds/admin.spec.ts",
+      "to": "tests/seeds/driver.spec.ts",
+      "replace": [
+        [
+          "test('start as admin'",
+          "test('start as driver'"
+        ],
+        [
+          "testUsers.admin",
+          "testUsers.driver"
+        ],
+        [
+          "Start as `admin`",
+          "Start as `driver`"
+        ]
+      ]
+    },
+    {
+      "from": "tests/seeds/admin.spec.ts",
+      "to": "tests/seeds/transportManager.spec.ts",
+      "replace": [
+        [
+          "test('start as admin'",
+          "test('start as transportManager'"
+        ],
+        [
+          "testUsers.admin",
+          "testUsers.transportManager"
+        ],
+        [
+          "Start as `admin`",
+          "Start as `transportManager`"
+        ]
+      ]
+    },
+    {
+      "from": "tests/seeds/admin.spec.ts",
+      "to": "tests/seeds/technician.spec.ts",
+      "replace": [
+        [
+          "test('start as admin'",
+          "test('start as technician'"
+        ],
+        [
+          "testUsers.admin",
+          "testUsers.technician"
+        ],
+        [
+          "Start as `admin`",
+          "Start as `technician`"
+        ]
+      ]
+    }
+  ],
+  "delete": [
+    "tests/seeds/admin.spec.ts",
+    "tests/seeds/standardUser.spec.ts",
+    "tests/seeds/readOnlyUser.spec.ts"
+  ],
+  "edit": [
+    {
+      "file": "config/projectProfile.ts",
+      "replace": [
+        [
+          "export const roles = ['admin', 'standardUser', 'readOnlyUser'] as const;",
+          "export const roles = ['driver', 'transportManager', 'technician'] as const;"
+        ],
+        [
+          "baselineRole: 'admin',",
+          "baselineRole: 'transportManager',"
+        ]
+      ]
+    },
+    {
+      "file": "pages/LoginPage.ts",
+      "replace": [
+        [
+          "page.getByLabel('CHANGE_ME_Email')",
+          "page.getByLabel('Email')"
+        ],
+        [
+          "page.getByLabel('CHANGE_ME_Password')",
+          "page.getByLabel('Password')"
+        ],
+        [
+          "{ name: 'CHANGE_ME_Log in' }",
+          "{ name: 'Sign in' }"
+        ]
+      ]
+    },
+    {
+      "file": "pages/DashboardPage.ts",
+      "replace": [
+        [
+          "this.signedInMarker = page.getByRole('button', { name: 'CHANGE_ME_Account' });",
+          "this.signedInMarker = page.getByRole('button', { name: 'Sign out' });"
+        ]
+      ]
+    },
+    {
+      "file": "pages/common/Logout.ts",
+      "replace": [
+        [
+          "page.getByRole('menuitem', { name: 'CHANGE_ME_Sign out' })",
+          "page.getByRole('button', { name: 'Sign out' })"
+        ]
+      ]
+    },
+    {
+      "file": "data/seed.ts",
+      "replace": [
+        [
+          "import DbConnection from '../config/DbConnection';\n",
+          ""
+        ],
+        [
+          "    const db = new DbConnection();\n    try {\n        // CHANGE_ME — e.g.\n        // await db.executeUpdate(sqlQueries.resetTestRecords);\n    } finally {\n        await db.close();\n    }\n}",
+          "    // FleetKeep demo: the app has a reset endpoint instead of a database the suite can reach.\n    const response = await fetch(`${process.env.BASE_URL}/__reset`, { method: 'POST' });\n    if (!response.ok) throw new Error(`Resetting FleetKeep demo data failed: HTTP ${response.status}`);\n}"
+        ],
+        [
+          "    const db = new DbConnection();\n    try {\n        // CHANGE_ME — e.g.\n        // await db.executeUpdate(sqlQueries.seedValidRecord(recordData.validIdentifier));\n    } finally {\n        await db.close();\n    }\n}",
+          "    // FleetKeep demo: the reset restores the seed data, so there is nothing more to create.\n}"
+        ]
+      ]
+    },
+    {
+      "file": "PROJECT-PROFILE.md",
+      "replace": [
+        [
+          "| Application name | `<AppName>` |",
+          "| Application name | `FleetKeep` (demo) |"
+        ],
+        [
+          "| One-line description | `<what the app does, in one sentence — agents use this to judge risk>` |",
+          "| One-line description | `Fleet maintenance: drivers report vehicle defects, the transport manager triages them, technicians fix them, and a vehicle returns to service only when it is safe` |"
+        ],
+        [
+          "| Domain | `<e.g. billing / logistics / CRM / field service>` |",
+          "| Domain | `Fleet maintenance` |"
+        ],
+        [
+          "| Primary environment under test | `<QA / UAT>` |",
+          "| Primary environment under test | `Local demo app — examples/fleetkeep/demo-app in the harness template` |"
+        ],
+        [
+          "| Issue tracker project key | `<e.g. PROJ>` |",
+          "| Issue tracker project key | `FK` |"
+        ],
+        [
+          "| Issue key format | `<e.g. PROJ-1234>` —",
+          "| Issue key format | `FK-1234` —"
+        ]
+      ]
+    }
+  ],
+  "env": {
+    "set": {
+      "APP_NAME": "FleetKeep",
+      "TRACKER_PROJECT_KEY": "FK",
+      "BASE_URL": "http://localhost:4300",
+      "DB_VALIDATION_ENABLED": "false",
+      "BUILD_UNDER_TEST": "demo-1"
+    },
+    "remove": [
+      "ADMIN_EMAIL",
+      "ADMIN_PASSWORD",
+      "STANDARD_USER_EMAIL",
+      "STANDARD_USER_PASSWORD",
+      "READ_ONLY_USER_EMAIL",
+      "READ_ONLY_USER_PASSWORD"
+    ],
+    "add_heading": "FleetKeep demo accounts — DEMO VALUES ONLY, committed on purpose (examples/fleetkeep/demo-app/README.md).\n# A real project never puts credentials in .env.example.",
+    "add": {
+      "DRIVER_EMAIL": "dana.driver@fleetkeep.test",
+      "DRIVER_PASSWORD": "Drive-Demo-1",
+      "TRANSPORT_MANAGER_EMAIL": "theo.manager@fleetkeep.test",
+      "TRANSPORT_MANAGER_PASSWORD": "Manage-Demo-1",
+      "TECHNICIAN_EMAIL": "tess.tech@fleetkeep.test",
+      "TECHNICIAN_PASSWORD": "Fix-Demo-1"
+    }
+  }
+}

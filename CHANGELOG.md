@@ -85,6 +85,10 @@ project-specific value lives in `PROJECT-PROFILE.md`, `.env`, `.mcp.json` and `c
   them for the full regression — then all of its tickets,
   some epics, or chosen tickets, runs them, and reports on exactly that selection. Each plan records its
   release and epic — from Jira's fix version and parent epic when the tracker is connected.
+- **A practice example** — `examples/fleetkeep/`: a small fictional fleet-maintenance app with one planted
+  defect, and layers that turn an export into a ready practice repo (`npm run export -- <dir> --example
+  fleetkeep`, `--worked` for one ticket's finished cycle). Layers carry changes, not copies, and
+  `check:docs` fails when a template change stops one applying. Never exported to a project.
 - **A knowledge layer** — `context/` for distilled project knowledge, `PROJECT-PROFILE.md` for identity,
   `specs/UserFlowsUserRolePermissions/` for navigation and permissions.
 - **The suite** — Page Factory fixtures, `BasePage` with an accessibility check, two wired page-object

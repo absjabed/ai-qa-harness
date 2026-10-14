@@ -13,6 +13,11 @@ cloned for a project and never configured. It stays clean so the next project ca
 
 [SETUP.md](../SETUP.md) has the reasoning behind each piece. This guide is the order to do them in.
 
+**New to the harness? Practise first.** `npm run export -- <dir> --example fleetkeep` builds a ready practice
+repo against a small demo app that ships with the template, with one planted defect to find —
+`examples/fleetkeep/README.md` in the harness template (examples are not copied into a project's repo). The real project's repo is then the second time,
+not the first.
+
 ---
 
 ## 1. Create the new repo and copy the harness into it

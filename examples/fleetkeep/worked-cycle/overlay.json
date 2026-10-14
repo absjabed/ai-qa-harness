@@ -1,0 +1,52 @@
+{
+  "description": "What one ticket's full cycle left behind: FK-1304's plan and spec, the page objects and fixtures it needed, the results, the planted defect logged with its evidence, raised as a CSV bug and verified after the fix, the release 2.26 closure report, and HARNESS-CHANGES.md entries. Applied on top of qa-setup.",
+  "files": [
+    "pages/FleetPages.ts",
+    "specs/FK-1304.plan.md",
+    "tests/stories/2.26/FK-1304.spec.ts",
+    "specs/defects/defects.csv",
+    "specs/defects/evidence/FK-1304-TC002-1791999759/error-context.md",
+    "specs/defects/evidence/FK-1304-TC002-1791999759/test-failed-1.png",
+    "specs/execution/closure/cycle-summary-release-2.26-2026-10-14-17-45.md"
+  ],
+  "replaces": [
+    "specs/execution/automated-results.csv",
+    "specs/execution/manual-results.csv",
+    "specs/defects/defect-log.json",
+    "HARNESS-CHANGES.md"
+  ],
+  "edit": [
+    {
+      "file": "lib/BaseTest.ts",
+      "replace": [
+        [
+          "import DashboardPage from '../pages/DashboardPage';",
+          "import DashboardPage from '../pages/DashboardPage';\nimport { VehiclesPage, ReportDefectPage, DefectPage } from '../pages/FleetPages';"
+        ],
+        [
+          "    // CHANGE_ME — add one entry per page object in `pages/`, e.g.:\n    // recordListPage: RecordListPage;\n};",
+          "    vehiclesPage: VehiclesPage;\n    reportDefectPage: ReportDefectPage;\n    defectPage: DefectPage;\n};"
+        ],
+        [
+          "    logout: async ({ page }: { page: Page }, use: (r: Logout) => Promise<void>) => {",
+          "    vehiclesPage: async ({ page }: { page: Page }, use: (r: VehiclesPage) => Promise<void>) => {\n        await use(new VehiclesPage(page));\n    },\n    reportDefectPage: async ({ page }: { page: Page }, use: (r: ReportDefectPage) => Promise<void>) => {\n        await use(new ReportDefectPage(page));\n    },\n    defectPage: async ({ page }: { page: Page }, use: (r: DefectPage) => Promise<void>) => {\n        await use(new DefectPage(page));\n    },\n\n    logout: async ({ page }: { page: Page }, use: (r: Logout) => Promise<void>) => {"
+        ]
+      ]
+    },
+    {
+      "file": "specs/RegressionTags/regression-tags.md",
+      "replace": [
+        [
+          "| `<Module A>` | `tests/<moduleA>.spec.ts` | `@<ModuleA>` |\n| `<Module B>` | `tests/<moduleB>.spec.ts` | `@<ModuleB>` |",
+          "| Vehicles — return to service | `tests/stories/2.26/FK-1304.spec.ts` | `@ReturnToService` |"
+        ]
+      ]
+    }
+  ],
+  "append": [
+    {
+      "file": "data/testData.ts",
+      "text": "\n/** FleetKeep — vehicles, defects and the messages the app shows. Practice-run data. */\nexport const fleetData = {\n    /** Assigned to the driver; used by the return-to-service scenarios. */\n    vehicleForReturn: 'FK21 ABC',\n    /** Assigned to the driver; used when a second vehicle must be off the road. */\n    secondVehicle: 'FK22 DEF',\n    categoryADescription: 'Brake warning light stays on',\n    statusRoadworthy: 'Roadworthy',\n    statusOffRoad: 'VOR',\n};\n\nexport const fleetMessages = {\n    backInService: (registration: string) => `${registration} is back in service.`,\n    returnRefused: (registration: string, defectId: string) =>\n        `${registration} can't return to service: category-A defect ${defectId} is not closed.`,\n};\n"
+    }
+  ]
+}

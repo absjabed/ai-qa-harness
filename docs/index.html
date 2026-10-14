@@ -735,6 +735,13 @@ td code { white-space: nowrap; }
       <p class="lede">Each project gets its own new QA repository. The harness's files are copied into it, and
       all configuration happens there. This template is never cloned for a project and never configured — it
       stays clean for the next one.</p>
+      <div class="note">
+        <p><strong>New to the harness? Practise first.</strong> <code>npm run export -- &lt;dir&gt; --example
+        fleetkeep</code> builds a ready practice repo against a small demo app that ships with the template —
+        roles, logins and demo accounts already set, one planted defect to find. See
+        <code>examples/fleetkeep/README.md</code>. Your real project's repo is then the second time, not the
+        first.</p>
+      </div>
 
       <pre class="flow-diagram"><code>  ai-qa-harness (this repo)                     &lt;project&gt;-qa (the new repo)
   the template — never configured   ── copy ──▶ the project's QA suite
@@ -2688,6 +2695,8 @@ Run it? [Y/n]: y</code></pre>
         <li><code>tests/example.spec.ts</code> — the conventions in working code</li>
         <li>First task: add one page object by hand. Faster to understand the Page Factory by wiring one
         than by reading about it.</li>
+        <li>Then a practice cycle on the FleetKeep demo app — <code>npm run export -- &lt;dir&gt; --example
+        fleetkeep</code> — one ticket, all the agents, a planted defect to find</li>
       </ol>
       <p>Skip the agents until after that. Someone who doesn't know the conventions can't review agent
       output — and reviewing agent output is most of the job.</p>
@@ -2863,6 +2872,7 @@ Run it? [Y/n]: y</code></pre>
             <tr><td><code>npm run report</code></td><td>Open the last HTML report</td></tr>
             <tr><td><code>npm run setup</code></td><td><code>playwright install</code></td></tr>
             <tr><td><code>npm run export -- &lt;dir&gt;</code></td><td>Template only: copy the harness into a project's QA repository</td></tr>
+            <tr><td><code>npm run export -- &lt;dir&gt; --example fleetkeep</code></td><td>Template only: a practice repo against the FleetKeep demo app; <code>--worked</code> adds one ticket's finished cycle</td></tr>
           </tbody>
         </table>
       </div>

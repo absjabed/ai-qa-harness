@@ -75,6 +75,7 @@ application stays in your copy. That is the line that keeps this template reusab
 | [docs/WORKFLOWS.md](docs/WORKFLOWS.md) | End-to-end recipes — first story, healing a regression, onboarding, porting |
 | [docs/MCP.md](docs/MCP.md) | Wiring the browser, database and Jira MCP servers, and the guard rails |
 | [docs/qa-harness-intro.html](docs/qa-harness-intro.html) | Three slides for introducing the harness to a QA team: how they test today, how they will with it |
+| [examples/fleetkeep/README.md](examples/fleetkeep/README.md) | A practice app to learn the harness on before a real project — `npm run export -- <dir> --example fleetkeep` — and one ticket's whole cycle, worked |
 | [context/README.md](context/README.md) | What project knowledge goes in `context/`, and in what shape |
 | [PROJECT-PROFILE.md](PROJECT-PROFILE.md) | The file you fill in per project |
 | [TEST-AUTHORING-INVARIANTS.md](TEST-AUTHORING-INVARIANTS.md) | I1–I8, the conventions every test follows |
@@ -195,6 +196,8 @@ docs/
   qa-harness-intro.html          three-slide introduction for a QA team
   qa-harness-walkthrough.html    one example cycle, step by step - what you run, what it asks, what comes out
   NEW-QA-REPO.md                 starting a project's QA repo - files, minimum config, checklist
+examples/
+  fleetkeep/                     a practice app and one ticket's worked cycle - never exported to a project
 scripts/
   open-docs.js                   opens the handbook cross-platform
   export-harness.js              copies the harness into a project's QA repo

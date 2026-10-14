@@ -1,0 +1,31 @@
+[
+  {
+    "id": "FK-1304-TC002-1791999759",
+    "status": "verified",
+    "tcid": "FK-1304-TC002",
+    "storyKey": "FK-1304",
+    "detectedAt": "2026-10-14T17:42:39Z",
+    "specFile": "tests/stories/2.26/FK-1304.spec.ts",
+    "foundBy": "automated",
+    "testName": "FK-1304-TC002 Validate that return to service is refused while the category-A defect is only resolved",
+    "severity": "P2",
+    "summary": "QA - Vehicle returns to service while its category-A defect is only resolved, in Vehicles",
+    "stepsToReproduce": [
+      "As the driver, report a category-A defect on FK22 DEF",
+      "As the transport manager, triage it and raise a job card",
+      "As the technician, start work and mark it resolved",
+      "As the transport manager, return FK22 DEF to service"
+    ],
+    "actualResult": "FK22 DEF is back in service. The vehicle is Roadworthy although its category-A defect is Resolved, not Closed.",
+    "expectedResult": "FK22 DEF can't return to service: category-A defect <ID> is not closed. The vehicle stays VOR.",
+    "evidence": "Reproduced twice. The page shows the success message; the test's assertion and the plan's Expected Result agree (BR-019), so this is not a test-side cause.",
+    "environment": "chromium, Windows, build demo-1",
+    "trackerKey": null,
+    "attachments": [
+      "specs/defects/evidence/FK-1304-TC002-1791999759/test-failed-1.png",
+      "specs/defects/evidence/FK-1304-TC002-1791999759/error-context.md"
+    ],
+    "raisedAt": "2026-10-14T17:42:52Z",
+    "verifiedAt": "2026-10-14T17:45:04Z"
+  }
+]

@@ -1,0 +1,4 @@
+TCID,Status,Executed On,Browser,Build,Spec
+FK-1304-TC001,Passed,2026-10-14 17:45,chromium edge,demo-1,tests/stories/2.26/FK-1304.spec.ts
+FK-1304-TC002,Passed,2026-10-14 17:45,chromium edge,demo-1,tests/stories/2.26/FK-1304.spec.ts
+FK-1304-TC003,Passed,2026-10-14 17:45,chromium edge,demo-1,tests/stories/2.26/FK-1304.spec.ts

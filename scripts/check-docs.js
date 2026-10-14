@@ -292,6 +292,23 @@ for (const doc of contextDocs) {
     }
 }
 
+// ---------------------------------------------------------------- examples still apply
+
+// Template only. An example layer carries changes to harness files, not copies of them, so a template
+// change can silently stop one applying — this is where that shows up, before anyone builds a practice repo.
+if (isTemplate && exists('examples')) {
+    const { checkLayer } = require('./lib/overlay');
+    for (const name of fs.readdirSync(path.join(root, 'examples'))) {
+        for (const layer of ['qa-setup', 'worked-cycle']) {
+            const dir = path.join(root, 'examples', name, layer);
+            if (!fs.existsSync(path.join(dir, 'overlay.json'))) continue;
+            for (const problem of checkLayer(dir, root)) {
+                check(`examples/${name}/${layer} no longer applies`, false, problem);
+            }
+        }
+    }
+}
+
 // ---------------------------------------------------------------- harness version
 
 // The harness's version is written in exactly one place — the newest CHANGELOG.md entry — and

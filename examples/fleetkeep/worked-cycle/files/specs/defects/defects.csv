@@ -1,0 +1,24 @@
+Summary,Issue Type,Project key,Priority,Description,Severity,Reporter,Labels,Environment
+"QA - Vehicle returns to service while its category-A defect is only resolved, in Vehicles",Bug,FK,High,"QA - Vehicle returns to service while its category-A defect is only resolved, in Vehicles
+
+*Steps to Reproduce:*
+# As the driver, report a category-A defect on FK22 DEF
+# As the transport manager, triage it and raise a job card
+# As the technician, start work and mark it resolved
+# As the transport manager, return FK22 DEF to service
+
+*Actual Result:*
+FK22 DEF is back in service. The vehicle is Roadworthy although its category-A defect is Resolved, not Closed.
+
+*Expected Result:*
+FK22 DEF can't return to service: category-A defect <ID> is not closed. The vehicle stays VOR.
+
+*Evidence:*
+Reproduced twice. The page shows the success message; the test's assertion and the plan's Expected Result agree (BR-019), so this is not a test-side cause.
+Attached: test-failed-1.png, error-context.md
+
+*Environment:*
+chromium, Windows, build demo-1
+
+*Traceability:*
+Story FK-1304 · test case FK-1304-TC002 · tests/stories/2.26/FK-1304.spec.ts",Major,playwright-test-healer,automated-healer FK-1304 FK-1304-TC002 FK-1304.spec.ts,"chromium, Windows, build demo-1"

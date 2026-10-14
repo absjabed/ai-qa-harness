@@ -13,7 +13,13 @@
  * It never overwrites. If any file it would write already exists in the target, it lists them and
  * writes nothing.
  *
- *   --allow-dirty   copy from a template with uncommitted changes, recording the commit as `<sha>-dirty`
+ *   --allow-dirty         copy from a template with uncommitted changes, recording the commit as `<sha>-dirty`
+ *   --example <name>      a practice repo instead of a project's: apply examples/<name>/qa-setup on top of the
+ *                         copy, and write .env from its .env.example (demo values only)
+ *   --worked              with --example, also apply examples/<name>/worked-cycle — one ticket's whole cycle,
+ *                         done, to read alongside
+ *
+ * `examples/` itself is never copied: a project's QA repo has no use for the practice app.
  */
 
 const fs = require('fs');
@@ -26,7 +32,8 @@ const root = path.join(__dirname, '..');
  * Tracked files that describe the template, not a project. Everything else is copied.
  * README.md is replaced by one written for the project; the template's history stays with the template.
  */
-const TEMPLATE_ONLY = ['README.md', 'CHANGELOG.md', 'scripts/export-harness.js'];
+const TEMPLATE_ONLY = ['README.md', 'CHANGELOG.md', 'scripts/export-harness.js', 'scripts/lib/overlay.js'];
+const TEMPLATE_ONLY_DIRS = ['examples/'];
 
 function fail(message) {
     console.error(`\nexport: ${message}\n`);
@@ -41,11 +48,21 @@ function git(...args) {
 
 const args = process.argv.slice(2);
 const allowDirty = args.includes('--allow-dirty');
-const targetArg = args.find((a) => !a.startsWith('--'));
+const withWorked = args.includes('--worked');
+const exampleIdx = args.indexOf('--example');
+const example = exampleIdx >= 0 ? args[exampleIdx + 1] : null;
+const targetArg = args.find((a, i) => !a.startsWith('--') && (exampleIdx < 0 || i !== exampleIdx + 1));
 
-if (!targetArg) {
-    fail('usage: npm run export -- <target-dir> [--allow-dirty]\n\n' +
-        '  <target-dir> is the project\'s QA repository — an empty folder, or a fresh clone.');
+if (!targetArg || (exampleIdx >= 0 && (!example || example.startsWith('--')))) {
+    fail('usage: npm run export -- <target-dir> [--allow-dirty] [--example <name> [--worked]]\n\n' +
+        '  <target-dir> is the project\'s QA repository — an empty folder, or a fresh clone.\n' +
+        '  --example builds a practice repo from examples/<name> instead.');
+}
+if (withWorked && !example) fail('--worked goes with --example <name>.');
+const exampleDir = example ? path.join(root, 'examples', example) : null;
+if (example && !fs.existsSync(path.join(exampleDir, 'qa-setup', 'overlay.json'))) {
+    const known = fs.existsSync(path.join(root, 'examples')) ? fs.readdirSync(path.join(root, 'examples')) : [];
+    fail(`no example "${example}". Known: ${known.join(', ') || 'none'}.`);
 }
 
 const target = path.resolve(targetArg);
@@ -86,7 +103,7 @@ if (!harnessVersion) fail('CHANGELOG.md has no "## <version>" entry, so there is
 
 // ---------------------------------------------------------------- plan the copy
 
-const toCopy = files.filter((f) => !TEMPLATE_ONLY.includes(f));
+const toCopy = files.filter((f) => !TEMPLATE_ONLY.includes(f) && !TEMPLATE_ONLY_DIRS.some((d) => f.startsWith(d)));
 
 // A folder name is not always a valid package name; make it one.
 const projectName =
@@ -172,7 +189,9 @@ harness's version, not this project's: the project's releases are its client's, 
 
 Defined in [agents/](agents/), wired into Claude Code by \`.claude/commands/\`:
 \`/playwright-context-builder\`, \`/playwright-test-planner\`, \`/playwright-test-generator\`,
-\`/playwright-test-healer\`, \`/playwright-defect-raiser\`.
+\`/playwright-test-reviewer\`, \`/playwright-test-healer\`, \`/playwright-defect-raiser\` — and
+\`/playwright-harness-improver\` when the harness itself does not fit; it records each change in
+[HARNESS-CHANGES.md](HARNESS-CHANGES.md).
 
 Every story must arrive with its issue key — the planner stops and asks for one if it is missing.
 
@@ -186,6 +205,24 @@ npm run report:cycle          # test-cycle closure report
 
 Credentials live in \`.env\` and MCP servers in \`.mcp.json\`. Both are gitignored — never commit either.
 `);
+}
+
+// ---------------------------------------------------------------- example layers
+
+const applied = [];
+if (example) {
+    const { applyLayer } = require('./lib/overlay');
+    for (const layer of ['qa-setup', ...(withWorked ? ['worked-cycle'] : [])]) {
+        try {
+            applyLayer(path.join(exampleDir, layer), target);
+            applied.push(layer);
+        } catch (e) {
+            fail(`examples/${example}/${layer} did not apply: ${e.message}\n` +
+                'The template has changed under the example — npm run check:docs in the template names what to update.');
+        }
+    }
+    // A practice repo runs straight away: its .env is the example's .env.example, demo values only.
+    fs.copyFileSync(path.join(target, '.env.example'), path.join(target, '.env'));
 }
 
 // ---------------------------------------------------------------- verify
@@ -208,7 +245,8 @@ export: copied ${toCopy.length} files into ${target}
   harness          ${harnessVersion} (${commit})${recorded === 2 ? ' — recorded in PROJECT-PROFILE.md section 1' : ''}
   left behind      ${skipped.join(', ')}
   README.md        ${writeReadme ? 'written for the project' : 'already existed — left as it was'}
-  check:docs       ${verified ? 'passed in the copy' : 'FAILED in the copy — see above'}
+  check:docs       ${verified ? 'passed in the copy' : 'FAILED in the copy — see above'}${example ? `
+  example          ${example}: ${applied.join(' + ')}; .env written from .env.example (demo values)` : ''}
 `);
 if (untracked.length) {
     console.log(`  note: ${untracked.length} untracked file(s) in the template were not copied — commit them first if they belong:`);
@@ -223,7 +261,13 @@ console.log(`Next, in ${target}:
   ${fs.existsSync(path.join(target, '.git')) ? '' : 'git init\n  '}npm install
   npx playwright install
 
-then docs/NEW-QA-REPO.md — the minimum to configure, and the checklist before the context-builder.
+${example
+    ? `then start the demo app, in another terminal:
+
+  node ${path.join(exampleDir, 'demo-app', 'server.js')}
+
+and see examples/${example}/README.md in the template for what to practise.`
+    : 'then docs/NEW-QA-REPO.md — the minimum to configure, and the checklist before the context-builder.'}
 Before the first commit, confirm \`git status\` does not list .env or .mcp.json.
 `);
 

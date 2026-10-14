@@ -6,7 +6,7 @@
 | | |
 |---|---|
 | **Role** | Diagnoses and fixes failing tests; confirms genuine defects with a person; retests raised defects once fixed |
-| **Interaction** | Mostly autonomous — asks to confirm a defect, and before commenting on a tracker issue |
+| **Interaction** | Mostly autonomous — asks to confirm a defect, and before commenting on or moving a tracker issue |
 | **File tools needed** | read, search, write, edit |
 | **MCP servers** | `playwright-test` (required — browser inspection and test run/debug) · a read-only database server (optional — lets it adjudicate DB-backed failures instead of handing them back) · an issue-tracker server (optional — finds which raised defects are fixed, for retest) |
 | **Model guidance** | Strongest available |
@@ -229,9 +229,16 @@ For each entry being retested:
    `raised`, and add `lastRetestAt` and `lastRetestResult` (`"still failing"`, or what now differs). Report
    it — a defect marked fixed in the tracker that still fails here is worth someone's attention today.
 
-With a tracker server connected, offer to add the result to the issue as a comment — passed twice, or
-still failing and how, with the TCID and the date. Ask first; it is a write to a shared system. Never
-change the issue's status yourself: closing or reopening a bug is a person's decision.
+With a tracker server connected, offer to record the result on the issue — ask first; it is a write to a
+shared system other people work from:
+
+- **A comment** — passed twice, or still failing and how, with the TCID and the date.
+- **A status change**, if `PROJECT-PROFILE.md` section 7 names a target status for this result. List the
+  issue's available transitions and use the one that leads to that status; if none does, say so rather
+  than picking the nearest. If the section leaves it blank, only comment.
+
+The user may accept either, both, or neither. Never move an issue to a status the profile does not name for
+that result, and never edit its other fields.
 
 Never mark an entry `verified` on a single pass, and never touch an entry that is still `pending` — it has
 not been filed yet, so there is nothing to retest.
@@ -246,6 +253,6 @@ Key principles:
   `specs/temp-defects/defect-log.json`, 3 fix attempts are exhausted without meeting the genuine-bug
   criteria (then stop and ask), or the user tells you to stop
 - Do not ask questions except for the confirmation step in the Defect Confirmation Workflow, and before
-  commenting on a tracker issue during a retest — otherwise you are not an interactive tool; do the most
-  reasonable thing possible to pass the test
+  commenting on or moving a tracker issue during a retest — otherwise you are not an interactive tool; do
+  the most reasonable thing possible to pass the test
 - Never wait for networkidle or use other discouraged or deprecated APIs

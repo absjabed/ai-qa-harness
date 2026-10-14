@@ -775,6 +775,11 @@ cp .mcp.json.example .mcp.json</code></pre>
             <p>For the database, set <code>DB_ENGINE</code> to <code>mssql</code> (SQL Server) or
             <code>postgres</code> (PostgreSQL), then the <code>DB_*</code> block. Port and schema default to
             the engine's own.</p>
+            <p><b>Two database connections, two users.</b> The <em>test suite</em> connects through the driver
+            in <code>config/db/</code>, configured in <code>.env</code> — for DB-backed assertions, the
+            readiness check and seeding, so its account may need to write. The <em>AI agents</em> connect
+            through the <code>database</code> MCP server, configured in <code>.mcp.json</code> — to read the
+            schema, with a read-only account always. Each is optional on its own.</p>
             <p><code>.mcp.json</code> has three entries; delete the ones you will not use.</p>
             <ul>
               <li><b><code>playwright-test</code> — required.</b> The context-builder, generator and healer
@@ -783,8 +788,9 @@ cp .mcp.json.example .mcp.json</code></pre>
               asking you for every query. PostgreSQL in the example, SQL Server flags in its comment.</li>
               <li><b><code>tracker</code> — optional.</b> Jira, through Atlassian's MCP server: the planner
               fetches stories by key, the defect-raiser creates the bugs, the healer reads their status for
-              retests. Sign in with <code>/mcp</code>. Keep <code>?tools=all</code> and the key
-              <code>tracker</code>.</li>
+              retests and records the result. Sign in with <code>/mcp</code>. Keep <code>?tools=all</code> and
+              the key <code>tracker</code> — or use the Atlassian plugin for Claude Code instead, and delete
+              this entry so Jira is not connected twice.</li>
             </ul>
             <div class="note warn">
               <p><strong>Use a read-only database account, against QA.</strong> An agent with write access
@@ -798,15 +804,16 @@ cp .mcp.json.example .mcp.json</code></pre>
                 <table>
                   <thead><tr><th>Rule</th><th>Covers</th></tr></thead>
                   <tbody>
-                    <tr><td><b>Deny</b></td><td>Reading <code>.env</code> and <code>.mcp.json</code> — agents never see a password. The database server's write tools. Jira edits, status changes, deletes, admin tools, and its generic <code>execute</code>.</td></tr>
-                    <tr><td><b>Ask</b></td><td>Creating, linking, commenting on or attaching to a Jira issue — a person approves every tracker write.</td></tr>
+                    <tr><td><b>Deny</b></td><td>Reading <code>.env</code> and <code>.mcp.json</code> — agents never see a password. The database server's write tools — nothing in the harness needs them. Jira deletes, worklogs, sprints, boards, versions, project admin.</td></tr>
+                    <tr><td><b>Ask</b></td><td>Creating, editing, moving, linking, commenting on or attaching to a Jira issue — a person approves every tracker write.</td></tr>
                     <tr><td><b>Allow</b></td><td>The read-only database and Jira tools, so lookups don't prompt.</td></tr>
                   </tbody>
                 </table>
               </div>
-              <p style="margin-top:8px">The rules name tools as <code>mcp__database__…</code> and
-              <code>mcp__tracker__…</code>, so they follow the server keys in <code>.mcp.json</code> — change a
-              key or a server, update the rules. They are a second line behind the agents' own instructions,
+              <p style="margin-top:8px">The rules name tools as <code>mcp__database__…</code>, and Jira's
+              for both routes — <code>mcp__tracker__…</code> and the plugin's
+              <code>mcp__plugin_atlassian_atlassian__…</code> — so they follow the server keys in
+              <code>.mcp.json</code>: change a key or a server, update the rules. They are a second line behind the agents' own instructions,
               not a sandbox: a shell command could still read <code>.env</code>, and the read-only database
               account is still the real guard. Personal overrides go in
               <code>.claude/settings.local.json</code>, which is gitignored.</p>
@@ -922,9 +929,11 @@ cp .mcp.json.example .mcp.json</code></pre>
             fixtures and the login helper, with <code>CHANGE_ME</code> selectors. Replace them. Prefer
             <code>getByRole</code> / <code>getByLabel</code> over XPath where the app gives you the
             choice — they survive markup changes a positional XPath doesn't.</p>
-            <pre><code>npx playwright test tests/example.spec.ts --grep "@Priority1"</code></pre>
-            <p>That passing means login and the dashboard are wired. It's the milestone worth stopping
-            at — everything after builds on it.</p>
+            <pre><code>npx playwright test tests/seeds/
+npx playwright test tests/example.spec.ts --grep "@Priority1"</code></pre>
+            <p>Every seed passing means each role can log in — and the agents, which start from those
+            seeds, can work as each role. The reference test passing means login and the dashboard are
+            wired. It's the milestone worth stopping at — everything after builds on it.</p>
           </div>
         </li>
 
@@ -996,7 +1005,8 @@ cp .mcp.json.example .mcp.json</code></pre>
           <div class="step-body">
             <h3>Verify</h3>
             <p>Walk the checklist in profile section 11, then:</p>
-            <pre><code>npm run typecheck
+            <pre><code>npm run check
+npx playwright test tests/seeds/
 npx playwright test tests/example.spec.ts</code></pre>
             <p>Before any run, a readiness check confirms the application — and the database, if in scope — is
             reachable, and stops with one clear "entry criteria not met" message if not.</p>
@@ -1712,7 +1722,7 @@ npx playwright test tests/example.spec.ts</code></pre>
         <p class="comp-plain">What agents are never allowed to do, enforced by Claude Code rather than left to
         the agent.</p>
         <p>Agents may not read <code>.env</code> or <code>.mcp.json</code>, may not call the database
-        server's write tools, and may not edit, move or delete anything in Jira. Creating, linking or
+        server's write tools, and may not delete anything in Jira. Creating, editing, moving, linking or
         commenting on a Jira issue always asks a person first. Read-only lookups are pre-approved so they
         do not prompt. It is a second line behind the agents' own instructions — not a sandbox.</p>
         <p class="you-do"><b>You touch it:</b> only if you rename a server key in <code>.mcp.json</code> or
@@ -1908,11 +1918,11 @@ npx playwright test tests/example.spec.ts</code></pre>
 
       <div class="comp">
         <div class="comp-head"><code class="comp-name">.github/workflows/</code><span class="comp-tag">reference</span></div>
-        <p class="comp-plain">What runs automatically, and what waits to be switched on.</p>
-        <p><code>checks.yml</code> runs typecheck, docs and traceability checks on every push.
-        <code>regression.yml</code> runs the suite and the closure report — opt-in, since it needs a live
-        environment and repository secrets.</p>
-        <p class="you-do"><b>You touch it:</b> to schedule regression, once the environment is reachable from CI.</p>
+        <p class="comp-plain">What runs automatically on every push.</p>
+        <p><code>checks.yml</code> runs typecheck, docs and traceability checks — none of which need the
+        application. The suite itself is not run here, by design: regression runs on QA team members' own
+        machines against the release under test, so no pipeline holds environment credentials.</p>
+        <p class="you-do"><b>You touch it:</b> rarely.</p>
       </div>
 
       <h3>Specs — plans, conventions and tests</h3>
@@ -2035,6 +2045,7 @@ npx playwright test tests/example.spec.ts</code></pre>
 
       <h3>Onboarding someone new</h3>
       <ol>
+        <li>For a whole team, the <a href="qa-harness-intro.html">three intro slides</a> first — how their testing changes</li>
         <li>This page — orientation and agents</li>
         <li><code>SETUP.md</code>, even if the harness is already configured — it explains why each piece exists</li>
         <li><code>TEST-AUTHORING-INVARIANTS.md</code> — eight rules, one page</li>
@@ -2058,8 +2069,8 @@ npx playwright test tests/example.spec.ts</code></pre>
       fixed bugs itself, from their status; without one, tell it which, and make sure each defect-log entry
       has its <code>trackerKey</code>. It un-<code>fixme</code>s the test, runs it twice, and either marks
       the entry <code>verified</code> or restores the <code>fixme</code> and reports that the fix didn't
-      hold. With a tracker it offers to comment the result on the bug — asking first — and never closes or
-      reopens it itself.</p>
+      hold. With a tracker it offers, asking first, to comment the result on the bug and move it to the
+      status the profile names for that result.</p>
     </section>
 
     <!-- ================= TROUBLESHOOTING ================= -->
@@ -2090,7 +2101,7 @@ npx playwright test tests/example.spec.ts</code></pre>
             </tr>
             <tr>
               <td>The tracker server is listed but agents cannot use it</td>
-              <td>Not signed in, or <code>?tools=all</code> missing from its URL — then only the generic <code>execute</code> tool exists, which is denied</td>
+              <td>Not signed in. Or <code>?tools=all</code> is missing from the <code>tracker</code> URL — it still works, but writes go through a generic <code>execute</code> and ask with only the operation's name</td>
               <td>Run <code>/mcp</code> to sign in; restore <code>?tools=all</code>.</td>
             </tr>
             <tr>
@@ -2107,11 +2118,6 @@ npx playwright test tests/example.spec.ts</code></pre>
               <td><code>Credentials for role 'x' are not configured.</code></td>
               <td>Role in <code>projectProfile.ts</code> has no env pair</td>
               <td>Add <code>&lt;ROLE&gt;_EMAIL</code>/<code>_PASSWORD</code>, or remove the role from <code>roles</code>.</td>
-            </tr>
-            <tr>
-              <td><code>Project profile not configured: ... CHANGE_ME</code></td>
-              <td><code>APP_NAME</code> or <code>TRACKER_PROJECT_KEY</code> unset</td>
-              <td>Set both in <code>.env</code>.</td>
             </tr>
             <tr>
               <td><code>Database is not configured: DB_SERVER, ...</code></td>
@@ -2215,6 +2221,7 @@ npx playwright test --project=api                                 # API only</co
         <a href="AGENTS.md">AGENTS.md</a> ·
         <a href="WORKFLOWS.md">WORKFLOWS.md</a> ·
         <a href="MCP.md">MCP.md</a> ·
+        <a href="qa-harness-intro.html">team intro slides</a> ·
         <a href="../SETUP.md">SETUP.md</a> ·
         <a href="../PROJECT-PROFILE.md">PROJECT-PROFILE.md</a> ·
         <a href="../context/README.md">context/README.md</a>

@@ -327,8 +327,10 @@ shows as done — and says which it found. Without one, tell it which were fixed
 - **passes both times** → keeps it active, removes the defect comment, marks the log entry `verified`
 - **fails either time** → restores the `fixme` exactly, leaves the entry `raised`, records the retest
 
-With a tracker, it offers to comment the result on the bug — asking first. It never closes or reopens a bug
-itself; that is a person's call.
+With a tracker, it offers to record the result on the bug — asking first: a comment, and a status change
+if `PROJECT-PROFILE.md` section 7 names a target status for that result (say *Done* when it passes,
+*Reopened* when it still fails). It moves a bug only to the status the profile names, and edits nothing
+else on it.
 
 Without this step a `fixme`'d test stays skipped forever, long after its bug was fixed, and the suite quietly
 loses coverage.

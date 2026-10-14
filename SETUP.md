@@ -108,6 +108,17 @@ throws a clear error if a role is unconfigured, which is the behavior you want.
 **Database:** set `DB_ENGINE` to `mssql` (SQL Server) or `postgres` (PostgreSQL), then the `DB_*` block.
 `DB_PORT` and `DB_SCHEMA_PREFIX` default to the engine's own (1433 and `dbo`, or 5432 and `public`).
 
+There are two database connections, for two different users:
+
+| | The test suite | The AI agents |
+|---|---|---|
+| Through | The driver in `config/db/` (`mssql` or `pg`) | The `database` MCP server |
+| Configured in | `.env` — the `DB_*` block | `.mcp.json` |
+| Used for | DB-backed assertions, `npm run db:check`, the readiness check, `data/seed.ts` | Reading the schema while exploring; checking a failing DB-backed assertion |
+| Account | Whatever the suite needs — seeding writes | Read-only, always |
+
+Each is optional on its own. A project can have the suite's connection without the agents', or neither.
+
 No database? Set `DB_VALIDATION_ENABLED=false` and skip the `DB_*` block. No API? Leave
 `API_TESTS_ENABLED=false`.
 
@@ -126,8 +137,10 @@ Three entries. Delete the ones you will not use.
   read-only mode, so use a **read-only** account against a QA database, never production.
 - **`tracker` — optional.** Jira, through Atlassian's remote MCP server. The planner then fetches a story
   from its key, the defect-raiser creates bugs instead of writing a CSV to import, and the healer reads bug
-  status to know what to retest. Sign in by running `/mcp` in Claude Code. Keep `?tools=all` on the URL and
-  the server key `tracker` — the guard rails below depend on both.
+  status to know what to retest, then records the result. Sign in by running `/mcp` in Claude Code. Keep
+  `?tools=all` on the URL and the server key `tracker` — the guard rails below depend on both. Prefer the
+  Atlassian plugin for Claude Code instead? That works too; delete this entry so Jira is not connected
+  twice. [docs/MCP.md](docs/MCP.md) compares the two.
 
 [docs/MCP.md](docs/MCP.md) has the reasoning and the caveats.
 
@@ -136,12 +149,16 @@ harness in Claude Code:
 
 | Rule | Covers |
 |---|---|
-| **Deny** | Reading `.env` and `.mcp.json` — agents never see a password. The database server's write tools. Jira deletes, edits, status changes and admin tools, and the server's generic `execute` tool. |
-| **Ask** | Creating a Jira issue, linking one, commenting, attaching. A person approves every write to the tracker. |
+| **Deny** | Reading `.env` and `.mcp.json` — agents never see a password. The database server's write tools. Jira deletes, worklogs, sprints, boards, versions and project admin. |
+| **Ask** | Creating, editing or moving a Jira issue, linking one, commenting, attaching. A person approves every write to the tracker. |
 | **Allow** | The read-only database and Jira tools, so agents do not prompt on every lookup. |
 
-The rules name tools as `mcp__database__<tool>` and `mcp__tracker__<tool>`, so they depend on the server
-keys in `.mcp.json`. Rename a key, or choose a different database or tracker server, and update the rules
+Database writes are denied because nothing in the harness needs them — `data/seed.ts` writes through the
+suite's own connection, not the agents'. If your team later wants an agent to write, move those tools from
+`deny` to `ask` deliberately.
+
+The rules name tools as `mcp__database__<tool>`, and Jira's as `mcp__tracker__<tool>` or — for the Atlassian
+plugin — `mcp__plugin_atlassian_atlassian__<tool>`, so they depend on the server keys in `.mcp.json`. Rename a key, or choose a different database or tracker server, and update the rules
 to match — `/mcp` in Claude Code lists the tools a server exposes. Personal overrides go in
 `.claude/settings.local.json`, which is gitignored.
 
@@ -283,14 +300,17 @@ Then check `config/projectProfile.ts` matches sections 1, 2, 5 and 10.
 Prefer role- and label-based locators (`getByRole`, `getByLabel`) over XPath where the application gives
 you the choice — they survive markup changes that a positional XPath does not.
 
-Then verify the round trip:
+Then verify the round trip — every role's login, and the first reference test:
 
 ```bash
+npx playwright test tests/seeds/
 npx playwright test tests/example.spec.ts --grep "@Priority1"
 ```
 
-The first test passing means login and the dashboard are wired correctly. That is the milestone worth
-stopping at — everything after this builds on it.
+If you ran step 3, you already did the login half of this; run both anyway. Every seed passing means each
+role can log in — and the agents, which start from those seeds, can work as each role. The first reference
+test passing means login and the dashboard are wired correctly. That is the milestone worth stopping at —
+everything after this builds on it.
 
 ## 6. Fill in test data
 
@@ -361,6 +381,7 @@ Walk the checklist in PROJECT-PROFILE.md section 11, then:
 
 ```bash
 npm run check                 # typecheck + docs consistency + traceability
+npx playwright test tests/seeds/
 npx playwright test tests/example.spec.ts
 ```
 
@@ -424,9 +445,6 @@ deliberate: the harness refuses to run against a default URL rather than silentl
 **`Credentials for role 'x' are not configured`** — a role in `projectProfile.ts` has no
 `<ROLE>_EMAIL`/`<ROLE>_PASSWORD` pair in `.env`. Add it, or remove the role from the `roles` array.
 
-**`Project profile not configured: ... still set to CHANGE_ME`** — `APP_NAME` or `TRACKER_PROJECT_KEY`
-unset in `.env`.
-
 **`Database is not configured: DB_SERVER, ...`** — the `DB_*` block is missing from `.env`. Fill it, or set
 `DB_VALIDATION_ENABLED=false`.
 
@@ -444,9 +462,11 @@ start from these files and will not work around them.
 **`check:docs` says `tests/seeds/<role>.spec.ts is missing`** — a role was added to
 `config/projectProfile.ts` without its seed. Copy another seed and change the role.
 
-**The tracker server is listed but the agents cannot use it** — not signed in (run `/mcp`), or `?tools=all`
-is missing from its URL, in which case the server offers only its generic `execute` tool, which
-`.claude/settings.json` denies.
+**The tracker server is listed but the agents cannot use it** — not signed in: run `/mcp`. If `?tools=all`
+is missing from the `tracker` URL, the server offers only its generic `discover` and `execute` tools: it
+still works, but every write asks with only the operation's name to go on — restore `?tools=all`.
+
+**Every Jira tool appears twice** — both the `tracker` entry and the Atlassian plugin are connected. Keep one.
 
 **A database or tracker tool is refused outright** — it is on the deny list in `.claude/settings.json`. That
 is deliberate for writes; for a read tool your server names differently, add it to `allow`.

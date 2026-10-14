@@ -70,7 +70,8 @@ application stays in your copy. That is the line that keeps this template reusab
 | [docs/COMPONENTS.md](docs/COMPONENTS.md) | Every file: purpose, usage, extension points, failure modes |
 | [docs/AGENTS.md](docs/AGENTS.md) | The five agents: inputs, outputs, checkpoints, what to expect, what they refuse |
 | [docs/WORKFLOWS.md](docs/WORKFLOWS.md) | End-to-end recipes — first story, healing a regression, onboarding, porting |
-| [docs/MCP.md](docs/MCP.md) | Wiring the browser and database MCP servers, and why read-only matters |
+| [docs/MCP.md](docs/MCP.md) | Wiring the browser, database and Jira MCP servers, and the guard rails |
+| [docs/qa-harness-intro.html](docs/qa-harness-intro.html) | Three slides for introducing the harness to a QA team: how they test today, how they will with it |
 | [context/README.md](context/README.md) | What project knowledge goes in `context/`, and in what shape |
 | [PROJECT-PROFILE.md](PROJECT-PROFILE.md) | The file you fill in per project |
 | [TEST-AUTHORING-INVARIANTS.md](TEST-AUTHORING-INVARIANTS.md) | I1–I8, the conventions every test follows |
@@ -180,6 +181,7 @@ tests/
   common/                        test-side helpers
 docs/
   index.html                     the handbook - `npm run docs` opens it
+  qa-harness-intro.html          three-slide introduction for a QA team
 scripts/
   open-docs.js                   opens the handbook cross-platform
   export-harness.js              copies the harness into a project's QA repo
@@ -188,8 +190,7 @@ scripts/
   cycle-report.ts                STLC test-cycle closure report
   lib/trace.ts                   the parser the two above share
 .github/workflows/
-  checks.yml                     typecheck + docs + traceability on every push
-  regression.yml                 suite + closure report - opt-in, needs a live environment
+  checks.yml                     typecheck + docs + traceability on every push (the suite runs locally)
 PROJECT-PROFILE.md               the one file you fill in per project
 .env.example                     copy to .env
 .mcp.json.example                copy to .mcp.json - browser + optional database access

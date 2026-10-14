@@ -2,10 +2,9 @@ name: checks
 
 # Runs on the template itself, and on any copy made from it.
 #
-# Deliberately does NOT run the Playwright suite. Those tests need a live application and credentials,
-# which a copy configures per project — a workflow that tried would fail on every fresh clone and teach
-# people to ignore a red badge. Add a separate workflow for the suite once your environment is reachable
-# from CI.
+# Deliberately does NOT run the Playwright suite. Regression runs on QA team members' own machines,
+# against the release under test (`npm run test:regression`, then `npm run report:cycle`), so no pipeline
+# holds environment credentials and no runner has to reach the QA environment.
 
 on:
   push:

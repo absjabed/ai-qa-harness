@@ -28,12 +28,14 @@ agent uses (`allowed-tools`) so they run without a prompt — it restricts nothi
 
 | Rule | Covers |
 |---|---|
-| Deny | Reading `.env` and `.mcp.json`; the database server's write tools; Jira edits, status changes, deletes and admin tools, and the server's generic `execute` |
-| Ask | Creating, linking, commenting on or attaching to a Jira issue |
+| Deny | Reading `.env` and `.mcp.json`; the database server's write tools; Jira deletes, worklogs, sprints, boards, versions, project admin |
+| Ask | Creating, editing, moving, linking, commenting on or attaching to a Jira issue |
 | Allow | The read-only database and Jira tools |
 
-**How to use** The rules name tools as `mcp__database__<tool>` and `mcp__tracker__<tool>`, so they follow the
-server keys in `.mcp.json`. Change a key, or choose a different server, and update the names. Personal
+**How to use** The rules name tools as `mcp__database__<tool>`, and Jira's for both routes —
+`mcp__tracker__<tool>` and the Atlassian plugin's `mcp__plugin_atlassian_atlassian__<tool>` — so they follow
+the server keys in `.mcp.json`. Database writes are denied rather than asked because nothing in the harness
+needs them; move them to `ask` deliberately if that changes. Change a key, or choose a different server, and update the names. Personal
 overrides go in `.claude/settings.local.json`, which is gitignored.
 
 **What to expect** A second line behind the agents' own instructions, not a sandbox — a shell command can
@@ -78,8 +80,9 @@ agent will act on it confidently. Fix the document in the same change as the tes
   single reduction in friction available: with it, agents read your schema rather than asking you for
   every query. It has no read-only mode, so give it a read-only account.
 - `tracker` — Jira through Atlassian's remote MCP server, signed in with `/mcp`. The planner fetches stories
-  by key, the defect-raiser creates bugs, the healer reads bug status. Keep `?tools=all` and the key
-  `tracker`; `.claude/settings.json` depends on both.
+  by key, the defect-raiser creates bugs, the healer reads bug status and records retest results. Keep
+  `?tools=all` and the key `tracker`; `.claude/settings.json` depends on both. The Atlassian plugin is the
+  alternative — use one, not both.
 
 **What to expect** Introspection reports structure, and not always correctly — confirm anything surprising
 with a direct query before writing it into a context document. Full reasoning in
@@ -91,7 +94,10 @@ with a direct query before writing it into a context document. Full reasoning in
 
 **What** The documentation set. `index.html` is the handbook — a self-contained page covering setup, the
 agents, the components and the workflows. Alongside it, this file, `AGENTS.md`, `WORKFLOWS.md` and
-`MCP.md` carry the deeper per-topic reference.
+`MCP.md` carry the deeper per-topic reference. `qa-harness-intro.html` is a three-slide deck for
+introducing the harness to a QA team — how a story is tested by hand today, how it is tested with the
+harness, and what changes for them. Open it in a browser; arrow keys move between slides, F goes full
+screen, and printing gives one slide per page.
 
 **How to use** `npm run docs` opens the handbook. The markdown files are read in place, and are also what
 the agents read when they need a convention rather than an instruction.
@@ -562,8 +568,11 @@ at closure counts against the exit criteria exactly as an automated one would.
 ### `.github/workflows/`
 
 **What** `checks.yml` runs `typecheck`, `check:docs` and `check:trace` on every push — none of which need a
-live environment. `regression.yml` runs the suite and the closure report, **opt-in**: started by hand, with
-a commented-out schedule, so a fresh copy never shows a red badge for an environment it cannot reach.
+live environment.
+
+**What it deliberately does not do** Run the suite. Regression runs on QA team members' own machines,
+against the release under test — `npm run test:regression`, then `npm run report:cycle` — so there is no
+pipeline holding environment credentials, and no runner that needs to reach the QA environment.
 
 ---
 

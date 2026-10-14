@@ -1,6 +1,6 @@
 {
   "name": "ai-qa-harness",
-  "version": "1.2.0",
+  "version": "1.0.0",
   "description": "AI-driven Playwright test harness. Configure per project via PROJECT-PROFILE.md.",
   "private": true,
   "scripts": {

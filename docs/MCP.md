@@ -93,32 +93,38 @@ person, or `playwright-context-builder` — explores it once and writes down the
 
 | | |
 |---|---|
-| Used by | `playwright-test-planner` to fetch a story by its key · `playwright-defect-raiser` to create bugs · `playwright-test-healer` to see which bugs are fixed, and to comment the retest result |
+| Used by | `playwright-test-planner` to fetch a story by its key · `playwright-defect-raiser` to create bugs · `playwright-test-healer` to see which bugs are fixed, and to record the retest result — a comment, and a status change if the profile names one |
 | Without it | Stories are pasted into the conversation, defects become `specs/defects.csv` for someone to import, and the retest needs telling which bugs were fixed. Everything still works; there is just more copying by hand. |
 
-The example is Jira, through Atlassian's remote MCP server:
+The example is Jira, through Atlassian's remote MCP server. Connect it **one** of two ways — not both, or
+every Jira tool appears twice:
 
-```json
-"tracker": { "type": "http", "url": "https://mcp.atlassian.com/v2/mcp?tools=all" }
-```
+| | `tracker` entry in `.mcp.json` | Atlassian plugin for Claude Code |
+|---|---|---|
+| Set up | The entry in `.mcp.json.example` | `/plugin install atlassian@claude-plugins-official` |
+| Endpoint | `https://mcp.atlassian.com/v2/mcp?tools=all` | `https://mcp.atlassian.com/v2/mcp` |
+| Tools | Every Jira operation is its own tool, `mcp__tracker__<tool>` | A few common ones directly; the rest through `discover` and `executeRead` / `executeWrite` / `executeDestructive` (or one `execute`), as `mcp__plugin_atlassian_atlassian__<tool>` |
+| Permission rules | Per operation | Per operation for the direct tools; per tier for the rest |
+| Shared with the team | Yes — each person copies `.mcp.json.example` | Each person installs the plugin |
 
-Sign in by running `/mcp` in Claude Code — it is OAuth, so no token goes in the file. Two details matter:
-
-- **Keep `?tools=all`.** Without it the server exposes two generic tools, `discovery` and `execute`, and
-  every Jira operation goes through `execute` — which would slip past the per-tool rules below. That is why
-  `execute` is denied.
-- **Keep the key `tracker`.** The rules name tools as `mcp__tracker__<tool>`.
+Either way, sign in by running `/mcp` in Claude Code — it is OAuth, so no token goes in a file. The
+`tracker` entry gives the finer control, which is why it is the example. If you use it, keep `?tools=all`
+on the URL and the key `tracker`: the rules name its tools that way.
 
 ### What agents may do in the tracker
 
+`.claude/settings.json` covers both routes.
+
 | | Tools | Why |
 |---|---|---|
-| **Allowed** | read an issue, search by JQL, read issue-type and link-type metadata, read comments | Fetching stories and checking bug status |
-| **Ask every time** | create an issue, link issues, comment, attach a file | A person approves every write to a system other people work from |
-| **Denied** | edit or move an issue, delete anything, worklogs, sprints, boards, versions, project admin | Nothing in the harness needs them; changing a bug's status is a person's decision |
+| **Allowed** | read an issue, search by JQL, read issue-type, link-type, transition and status metadata, read comments, look up an account; the plugin's `discover` and `executeRead` | Fetching stories, checking bug status, finding transitions |
+| **Ask every time** | create, edit or move an issue, link issues, comment, attach a file; the plugin's `executeWrite` and single `execute` | A person approves every write to a system other people work from — and sees the operation's name first |
+| **Denied** | delete anything, worklogs, sprints, boards, versions, project admin; the plugin's `executeDestructive` | Nothing in the harness needs them |
 
-The agents' instructions say the same — the defect-raiser asks before creating a batch, the healer before
-commenting, and the planner only reads. The rules make it hold when an instruction is missed.
+The agents' instructions say the same: the planner only reads; the defect-raiser asks before creating a
+batch; the healer asks before commenting a retest result or moving a bug — and moves it only to the status
+`PROJECT-PROFILE.md` section 7 names for that result. Editing a bug's other fields is permitted by the rules
+for the team's own use; no agent does it. The rules make it hold when an instruction is missed.
 
 Another tracker works the same way if it has an MCP server: wire it under the key `tracker` and replace the
 tool names in `.claude/settings.json`. The agents describe what they need — fetch an issue, search, create a

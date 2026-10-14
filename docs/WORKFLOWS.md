@@ -197,6 +197,8 @@ ways this goes wrong in practice.
 
 Give them this order:
 
+0. For a whole team at once, start with `docs/qa-harness-intro.html` — three slides on how their testing
+   changes
 1. `docs/index.html` — open in a browser, read the orientation and agent sections
 2. `SETUP.md` — even if the harness is already configured, it explains why each piece exists
 3. `TEST-AUTHORING-INVARIANTS.md` — eight rules, one page
@@ -294,8 +296,9 @@ A `test.fixme` is only correct while its bug is open. Once it is fixed, the skip
 
 3. For each, it un-`fixme`s the test and runs it twice. Passes both → active again, entry marked `verified`.
    Fails either → `fixme` restored exactly, entry stays `raised`, retest recorded — worth telling whoever
-   marked the ticket fixed. With a tracker it offers to comment the result on the bug, asking first; it
-   never closes or reopens the bug itself.
+   marked the ticket fixed. With a tracker it offers, asking first, to comment the result on the bug and
+   to move it to the status `PROJECT-PROFILE.md` section 7 names for that result — leave those rows blank
+   and it only comments.
 
 ---
 

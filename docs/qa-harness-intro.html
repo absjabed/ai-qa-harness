@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QA Harness Intro</title>
+<style>
+  :root {
+    --bg: #eef1f5;
+    --slide: #ffffff;
+    --ink: #17202c;
+    --ink-2: #4a5566;
+    --ink-3: #7a8494;
+    --line: #dde2ea;
+    --card: #f6f8fb;
+    --accent: #2f5bd3;
+    --accent-soft: #e7eefc;
+    --agent: #6b3fd1;
+    --agent-soft: #efe9fc;
+    --you: #0f7a5c;
+    --you-soft: #e3f4ee;
+    --warn: #b4540a;
+    --warn-soft: #fcefe3;
+    --shadow: 0 10px 40px rgba(20, 30, 50, .10);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0d1117;
+      --slide: #151b24;
+      --ink: #e8edf4;
+      --ink-2: #b3bdcb;
+      --ink-3: #7f8a9b;
+      --line: #2a3340;
+      --card: #1b2330;
+      --accent: #7ea2ff;
+      --accent-soft: #1d2a47;
+      --agent: #b69bff;
+      --agent-soft: #2a2144;
+      --you: #5fd0a8;
+      --you-soft: #16332a;
+      --warn: #f0a55f;
+      --warn-soft: #3a2816;
+      --shadow: 0 10px 40px rgba(0, 0, 0, .45);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1117;
+    --slide: #151b24;
+    --ink: #e8edf4;
+    --ink-2: #b3bdcb;
+    --ink-3: #7f8a9b;
+    --line: #2a3340;
+    --card: #1b2330;
+    --accent: #7ea2ff;
+    --accent-soft: #1d2a47;
+    --agent: #b69bff;
+    --agent-soft: #2a2144;
+    --you: #5fd0a8;
+    --you-soft: #16332a;
+    --warn: #f0a55f;
+    --warn-soft: #3a2816;
+    --shadow: 0 10px 40px rgba(0, 0, 0, .45);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  code { font-family: "Cascadia Code", Consolas, "SF Mono", Menlo, monospace; font-size: .92em;
+         background: var(--card); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; }
+
+  /* ---------- stage: fixed 1280×720 slides, scaled to fit ---------- */
+  .stage { position: fixed; inset: 0; display: grid; place-items: center; }
+  .deck { width: 1280px; height: 720px; position: relative; transform-origin: center center; }
+  .slide {
+    position: absolute; inset: 0;
+    background: var(--slide);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    padding: 44px 56px 40px;
+    display: flex; flex-direction: column;
+    opacity: 0; visibility: hidden; transition: opacity .25s ease;
+  }
+  .slide.active { opacity: 1; visibility: visible; }
+
+  .eyebrow { font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+  h1 { font-size: 34px; line-height: 1.15; font-weight: 700; margin-top: 6px; letter-spacing: -.01em; }
+  .lede { font-size: 17px; color: var(--ink-2); margin-top: 8px; max-width: 960px; line-height: 1.45; }
+  .foot { margin-top: auto; display: flex; justify-content: space-between; align-items: center;
+          font-size: 12.5px; color: var(--ink-3); padding-top: 14px; }
+
+  /* ---------- slide 1: today ---------- */
+  .flow { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; margin-top: 32px; }
+  .step { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 13px 12px;
+          display: flex; flex-direction: column; position: relative; min-height: 290px; }
+  .step:not(:last-child)::after { content: "›"; position: absolute; right: -10px; top: 18px; font-size: 20px;
+          color: var(--ink-3); width: 10px; text-align: center; }
+  .num { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 13px;
+         font-weight: 700; background: var(--ink); color: var(--slide); }
+  .step h3 { font-size: 16.5px; margin-top: 10px; line-height: 1.25; }
+  .step p { font-size: 14px; color: var(--ink-2); margin-top: 6px; line-height: 1.42; }
+  .tag { margin-top: auto; align-self: flex-start; font-size: 11.5px; font-weight: 600; padding: 3px 8px;
+         border-radius: 999px; background: var(--warn-soft); color: var(--warn); }
+  .costs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 30px; }
+  .cost { border-left: 3px solid var(--warn); padding: 4px 0 4px 14px; }
+  .cost b { display: block; font-size: 16px; }
+  .cost span { font-size: 14px; color: var(--ink-2); line-height: 1.4; }
+
+  /* ---------- slide 2: with the harness ---------- */
+  .lanes { margin-top: 20px; display: grid; grid-template-columns: 92px repeat(6, 1fr); gap: 8px; }
+  .colhead { font-size: 13.5px; font-weight: 700; padding: 0 2px 2px; display: flex; gap: 7px; align-items: center; }
+  .colhead .num { width: 22px; height: 22px; font-size: 12px; flex: none; }
+  .lane-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+                display: flex; align-items: center; justify-content: flex-end; text-align: right; padding-right: 4px; }
+  .lane-label.agent { color: var(--agent); }
+  .lane-label.you { color: var(--you); }
+  .cell { border-radius: 9px; padding: 10px 11px; font-size: 12.8px; line-height: 1.4; color: var(--ink); }
+  .cell.agent { background: var(--agent-soft); border: 1px solid color-mix(in srgb, var(--agent) 30%, transparent); min-height: 172px; }
+  .cell.you { background: var(--you-soft); border: 1px solid color-mix(in srgb, var(--you) 30%, transparent); min-height: 104px; }
+  .who { display: block; font-size: 11.5px; font-weight: 700; margin-bottom: 4px; font-family: "Cascadia Code", Consolas, monospace; }
+  .cell.agent .who { color: var(--agent); }
+  .cell.you .who { color: var(--you); }
+  .thread { margin-top: 18px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+            background: var(--accent-soft); border-radius: 10px; padding: 11px 16px; font-size: 14px; }
+  .thread b { color: var(--accent); }
+  .chip { background: var(--slide); border: 1px solid var(--line); border-radius: 6px; padding: 3px 9px; font-weight: 600; font-size: 13px; }
+  .arrow { color: var(--ink-3); }
+
+  /* ---------- slide 3: what changes ---------- */
+  .cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 24px; }
+  .col { border-radius: 12px; padding: 18px 20px; border: 1px solid var(--line); background: var(--card); }
+  .col h2 { font-size: 17px; display: flex; align-items: center; gap: 9px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+  .col ul { list-style: none; margin-top: 12px; display: grid; gap: 10px; }
+  .col li { font-size: 14px; line-height: 1.42; color: var(--ink-2); padding-left: 16px; position: relative; }
+  .col li::before { content: ""; position: absolute; left: 0; top: 8px; width: 6px; height: 6px; border-radius: 2px; background: var(--ink-3); }
+  .col li b { color: var(--ink); }
+  .start { margin-top: 18px; display: grid; grid-template-columns: 150px repeat(3, 1fr); gap: 12px; align-items: stretch; }
+  .start-label { font-size: 17px; font-weight: 700; display: flex; align-items: center; }
+  .phase { border: 1px dashed var(--accent); border-radius: 10px; padding: 11px 14px; background: var(--accent-soft); }
+  .phase b { font-size: 14px; display: block; }
+  .phase span { font-size: 13px; color: var(--ink-2); line-height: 1.4; }
+
+  /* ---------- controls ---------- */
+  .controls { position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px;
+              align-items: center; background: var(--slide); border: 1px solid var(--line); border-radius: 999px;
+              padding: 5px 8px; box-shadow: var(--shadow); z-index: 5; }
+  .controls button { background: none; border: 0; color: var(--ink); font: inherit; font-size: 15px; cursor: pointer;
+                     width: 32px; height: 28px; border-radius: 999px; }
+  .controls button:hover { background: var(--card); }
+  .pips { display: flex; gap: 6px; padding: 0 4px; }
+  .controls .pip { width: 9px; height: 9px; border-radius: 50%; background: var(--line); border: 0; cursor: pointer; padding: 0; }
+  .controls .pip:hover { background: var(--ink-3); }
+  .controls .pip.on { background: var(--accent); }
+  .hint { font-size: 12px; color: var(--ink-3); padding: 0 6px 0 2px; }
+
+  @media print {
+    @page { size: 1280px 720px; margin: 0; }
+    body { overflow: visible; background: #fff; }
+    .stage { position: static; display: block; }
+    .deck { transform: none !important; width: 1280px; height: auto; }
+    .slide { position: relative; opacity: 1; visibility: visible; width: 1280px; height: 720px;
+             border-radius: 0; box-shadow: none; page-break-after: always; break-after: page; }
+    .controls { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="deck" id="deck">
+
+    <!-- ===================== 1. TODAY ===================== -->
+    <section class="slide active" aria-label="Slide 1: how we test today">
+      <p class="eyebrow">1 · How we test today</p>
+      <h1>One story, tested by hand, start to finish</h1>
+      <p class="lede">Every step below is done by a person, and most of them are repeated every release. The work
+      is careful. The trouble is that it doesn't scale, and a lot of what we know stays in our heads.</p>
+
+      <div class="flow">
+        <div class="step"><span class="num">1</span><h3>Read the story</h3>
+          <p>Open the ticket, read the acceptance criteria, chase the analyst about anything unclear.</p>
+          <span class="tag">by hand</span></div>
+        <div class="step"><span class="num">2</span><h3>Write test cases</h3>
+          <p>Type them into a spreadsheet or test tool. How much gets covered depends on who wrote them.</p>
+          <span class="tag">varies by person</span></div>
+        <div class="step"><span class="num">3</span><h3>Execute</h3>
+          <p>Click through every case in the browser, for each role, and note pass or fail.</p>
+          <span class="tag">by hand</span></div>
+        <div class="step"><span class="num">4</span><h3>Log the bug</h3>
+          <p>Reproduce it, take screenshots, and write the steps, expected and actual results into the tracker.</p>
+          <span class="tag">by hand</span></div>
+        <div class="step"><span class="num">5</span><h3>Retest</h3>
+          <p>When the fix lands, run the case again by hand, then close the ticket.</p>
+          <span class="tag">by hand</span></div>
+        <div class="step"><span class="num">6</span><h3>Regression</h3>
+          <p>Before each release, re-run the old cases to make sure nothing else broke.</p>
+          <span class="tag">every release</span></div>
+        <div class="step"><span class="num">7</span><h3>Report</h3>
+          <p>Count passes, failures and open bugs across sheets and tickets for sign-off.</p>
+          <span class="tag">compiled by hand</span></div>
+      </div>
+
+      <div class="costs">
+        <div class="cost"><b>Regression grows, the time for it doesn't</b>
+          <span>Each release adds cases to re-run. Something has to give, and it's usually coverage.</span></div>
+        <div class="cost"><b>Traceability lives in people's heads</b>
+          <span>Which test covers which acceptance criterion, and which bug came from which test, is rarely written down.</span></div>
+        <div class="cost"><b>Knowledge leaves with people</b>
+          <span>How the app works, which role can do what, where the tricky data is: none of it is recorded anywhere.</span></div>
+      </div>
+
+      <div class="foot"><span>QA Harness · introduction</span><span>1 / 3</span></div>
+    </section>
+
+    <!-- ===================== 2. WITH THE HARNESS ===================== -->
+    <section class="slide" aria-label="Slide 2: how we test with the harness">
+      <p class="eyebrow">2 · How we'll test with the harness</p>
+      <h1>Same steps. Agents do the legwork, you make the calls</h1>
+      <p class="lede">Five AI agents on top of a Playwright test suite. Each one stops and asks at the points that
+      need judgment, and none of them files a bug or saves a plan without you.</p>
+
+      <div class="lanes">
+        <div></div>
+        <div class="colhead"><span class="num">1</span>Read &amp; plan</div>
+        <div class="colhead"><span class="num">2</span>Automate</div>
+        <div class="colhead"><span class="num">3</span>Run</div>
+        <div class="colhead"><span class="num">4</span>Triage failures</div>
+        <div class="colhead"><span class="num">5</span>Log &amp; retest</div>
+        <div class="colhead"><span class="num">6</span>Report</div>
+
+        <div class="lane-label agent">Agent<br>does</div>
+        <div class="cell agent"><span class="who">/test-planner</span>Fetches the story from Jira by its key, reads it with
+          our app notes, flags gaps in the acceptance criteria, designs cases with standard techniques (boundaries, roles, errors). Each case gets an
+          ID linked to its criterion, e.g. <code>PROJ-123-TC001</code>.</div>
+        <div class="cell agent"><span class="who">/test-generator</span>Performs every step in a <b>real browser</b>
+          first, then writes the Playwright test from what actually happened, not from guesses.</div>
+        <div class="cell agent"><span class="who">test suite</span>Checks the environment is up, then runs every test,
+          across browsers and roles. Regression is one command.</div>
+        <div class="cell agent"><span class="who">/test-healer</span>Fixes broken tests (selectors, timing) in up to 3
+          tries. If the <b>app</b> is wrong rather than the test, it says so and explains why.</div>
+        <div class="cell agent"><span class="who">/defect-raiser</span>Creates the bug in Jira, with steps, expected vs
+          actual and test ID, linked to the story, after checking it isn't already filed. Parks the test until the
+          fix lands; the healer retests it.</div>
+        <div class="cell agent"><span class="who">report:cycle</span>Builds the closure report: pass rates by priority,
+          criteria coverage, open bugs, and whether each exit criterion was met.</div>
+
+        <div class="lane-label you">You<br>do</div>
+        <div class="cell you"><span class="who">you</span>Give it the story's <b>Jira key</b> and confirm what it fetched
+          is complete. Approve the plan at each checkpoint.</div>
+        <div class="cell you"><span class="who">you</span>Confirm where the test goes and any new page it needs. Run the
+          manual-only cases.</div>
+        <div class="cell you"><span class="who">you</span><code>npm test</code>, or <code>npm run test:regression</code>
+          before a release.</div>
+        <div class="cell you"><span class="who">you</span>Confirm whether it's a real bug. Nothing is filed on the
+          agent's word alone.</div>
+        <div class="cell you"><span class="who">you</span>Approve the batch before anything is created in Jira. Ask for
+          a retest when it's fixed.</div>
+        <div class="cell you"><span class="who">you</span>Read the numbers and make the sign-off call.</div>
+      </div>
+
+      <div class="thread">
+        <b>Traceable end to end:</b>
+        <span class="chip">Acceptance criterion</span><span class="arrow">→</span>
+        <span class="chip">Test case ID</span><span class="arrow">→</span>
+        <span class="chip">Automated test</span><span class="arrow">→</span>
+        <span class="chip">Result</span><span class="arrow">→</span>
+        <span class="chip">Bug</span>
+        <span style="color:var(--ink-2)">— every failure leads back to the requirement it breaks.</span>
+      </div>
+
+      <div class="foot"><span>Agents shown without their <code>playwright-</code> prefix</span><span>2 / 3</span></div>
+    </section>
+
+    <!-- ===================== 3. WHAT CHANGES ===================== -->
+    <section class="slide" aria-label="Slide 3: what changes for you">
+      <p class="eyebrow">3 · What this means for us</p>
+      <h1>Less repetition, and the judgment stays ours</h1>
+      <p class="lede">The harness takes over the repetitive parts: writing up cases, clicking through regression,
+      formatting bug reports, counting results. Deciding what matters stays with us.</p>
+
+      <div class="cols">
+        <div class="col">
+          <h2><span class="dot" style="background:var(--accent)"></span>Gets easier</h2>
+          <ul>
+            <li><b>Regression is a command</b>, not a week. Every automated case runs, every release.</li>
+            <li><b>Bug reports arrive complete</b>: steps, expected vs actual, test ID, story key.</li>
+            <li><b>Traceability is automatic.</b> A CI check fails any story test that is missing its case ID.</li>
+            <li><b>Knowledge is written down.</b> Modules, roles, permissions and data are recorded once and kept current.</li>
+          </ul>
+        </div>
+        <div class="col">
+          <h2><span class="dot" style="background:var(--you)"></span>Stays with us</h2>
+          <ul>
+            <li><b>Approving every plan.</b> The planner stops and asks at seven checkpoints.</li>
+            <li><b>Confirming every bug.</b> Agents never raise one on their own.</li>
+            <li><b>Exploratory and manual-only testing.</b> Results still get recorded, per case ID.</li>
+            <li><b>Reviewing agent output</b> the way we'd review a colleague's, and <b>the sign-off call</b>.</li>
+          </ul>
+        </div>
+        <div class="col">
+          <h2><span class="dot" style="background:var(--warn)"></span>Ground rules</h2>
+          <ul>
+            <li><b>Every story needs its Jira key.</b> If it's missing, the planner stops and asks.</li>
+            <li><b>Read-only.</b> Agents never submit forms or change data in the app or database.</li>
+            <li><b>QA environment only</b>, with dedicated test accounts, never production.</li>
+            <li><b>Agents never see a password.</b> They start already logged in, and every Jira write asks first.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="start">
+        <div class="start-label">How we start</div>
+        <div class="phase"><b>1 · Set up once</b>
+          <span>The QA lead connects the harness to our app. An agent walks the app and drafts what it finds, and we correct it.</span></div>
+        <div class="phase"><b>2 · Pilot one story</b>
+          <span>One real story, end to end. It's a new tool, so this is where we find what needs adjusting.</span></div>
+        <div class="phase"><b>3 · Roll out</b>
+          <span>Story by story. Existing manual cases carry on alongside, and move over as they're automated.</span></div>
+      </div>
+
+      <div class="foot"><span>Full details: the harness handbook, <code>npm run docs</code></span><span>3 / 3</span></div>
+    </section>
+
+  </div>
+</div>
+
+<nav class="controls" aria-label="Slide controls">
+  <button id="prev" aria-label="Previous slide">‹</button>
+  <div class="pips" id="pips"></div>
+  <button id="next" aria-label="Next slide">›</button>
+  <span class="hint">← → · F full screen</span>
+</nav>
+
+<script>
+  (function () {
+    var deck = document.getElementById('deck');
+    var slides = Array.prototype.slice.call(deck.querySelectorAll('.slide'));
+    var pips = document.getElementById('pips');
+    var current = 0;
+
+    slides.forEach(function (_, i) {
+      var b = document.createElement('button');
+      b.className = 'pip';
+      b.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+      b.addEventListener('click', function () { go(i); });
+      pips.appendChild(b);
+    });
+
+    function go(i) {
+      current = Math.max(0, Math.min(slides.length - 1, i));
+      slides.forEach(function (s, k) { s.classList.toggle('active', k === current); });
+      Array.prototype.forEach.call(pips.children, function (p, k) { p.classList.toggle('on', k === current); });
+      try { history.replaceState(null, '', '#' + (current + 1)); } catch (e) { /* file:// may refuse */ }
+    }
+
+    function fit() {
+      var s = Math.max(0.2, Math.min(window.innerWidth / 1320, (window.innerHeight - 56) / 760));
+      deck.style.transform = 'scale(' + s + ')';
+    }
+
+    document.getElementById('prev').addEventListener('click', function () { go(current - 1); });
+    document.getElementById('next').addEventListener('click', function () { go(current + 1); });
+    document.addEventListener('keydown', function (e) {
+      if (['ArrowRight', 'PageDown', ' ', 'Enter'].indexOf(e.key) >= 0) { e.preventDefault(); go(current + 1); }
+      else if (['ArrowLeft', 'PageUp', 'Backspace'].indexOf(e.key) >= 0) { e.preventDefault(); go(current - 1); }
+      else if (e.key === 'Home') go(0);
+      else if (e.key === 'End') go(slides.length - 1);
+      else if (e.key === 'f' || e.key === 'F') {
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
+        else document.exitFullscreen && document.exitFullscreen();
+      }
+    });
+    window.addEventListener('resize', fit);
+
+    var start = parseInt((location.hash || '').slice(1), 10);
+    fit();
+    go(isNaN(start) ? 0 : start - 1);
+  })();
+</script>
+</body>
+</html>

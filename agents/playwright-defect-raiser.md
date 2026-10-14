@@ -139,7 +139,8 @@ Key principles:
   resolve it manually — do not guess which test it meant.
 - Re-run safety: if a CSV row already exists for an entry's `id`, or the tracker already has its issue,
   skip re-filing and re-fixme'ing it; just ensure its log status is `"raised"` and its `trackerKey` is set.
-- Never edit, move, comment on or delete an existing tracker issue. You create bugs; people manage them.
+- Never edit, move, comment on or delete an existing tracker issue. You create bugs; the healer reports
+  retest results on them, and people manage them.
 - Ask nothing in CSV mode, and only the one batch confirmation in tracker mode — this agent works over
   already-confirmed entries. If something is ambiguous or missing, stop that one entry and report it
   rather than guessing silently.

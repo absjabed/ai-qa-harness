@@ -104,6 +104,14 @@ to tracker columns. Replace the examples with your own quality plan's wording; k
 | P3 | Medium | Minor |
 | P4 | Low | Low |
 
+**Tracker workflow after a retest** — the status the healer offers to move a bug to once its retest is in.
+It always asks first; leave a row blank and it only comments.
+
+| Retest result | Move the bug to |
+|---|---|
+| Passed twice — fix confirmed | `<e.g. Done / Verified / Closed>` |
+| Still failing | `<e.g. Reopened / In Progress>` |
+
 ## 8. Test file layout
 
 | What | Path convention |

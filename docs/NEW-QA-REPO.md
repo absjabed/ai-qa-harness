@@ -336,7 +336,7 @@ Yes — tests are **written as code from the test cases**, and Playwright runs t
 ```
 Jira story ──▶ planner ──▶ test cases (TCIDs) ──▶ generator ──▶ Playwright code ──▶ npm run regression / npx playwright test
                specs/<KEY>.plan.md                drives each case in the     tests/stories/<release>/<KEY>.spec.ts
-                                                  real browser first
+                                                  real browser first          checked against the plan by the reviewer
 ```
 
 Only cases marked **Automated** in the plan become code; **Manual** cases are run by a person and their results

@@ -333,10 +333,12 @@ it is a reference, not coverage.
 
 1. Paste a story — **with its issue key** — into a conversation and run `/playwright-test-planner`. Work
    through its checkpoints; it will ask about scope, the invariants, and scenario titles before writing
-   anything, and it will stop and ask if the key is missing.
+   anything, and it will stop and ask if the key is missing. Before saving it offers an independent review
+   of the plan against the story — say yes for a large or rule-heavy story.
 2. Review `specs/<KEY>.plan.md`.
 3. Run `/playwright-test-generator` against it. It drives the real browser first, then asks you to confirm
-   the target file path, then writes the spec plus any page objects it needed.
+   the target file path, then writes the spec plus any page objects it needed — and has
+   `playwright-test-reviewer` check every test against the plan before it finishes.
 4. Run the suite. If something fails, `/playwright-test-healer <KEY>`. The results are recorded in
    `specs/execution/automated-results.csv`, and the cycle report for the stories that ran is written as soon
    as the run ends, in `reports/`.

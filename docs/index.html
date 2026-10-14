@@ -630,7 +630,7 @@ td code { white-space: nowrap; }
       <ol class="pipeline">
         <li class="pipe-step"><span class="pipe-n">00</span><b>context-builder</b><span class="desc">Learns the application once, so the rest have something to work from.</span></li>
         <li class="pipe-step"><span class="pipe-n">01</span><b>planner</b><span class="desc">A story — fetched by its key, or pasted — becomes a reviewed plan + CSV.</span></li>
-        <li class="pipe-step"><span class="pipe-n">02</span><b>generator</b><span class="desc">Drives the real browser, then writes the spec and any page objects.</span></li>
+        <li class="pipe-step"><span class="pipe-n">02</span><b>generator</b><span class="desc">Drives the real browser, then writes the spec and any page objects — and has each test reviewed.</span></li>
         <li class="pipe-step"><span class="pipe-n">03</span><b>reviewer</b><span class="desc">Checks every spec against its plan — and the plan against the ticket, when you agree — in a fresh context.</span></li>
         <li class="pipe-step"><span class="pipe-n">04</span><b>healer</b><span class="desc">Fixes failures — never by changing what a test expects on its own — or confirms a genuine bug with you.</span></li>
         <li class="pipe-step"><span class="pipe-n">05</span><b>defect-raiser</b><span class="desc">Files the bug — in the tracker, or as a CSV row — and marks the test <code>fixme</code>.</span></li>
@@ -965,7 +965,7 @@ npx playwright install</code></pre></div></li>
       <h3>6 · Where everything is kept</h3>
       <p>Yes — tests are <b>written as code from the test cases</b>, and Playwright runs that code: a Jira story
       → the planner's test cases → the generator drives each case in the real browser, then writes the code →
-      Playwright runs it. Only <em>Automated</em> cases become code; <em>Manual</em> ones are run by a person and
+      the reviewer checks each test against its plan → Playwright runs it. Only <em>Automated</em> cases become code; <em>Manual</em> ones are run by a person and
       their results recorded. Everything is files in the QA repo, reviewed and committed like any code.</p>
       <div class="table-wrap">
         <table>
@@ -1688,7 +1688,7 @@ Run it? [Y/n]: y</code></pre>
         application. It clicks through each step of the approved plan in a real browser to find out how the
         page really behaves, then writes that up in your suite's conventions — reusing existing page objects
         where they fit and building new ones where they don't. It will not write a line for a step it never
-        performed.</p>
+        performed, and before it finishes an independent reviewer checks every test against the plan.</p>
 
         <h4>The loop, per step</h4>
         <ol>

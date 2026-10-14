@@ -227,10 +227,17 @@ The sections that matter most:
 
 Then check `config/projectProfile.ts` matches sections 1, 2, 5 and 10.
 
-## 5. Point the two shipped page objects at the real application
+## 5. Point the shipped page objects at the real application
 
-`pages/LoginPage.ts` and `pages/DashboardPage.ts` ship wired into the fixtures and the login helper, with
-`CHANGE_ME` selectors. Replace those selectors with the real ones.
+`pages/LoginPage.ts`, `pages/DashboardPage.ts` and `pages/common/Logout.ts` ship wired into the fixtures and
+the login helper, with `CHANGE_ME` selectors. Replace those selectors with the real ones — the context-builder
+offers to. Two need care:
+
+- **`DashboardPage.signedInMarker`** is what proves a login worked. Point it at something only a signed-in
+  user sees — the account menu, a Sign out button. Never a generic heading: the login screen has one too, and
+  a wrong password would pass.
+- **`Logout.signOutButton`** — tests that switch roles sign out between them. Set `profileMenu` too if the
+  Sign out control sits inside a menu.
 
 Prefer role- and label-based locators (`getByRole`, `getByLabel`) over XPath where the application gives
 you the choice — they survive markup changes that a positional XPath does not.

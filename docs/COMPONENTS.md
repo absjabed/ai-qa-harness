@@ -594,7 +594,8 @@ creep in.
 started, so a test reaching its first real step knows it is genuinely authenticated. Called from
 `test.beforeEach`, never inline.
 
-`Logout.ts` is the shared chrome widget. Widgets reachable from every page (nav bar, search box, toast
+`Logout.ts` is the shared chrome widget — `logout()` opens the profile menu only if the Sign out control is
+not already on screen, so it works with a menu or a plain button; tests that switch roles use it. Widgets reachable from every page (nav bar, search box, toast
 container) live in `common/`; screen-specific page objects live in `pages/`.
 
 ---

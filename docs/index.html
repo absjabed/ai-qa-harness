@@ -634,6 +634,7 @@ td code { white-space: nowrap; }
         <li class="pipe-step"><span class="pipe-n">03</span><b>reviewer</b><span class="desc">Checks every spec against its plan — and the plan against the ticket, when you agree — in a fresh context.</span></li>
         <li class="pipe-step"><span class="pipe-n">04</span><b>healer</b><span class="desc">Fixes failures — never by changing what a test expects on its own — or confirms a genuine bug with you.</span></li>
         <li class="pipe-step"><span class="pipe-n">05</span><b>defect-raiser</b><span class="desc">Files the bug — in the tracker, or as a CSV row — and marks the test <code>fixme</code>.</span></li>
+        <li class="pipe-step"><span class="pipe-n">06</span><b>harness-improver</b><span class="desc">When the harness does not fit, changes it in the right place and records why.</span></li>
       </ol>
 
       <h3>What makes this different from asking an LLM to write tests</h3>
@@ -950,7 +951,7 @@ npx playwright install</code></pre></div></li>
         <table>
           <thead><tr><th>Step</th><th>What it does</th></tr></thead>
           <tbody>
-            <tr><td><b>0 · Preflight</b></td><td>Shows the roles and asks if they are right; if not, sets them up with you and tells you the <code>.env</code> names to fill. Then runs every role's login file and reports per role — passed, or what to fix; offers to fill the login selectors if they are the cause. Says which Jira connection it found and fetches your known story.</td></tr>
+            <tr><td><b>0 · Preflight</b></td><td>Shows the roles and asks if they are right; if not, sets them up with you and tells you the <code>.env</code> names to fill. Then runs every role's login file and reports per role — passed, or what to fix; offers to fill the login, signed-in and sign-out selectors if they are the cause. Says which Jira connection it found and fetches your known story.</td></tr>
             <tr><td><b>1 · Inventory</b></td><td>Asks, by name, which sources exist and which it can reach — including specs, business rules, existing test cases, bug history and Jira.</td></tr>
             <tr><td><b>2 · Roam</b></td><td><b>Signed out</b>, the login screen, password reset and any public pages. Then <b>as each role</b> — starting already signed in, from that role's login file — page to page through the application: menus and areas, each screen it can reach, what the role can do there, what is missing compared with the full-access role, and the click path to each area.</td></tr>
             <tr><td><b>3 · Read</b></td><td>What you brought — specs and business rules, existing test cases, bug history, the Jira epics you named, source code, API docs.</td></tr>
@@ -1173,9 +1174,13 @@ cp .mcp.json.example .mcp.json</code></pre>
         <li class="step">
           <span class="step-n">5</span>
           <div class="step-body">
-            <h3>Point the two shipped page objects at the real app</h3>
-            <p><code>pages/LoginPage.ts</code> and <code>pages/DashboardPage.ts</code> ship wired into the
-            fixtures and the login helper, with <code>CHANGE_ME</code> selectors. Replace them. Prefer
+            <h3>Point the shipped page objects at the real app</h3>
+            <p><code>pages/LoginPage.ts</code>, <code>pages/DashboardPage.ts</code> and
+            <code>pages/common/Logout.ts</code> ship wired into the fixtures and the login helper, with
+            <code>CHANGE_ME</code> selectors. Replace them — the context-builder offers to. Point
+            <code>DashboardPage.signedInMarker</code> at something only a signed-in user sees, never a generic
+            heading, or a wrong password passes; and set the Sign out control, which tests that switch roles
+            use. Prefer
             <code>getByRole</code> / <code>getByLabel</code> over XPath where the app gives you the
             choice — they survive markup changes a positional XPath doesn't.</p>
             <pre><code>npx playwright test tests/seeds/
@@ -1522,6 +1527,7 @@ Run it? [Y/n]: y</code></pre>
               <tr><td>Project setup — once</td><td><code>/playwright-context-builder</code></td></tr>
               <tr><td>Every story or testing task</td><td>planner (plan review, if you agree) → generator (test review, always) → run the suite → healer, if something fails → defect-raiser</td></tr>
               <tr><td>Occasionally, when knowledge goes stale</td><td><code>/playwright-context-builder</code> again — usually for one area</td></tr>
+              <tr><td>When the harness does not do what you need</td><td><code>/playwright-harness-improver</code> — with one real case</td></tr>
             </tbody>
           </table>
         </div>
@@ -2169,8 +2175,10 @@ Run it? [Y/n]: y</code></pre>
         always asking first.</li>
         <li><b>Attachments where the tools cannot upload.</b> The defect-raiser attaches screenshots only if the
         Jira tools offer an upload; otherwise it tells you which files to attach by hand.</li>
-        <li><b>Real-world proof.</b> None of this has yet run end to end against a live application — the
-        reviewer included.</li>
+        <li><b>Real-world proof.</b> A practice run against a small local demo app has exercised the scripts end
+        to end — logins, a run, the results record, defect evidence, regression, retest and the closure report —
+        and the gaps it found are fixed. No agent has yet been run, and nothing has run against a real
+        application.</li>
       </ul>
     </section>
 
@@ -2733,6 +2741,16 @@ Run it? [Y/n]: y</code></pre>
               <td>A story is missing from the release you picked</td>
               <td>Its plan has no <code>**Release:**</code> yet, so it is listed under <em>no release</em></td>
               <td>Run it with <code>--release none</code>, or add the Release line to its plan — the planner takes it from Jira's fix version when connected — and move its spec into that release's folder.</td>
+            </tr>
+            <tr>
+              <td><code>Not signed in: the element only a signed-in user sees (DashboardPage.signedInMarker) did not appear</code></td>
+              <td>The login failed — wrong or locked account — or <code>signedInMarker</code> is still <code>CHANGE_ME</code></td>
+              <td>Check the screenshot under <code>test-results/</code>: still on the login screen means the account; signed in means point <code>signedInMarker</code> at the account menu or Sign out button.</td>
+            </tr>
+            <tr>
+              <td>A test passes alone and fails when run with others, or in a second browser</td>
+              <td>Another test left data behind — an open record that blocks this one</td>
+              <td>Reset before each test — <code>resetTestData()</code> in a <code>beforeEach</code> — or give each test its own records (workflow 10). <code>npm run regression</code> runs every browser project unless you pass <code>--browser</code>.</td>
             </tr>
             <tr>
               <td>The cycle report counts a pass from an earlier cycle</td>

@@ -6,8 +6,10 @@ End-to-end recipes. Each starts from a real situation and runs to a finished res
 
 ## 1. First story on a freshly configured harness
 
-**Before you start:** `npx playwright test tests/example.spec.ts` passes. If it doesn't, finish
-[SETUP.md](../SETUP.md) — everything here assumes login and the dashboard are wired.
+**Before you start:** `npx playwright test tests/seeds/` and
+`npx playwright test tests/example.spec.ts --grep "@Priority1"` pass. If they don't, finish
+[SETUP.md](../SETUP.md) — everything here assumes every role can log in. (The example's other tests wait on
+`CHANGE_ME` test data, and the database one skips when database validation is out of scope.)
 
 ### Step 1 — Plan
 

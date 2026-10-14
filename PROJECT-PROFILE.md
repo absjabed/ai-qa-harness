@@ -108,7 +108,7 @@ to tracker columns. Replace the examples with your own quality plan's wording; k
 
 | What | Path convention |
 |---|---|
-| Story-wise specs | `tests/stories/<release>/<STORY-KEY>.spec.ts` |
+| Story-wise specs | `tests/stories/<release>/<STORY-KEY>.spec.ts` — the client release the story ships in. No release yet: `tests/stories/<EPIC-KEY>/<STORY-KEY>.spec.ts`, or `tests/stories/<STORY-KEY>.spec.ts` with no epic either |
 | Module-wise specs | `tests/<module>.spec.ts` |
 | Test plans | `specs/<STORY-KEY>.plan.md` + `specs/<STORY-KEY>.plan.csv` |
 | Page objects | `pages/<Name>Page.ts`, shared widgets in `pages/common/` |

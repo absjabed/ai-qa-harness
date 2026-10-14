@@ -176,9 +176,9 @@ will:
 ### Before you run it
 
 Work through the checklist in [docs/NEW-QA-REPO.md](docs/NEW-QA-REPO.md) section 4 — what must be done,
-what is worth having, and what to decide. In short: the environment reachable; `.env` with the base URL and
-one dedicated QA test account per role; the role keys in `config/projectProfile.ts` and section 2 of the
-profile; one login file per role in `tests/seeds/`; the project's existing documents exported into
+what is worth having, and what to decide. In short: the environment reachable; `.env` with the base URL; your
+dedicated QA test accounts to hand; the roles — keys, one login file each, a credential pair each — set up
+yourself, or by the context-builder with you as its first step; the project's existing documents exported into
 `context/sources/`; `.mcp.json` with the Playwright server connected; and someone available to answer its
 checkpoints. The login selectors in `pages/LoginPage.ts` and `pages/DashboardPage.ts` can wait — its first
 step offers to fill them.

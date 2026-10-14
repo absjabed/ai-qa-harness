@@ -122,11 +122,22 @@ Also put the same project key's ticket format into `PROJECT-PROFILE.md` section 
 `ACME-1234`), and tighten `storyKeyPattern` in `config/projectProfile.ts` to it — `/^ACME-\d+$/` — so a
 mistyped key is caught.
 
-### 2b. Role keys
+### 2b. Role keys — or let the context-builder set them up
+
+**The context-builder can do 2b and 2c for you.** Its first step shows the roles it finds, asks which kinds
+of user your application really has, and — once you agree — writes the role keys, creates one login file per
+role, and tells you the exact `.env` names to fill in. To do it yourself instead, read on.
 
 A **role key** is a short name you choose for each *kind* of user that logs in — one per distinct set of
 permissions your tests need, not one per person. Write it in camelCase: letters and digits, starting with a
-lowercase letter, no spaces — `admin`, `caseWorker`, `readOnlyUser`.
+lowercase letter, no spaces. For example:
+
+| Application | Role keys |
+|---|---|
+| An HR system | `admin`, `hrManager`, `employee` |
+| An online store | `storeAdmin`, `warehouseStaff`, `customer` |
+| A case-management system | `supervisor`, `caseWorker`, `auditor` (read-only) |
+| A banking back office | `opsAdmin`, `teller`, `branchManager`, `complianceViewer` |
 
 The same key appears in four places. For roles `admin` and `caseWorker`:
 
@@ -142,7 +153,17 @@ Remove the example roles you do not have — from all four places.
 ### 2c. One login file per role
 
 Each file in `tests/seeds/` logs in as one role. Agents start from it whenever they need to be signed in, so
-they never handle a password. Three ship, for the example roles `admin`, `standardUser` and `readOnlyUser`.
+they never handle a password. Three ship, for the example roles `admin`, `standardUser` and `readOnlyUser`;
+each opens with these instructions and examples.
+
+For an online store with roles `storeAdmin`, `warehouseStaff` and `customer`, the folder ends up as:
+
+```
+tests/seeds/
+  storeAdmin.spec.ts        test('start as storeAdmin', …  testUsers.storeAdmin
+  warehouseStaff.spec.ts    test('start as warehouseStaff', …  testUsers.warehouseStaff
+  customer.spec.ts          test('start as customer', …  testUsers.customer
+```
 
 For each real role:
 
@@ -206,13 +227,15 @@ what exists before it runs:
 | **Functional specifications, business-rule documents** — Confluence or wiki pages, Word or PDF specs | export into `context/sources/` | rules in each area's `context/<area>.md`, citing document and section |
 | **Existing test cases** — spreadsheets, test-tool exports, an older suite | export as CSV into `context/sources/` | an *Existing coverage* summary per area, which the planner builds on |
 | **Known defects** — a bug list, problem areas | export into `context/sources/` | *Caveats* per area — where plans should push hardest |
-| **Jira tickets** — the epics and stories of recent releases | nothing to export: with Jira connected, tell it which epics, releases or JQL to digest | rules per area, each citing its issue key; the digested scope listed in `context/BASELINE.md` |
+| **Jira tickets** — the epics and stories of recent releases | **connected:** tell it which epics, releases or JQL to digest. **Not connected:** in Jira, run a filter or search for them, then *Export* → CSV with the description and acceptance-criteria columns, into `context/sources/` | rules per area, each citing its issue key; the digested scope listed in `context/BASELINE.md` |
 | **User guides, release notes, a glossary** | export into `context/sources/` | the vocabulary in `context/BASELINE.md`, and behavior to confirm |
 | **Application source, API docs, schema scripts** | give it the local path | validation rules, states, endpoints |
 
 **Formats:** Markdown, text, CSV and PDF read best — save a Word document as PDF and a spreadsheet as CSV.
-`context/sources/` is gitignored by default, since raw documents can be large or confidential; what is
-committed is the distilled `context/*.md`. Never put credentials, personal data or production extracts there.
+`context/sources/` is **committed** with the QA repo, so the whole team works from the same documents and every
+rule can be re-checked against its source. Never put credentials, personal data or production extracts there;
+a document too large or too confidential to commit can stay outside the repo — give the context-builder its
+path instead.
 
 **It distils, it does not copy.** No ticket text pasted, no whole documents — each rule it keeps cites where it
 came from. Where a document and the running application disagree, it records the difference as a *known
@@ -227,10 +250,10 @@ unknown* for someone to settle, rather than picking one. It only ever reads Jira
 - [ ] Harness copied in; `npm install` and `npx playwright install` run
 - [ ] The QA environment opens in a browser from this machine — VPN on if needed — and is not mid-deploy
 - [ ] `.env` has `APP_NAME`, `TRACKER_PROJECT_KEY` (your Jira project key, e.g. `ACME`) and `BASE_URL` (2a)
-- [ ] Role keys chosen, and the same in `config/projectProfile.ts`, `PROJECT-PROFILE.md` section 2 and the
-      `.env` names, with the baseline role named (2b)
-- [ ] One credential pair per role in `.env` — **dedicated QA test accounts**
-- [ ] One login file per role in `tests/seeds/`, unused ones deleted (2c)
+- [ ] Your QA test accounts to hand — one per kind of user, **dedicated QA accounts**, never a person's own
+- [ ] Roles: either set up yourself (2b, 2c) — keys in `config/projectProfile.ts` and `PROJECT-PROFILE.md`
+      section 2, one login file each, one credential pair each in `.env` — or left for the context-builder,
+      which sets them up with you first and then tells you the `.env` names to fill
 - [ ] `.mcp.json` created; Claude Code opened in the new repo; `/mcp` shows `playwright-test` connected (2e)
 - [ ] `npm run check` passes
 
@@ -239,8 +262,8 @@ The login selectors (2d) can stay `CHANGE_ME` — the context-builder offers to 
 **Worth having** — each one widens what it can learn; none is required:
 
 - [ ] Existing documents exported into `context/sources/` — specs, business rules, test cases, bug lists (3)
-- [ ] Jira connected and signed in, **one story key you know exists** to test it, and which epics or
-      releases to digest (3)
+- [ ] Jira: connected and signed in, **one story key you know exists** to test it, and which epics or
+      releases to digest — or, not connected, those issues exported as CSV into `context/sources/` (3)
 - [ ] A read-only QA database account, in `.mcp.json`
 - [ ] Local paths to the application source, OpenAPI/Swagger file, schema scripts, integration contracts
 - [ ] Who to ask about which area
@@ -263,7 +286,7 @@ Walking the application page by page is the **main part** of its job. In order:
 
 | Step | What it does | You |
 |---|---|---|
-| **0. Preflight** | Runs every role's login file and reports per role: passed, or what to fix — a variable missing from `.env`, a selector still `CHANGE_ME`, an account rejected. If the selectors are the cause, it offers to fill them (2d). Says which Jira connection it found, and fetches your known story to prove it works. | fix what it reports; agree to its edits |
+| **0. Preflight** | Shows the roles and asks if they are right; if not, sets them up with you — keys, login files — and tells you the `.env` names to fill (2b, 2c). Then runs every role's login file and reports per role: passed, or what to fix — a variable missing from `.env`, a selector still `CHANGE_ME`, an account rejected. If the selectors are the cause, it offers to fill them (2d). Says which Jira connection it found, and fetches your known story to prove it works. | name the roles; fill `.env`; agree to its edits |
 | **1. Inventory** | Asks, by name, which sources exist and which it can reach — the app, database, source code, API docs, specs and business rules, existing test cases, bug history, Jira, user guides, people. Checks it can read each one. | answer; correct |
 | **2. Roam** | **Signed out**, it looks at the login screen, password reset and any public pages. Then **as each role** — starting from that role's login file, so it begins already signed in — it clicks through the application page to page: the menus and top-level areas, each screen it can reach, what that role can do there, what is missing or disabled compared with the full-access role, and the click path to every area. It records the labels the UI uses. | confirm the module map and the role differences |
 | **3. Read** | Reads what you brought (section 3): specs and business rules, existing test cases, bug history, the Jira epics you named, user guides, source code, API docs. | name what to digest |
@@ -302,9 +325,9 @@ recorded. Everything is files in the new QA repo, reviewed and committed like an
 | What | Produced by | Kept in | Committed? |
 |---|---|---|---|
 | What the harness knows about the app | context-builder | `context/BASELINE.md`, `context/<area>.md`, `PROJECT-PROFILE.md` §2–4, `specs/UserFlowsUserRolePermissions/`, `specs/RegressionTags/` | yes |
-| The documents it read | you | `context/sources/` | no, by default |
+| The documents it read | you | `context/sources/` | yes |
 | Test cases for a story — TCIDs, steps, expected results | planner | `specs/<STORY-KEY>.plan.md` and `.plan.csv` | yes |
-| **Test code** — one test per automated test case | generator | `tests/stories/<release>/<STORY-KEY>.spec.ts` | yes |
+| **Test code** — one test per automated test case | generator | `tests/stories/<release>/<STORY-KEY>.spec.ts` — see below for a story with no release yet | yes |
 | Page objects — how tests talk to each screen | generator, or you | `pages/<Name>Page.ts` | yes |
 | Fixtures — wiring page objects into tests | generator | `lib/BaseTest.ts` | yes |
 | Test data and database queries | you, when an agent asks for them | `data/testData.ts`, `data/sql_queries.ts` | yes |
@@ -314,8 +337,18 @@ recorded. Everything is files in the new QA repo, reviewed and committed like an
 | Confirmed defects, before and after filing | healer, defect-raiser | `specs/temp-defects/defect-log.json` — on the machine that ran it | no |
 | Bugs to import, when Jira is not connected | defect-raiser | `specs/defects.csv` | yes |
 
-`<release>` is the client release the story ships in — the plan's *Release* — so each release's tests sit in
-their own folder, and `npm run regression` runs them by release, epic or ticket.
+**Which folder the test code goes in.** The generator proposes the path and asks you to confirm it before
+writing anything:
+
+| The plan has | Folder |
+|---|---|
+| a release — the client release the story ships in, from Jira's fix version or asked by the planner | `tests/stories/2.26/ACME-1234.spec.ts` |
+| no release yet, but an epic — it asks once whether a release is known | `tests/stories/ACME-100/ACME-1234.spec.ts` |
+| neither | `tests/stories/ACME-1234.spec.ts` |
+
+`npm run regression` asks which release to run before running anything; stories with no release yet are listed
+as *no release* (`--release none`). When a story gets its release later, the plan gains a *Release* line and the
+file moves to that release's folder.
 
 ---
 

@@ -103,10 +103,17 @@ if (conflicts.length) {
 
 // ---------------------------------------------------------------- copy
 
+// Text files are written with LF line endings — what the repository stores — so the copy's first `git add`
+// is not a wall of "CRLF will be replaced by LF" warnings from a Windows checkout of the template.
+const BINARY = /\.(png|jpe?g|gif|ico|pdf|woff2?|ttf|zip)$/i;
 for (const f of toCopy) {
     const dest = path.join(target, f);
     fs.mkdirSync(path.dirname(dest), { recursive: true });
-    fs.copyFileSync(path.join(root, f), dest);
+    if (BINARY.test(f)) {
+        fs.copyFileSync(path.join(root, f), dest);
+    } else {
+        fs.writeFileSync(dest, fs.readFileSync(path.join(root, f), 'utf8').replace(/\r\n/g, '\n'));
+    }
 }
 
 // package.json — the project's own name, and no export script (a copy has nothing to export). Its version

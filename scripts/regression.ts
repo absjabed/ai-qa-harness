@@ -13,6 +13,7 @@
  *   npm run regression -- --release 2.26 --stories PROJ-12,PROJ-15
  *   npm run regression -- --release 2.26 --all-tests             not only tests tagged @Regression
  *   npm run regression -- --release 2.26 --browser chromium      one Playwright project (browser)
+ *   npm run regression -- --release none                         tickets with no release yet
  *
  * `--release` and the other list flags take comma-separated values and can be repeated. `--yes` skips the
  * final confirmation.
@@ -22,7 +23,7 @@ import 'dotenv/config';
 import readline from 'readline/promises';
 import { spawnSync } from 'child_process';
 import { buildCycleReport, plansWithRelease } from './lib/cycle';
-import { rel, releaseOfSpec, ROOT, storyKeyOf, storySpecFiles, type Plan } from './lib/trace';
+import { NO_RELEASE, rel, releaseOfSpec, ROOT, storyKeyOf, storySpecFiles, type Plan } from './lib/trace';
 
 const args = process.argv.slice(2);
 const values = (flag: string) =>
@@ -68,8 +69,8 @@ function collectTickets(): Ticket[] {
     for (const key of keys) {
         const plan = plans.get(key);
         const spec = specs.get(key) ?? null;
-        const release = plan?.release ?? (spec ? releaseOfSpec(spec) : null);
-        if (!release) continue;
+        // No release yet is a release of its own for selection: listed last, chosen with `--release none`.
+        const release = plan?.release ?? (spec ? releaseOfSpec(spec) : null) ?? NO_RELEASE;
         const active = plan?.cases.filter((c) => !c.retired) ?? [];
         tickets.push({
             key,
@@ -86,11 +87,12 @@ function collectTickets(): Ticket[] {
 
 async function main(): Promise<void> {
     const tickets = collectTickets();
-    const releases = [...new Set(tickets.map((t) => t.release))].sort(compareReleases);
+    const named = [...new Set(tickets.map((t) => t.release).filter((r) => r !== NO_RELEASE))].sort(compareReleases);
+    const releases = tickets.some((t) => t.release === NO_RELEASE) ? [...named, NO_RELEASE] : named;
     if (releases.length === 0) {
-        fail('no releases found. A ticket belongs to a release through `**Release:**` in its plan, or a spec at\n' +
-            'tests/stories/<release>/<STORY-KEY>.spec.ts.');
+        fail('no tickets found. A ticket comes from a plan in specs/ or a spec under tests/stories/.');
     }
+    const shown = (r: string) => (r === NO_RELEASE ? 'no release yet' : r);
 
     const rl = interactive ? readline.createInterface({ input: process.stdin, output: process.stdout }) : null;
     const ask = async (q: string, fallback = '') => (rl ? ((await rl.question(q)).trim() || fallback) : fallback);
@@ -107,9 +109,10 @@ async function main(): Promise<void> {
         if (unknown.length) fail(`no tickets in release ${unknown.join(', ')}. Known releases: ${releases.join(', ')}.`);
     } else if (rl) {
         console.log('\nReleases:');
-        releases.forEach((r, i) => console.log(`  ${i + 1}. ${r}  (${tickets.filter((t) => t.release === r).length} tickets)`));
-        const picked = await pickNumbers(`Which release? Numbers, comma-separated [${releases.length} = ${releases[releases.length - 1]}]: `, releases.length);
-        chosenReleases = picked.length ? picked.map((i) => releases[i]) : [releases[releases.length - 1]];
+        releases.forEach((r, i) => console.log(`  ${i + 1}. ${shown(r)}  (${tickets.filter((t) => t.release === r).length} tickets)`));
+        const latest = named.length ? named[named.length - 1] : releases[0];
+        const picked = await pickNumbers(`Which release? Numbers, comma-separated [${shown(latest)}]: `, releases.length);
+        chosenReleases = picked.length ? picked.map((i) => releases[i]) : [latest];
     } else {
         fail(`not a terminal, so pass the release: --release <one of ${releases.join(', ')}>.`);
     }
@@ -123,7 +126,7 @@ async function main(): Promise<void> {
     if (byStories.length) pool = pool.filter((t) => byStories.includes(t.key));
 
     if (!byEpics.length && !byStories.length && rl) {
-        console.log(`\nTickets in release ${chosenReleases.join(', ')}:`);
+        console.log(`\nTickets in ${chosenReleases.map(shown).join(', ')}:`);
         pool.forEach((t, i) =>
             console.log(`  ${i + 1}. ${t.key}  ${t.title}${t.epic ? `  [epic ${t.epic}]` : ''}  — ${t.automated} automated, ${t.manual} manual${t.spec ? '' : ', no spec yet'}`)
         );
@@ -151,7 +154,7 @@ async function main(): Promise<void> {
     const noSpec = pool.filter((t) => !t.spec);
     const project = option('--browser');
 
-    const label = `release ${chosenReleases.join(', ')}` + (pool.length < tickets.filter((t) => chosenReleases.includes(t.release)).length ? ` — ${pool.length} ticket${pool.length === 1 ? '' : 's'}` : '');
+    const label = chosenReleases.map((r) => (r === NO_RELEASE ? 'no release' : `release ${r}`)).join(', ') + (pool.length < tickets.filter((t) => chosenReleases.includes(t.release)).length ? ` — ${pool.length} ticket${pool.length === 1 ? '' : 's'}` : '');
 
     console.log(`\nRegression: ${label}`);
     console.log(`  tickets   ${pool.map((t) => t.key).join(', ')}`);

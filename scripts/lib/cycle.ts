@@ -23,7 +23,7 @@ import fs from 'fs';
 import path from 'path';
 import { execFileSync } from 'child_process';
 import { projectProfile } from '../../config/projectProfile';
-import { parsePlan, Plan, PlannedCase, planFiles, releaseOfSpec, ROOT, storyKeyOf, storySpecFiles, TCID_PREFIX } from './trace';
+import { NO_RELEASE, parsePlan, Plan, PlannedCase, planFiles, releaseOfSpec, ROOT, storyKeyOf, storySpecFiles, TCID_PREFIX } from './trace';
 
 export type Outcome = 'Passed' | 'Failed' | 'Flaky' | 'Blocked' | 'Skipped' | 'Not Run';
 
@@ -64,7 +64,7 @@ export function plansWithRelease(): Plan[] {
 
 function scopeLabel(scope: CycleScope, plans: Plan[]): string {
     if (scope.label) return scope.label;
-    if (scope.releases?.length) return `release ${scope.releases.join(', ')}`;
+    if (scope.releases?.length) return scope.releases.map((r) => (r === NO_RELEASE ? 'no release' : `release ${r}`)).join(', ');
     if (scope.stories?.length) return plans.length === 1 ? plans[0].storyKey : `${plans.length} stories`;
     return 'all stories';
 }
@@ -149,7 +149,7 @@ export function buildCycleReport(scope: CycleScope = {}): CycleResult {
 
     // ---- scope
     let plans = plansWithRelease();
-    if (scope.releases?.length) plans = plans.filter((p) => p.release && scope.releases!.includes(p.release));
+    if (scope.releases?.length) plans = plans.filter((p) => scope.releases!.includes(p.release ?? NO_RELEASE));
     if (scope.stories?.length) plans = plans.filter((p) => scope.stories!.includes(p.storyKey));
     const inScope = new Set(plans.map((p) => p.storyKey));
     const label = scopeLabel(scope, plans);

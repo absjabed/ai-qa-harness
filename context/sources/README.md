@@ -6,6 +6,8 @@ Drop exported project documents here before running `/playwright-context-builder
 - existing test cases — spreadsheets, test-management exports
 - bug lists and defect history
 - user guides, release notes, a glossary of business terms
+- Jira issues, when Jira is not connected — a filter or search, then *Export* → CSV, with the description and
+  acceptance-criteria columns
 
 **Formats:** Markdown, text, CSV and PDF read best. Export a Word document as PDF, and a spreadsheet as CSV —
 one file per sheet that matters.
@@ -15,6 +17,7 @@ one file per sheet that matters.
 *Caveats* — each citing the file and section it came from. These originals are not what the other agents
 read.
 
-**Not committed by default.** Everything here except this file is gitignored: raw documents can be large or
-confidential. If your team wants them versioned, remove the `context/sources/` lines from `.gitignore`.
-Never put credentials, personal data or production extracts here.
+**Committed with the QA repo**, so the whole team works from the same documents and a context document can be
+re-checked against its source. Never put credentials, personal data or production extracts here — and if a
+document is too large or too confidential to commit, keep it outside the repo and give the context-builder
+its path instead.

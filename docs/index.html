@@ -807,10 +807,16 @@ npx playwright install</code></pre></div></li>
       <p>Also write the ticket format into profile section 1 (<code>ACME-1234</code>) and tighten
       <code>storyKeyPattern</code> in <code>config/projectProfile.ts</code> to <code>/^ACME-\d+$/</code>.</p>
 
-      <h4>2b · Role keys</h4>
+      <h4>2b · Role keys — or let the context-builder set them up</h4>
+      <p><b>The context-builder can do 2b and 2c for you:</b> its first step shows the roles it finds, asks which
+      kinds of user your application really has, and once you agree writes the keys, creates a login file per
+      role and tells you the <code>.env</code> names to fill. To do it yourself:</p>
       <p>A <b>role key</b> is a short name you choose for each <em>kind</em> of user that logs in — one per
-      distinct set of permissions, not one per person — in camelCase: <code>admin</code>,
-      <code>caseWorker</code>, <code>readOnlyUser</code>. The same key goes in four places:</p>
+      distinct set of permissions, not one per person — in camelCase. For example: an HR system
+      <code>admin</code>, <code>hrManager</code>, <code>employee</code>; an online store
+      <code>storeAdmin</code>, <code>warehouseStaff</code>, <code>customer</code>; a case system
+      <code>supervisor</code>, <code>caseWorker</code>, <code>auditor</code>. The same key goes in four
+      places:</p>
       <div class="table-wrap">
         <table>
           <thead><tr><th>Where</th><th>For roles <code>admin</code> and <code>caseWorker</code></th></tr></thead>
@@ -824,8 +830,11 @@ npx playwright install</code></pre></div></li>
       </div>
 
       <h4>2c · One login file per role</h4>
-      <p>Copy <code>tests/seeds/admin.spec.ts</code> to <code>tests/seeds/&lt;role key&gt;.spec.ts</code> and
-      change the role in the test title and the credential:</p>
+      <p>For an online store, the folder ends up as <code>tests/seeds/storeAdmin.spec.ts</code>,
+      <code>warehouseStaff.spec.ts</code> and <code>customer.spec.ts</code>. Each shipped login file opens with
+      these instructions and examples. Copy <code>tests/seeds/admin.spec.ts</code> to
+      <code>tests/seeds/&lt;role key&gt;.spec.ts</code> and change the role in the test title and the
+      credential:</p>
       <pre><code>test('start as caseWorker', async ({ loginPage, dashboardPage }) =&gt; {
     await userLogin(loginPage, dashboardPage, testUsers.caseWorker);
 });</code></pre>
@@ -861,16 +870,17 @@ npx playwright install</code></pre></div></li>
             <tr><td><b>Functional specs, business-rule documents</b></td><td>export into <code>context/sources/</code></td><td>rules per area in <code>context/&lt;area&gt;.md</code>, citing document and section</td></tr>
             <tr><td><b>Existing test cases</b></td><td>export as CSV into <code>context/sources/</code></td><td>an <em>Existing coverage</em> summary per area, which the planner builds on</td></tr>
             <tr><td><b>Known defects, bug history</b></td><td>export into <code>context/sources/</code></td><td><em>Caveats</em> per area — where plans should push hardest</td></tr>
-            <tr><td><b>Jira tickets</b></td><td>with Jira connected, name the epics, releases or JQL to digest</td><td>rules per area, each citing its issue key; the scope listed in the baseline</td></tr>
+            <tr><td><b>Jira tickets</b></td><td><b>connected:</b> name the epics, releases or JQL to digest. <b>Not connected:</b> export them from a Jira filter or search as CSV, with the description and acceptance-criteria columns, into <code>context/sources/</code></td><td>rules per area, each citing its issue key; the scope listed in the baseline</td></tr>
             <tr><td><b>User guides, release notes, glossary</b></td><td>export into <code>context/sources/</code></td><td>the vocabulary, and behavior to confirm</td></tr>
             <tr><td><b>Source code, API docs, schema scripts</b></td><td>give it the local path</td><td>validation rules, states, endpoints</td></tr>
           </tbody>
         </table>
       </div>
-      <p>Markdown, text, CSV and PDF read best. <code>context/sources/</code> is gitignored by default — what
-      is committed is the distilled <code>context/*.md</code>. It distils rather than copies, cites every rule's
-      source, records any disagreement between a document and the application as a known unknown, and only
-      ever reads Jira.</p>
+      <p>Markdown, text, CSV and PDF read best. <code>context/sources/</code> is <b>committed</b> with the QA
+      repo, so the team works from the same documents and every rule can be checked against its source — never
+      put credentials, personal data or production extracts there. It distils rather than copies, cites every
+      rule's source, records any disagreement between a document and the application as a known unknown, and
+      only ever reads Jira.</p>
 
       <h3>4 · Checklist before <code>/playwright-context-builder</code></h3>
       <h4>Must be done</h4>
@@ -879,10 +889,10 @@ npx playwright install</code></pre></div></li>
         <li>The QA environment opens in a browser from this machine — VPN on if needed — and is not mid-deploy</li>
         <li><code>.env</code> has <code>APP_NAME</code>, <code>TRACKER_PROJECT_KEY</code> (your Jira project key)
         and <code>BASE_URL</code></li>
-        <li>Role keys chosen, the same in <code>config/projectProfile.ts</code>, profile section 2 and the
-        <code>.env</code> names; baseline role named</li>
-        <li>One credential pair per role in <code>.env</code> — dedicated QA test accounts</li>
-        <li>One login file per role in <code>tests/seeds/</code>; unused ones deleted</li>
+        <li>Your QA test accounts to hand — one per kind of user, dedicated QA accounts only</li>
+        <li>Roles: set up yourself (2b, 2c) — keys, one login file each, one credential pair each in
+        <code>.env</code> — or left for the context-builder, which sets them up with you first and tells you the
+        <code>.env</code> names to fill</li>
         <li><code>.mcp.json</code> created; Claude Code opened in the new repo; <code>/mcp</code> shows
         <code>playwright-test</code> connected</li>
         <li><code>npm run check</code> passes</li>
@@ -891,7 +901,8 @@ npx playwright install</code></pre></div></li>
       <h4>Worth having</h4>
       <ul class="checklist">
         <li>Existing documents in <code>context/sources/</code> — specs, business rules, test cases, bug lists</li>
-        <li>Jira connected and signed in, one story key you know exists, and which epics or releases to digest</li>
+        <li>Jira: connected and signed in, one story key you know exists, and which epics or releases to digest
+        — or, not connected, those issues exported as CSV into <code>context/sources/</code></li>
         <li>A read-only QA database account, in <code>.mcp.json</code></li>
         <li>Local paths to the source, OpenAPI/Swagger, schema scripts, contracts</li>
         <li>Who to ask about which area</li>
@@ -910,7 +921,7 @@ npx playwright install</code></pre></div></li>
         <table>
           <thead><tr><th>Step</th><th>What it does</th></tr></thead>
           <tbody>
-            <tr><td><b>0 · Preflight</b></td><td>Runs every role's login file and reports per role — passed, or what to fix; offers to fill the login selectors if they are the cause. Says which Jira connection it found and fetches your known story.</td></tr>
+            <tr><td><b>0 · Preflight</b></td><td>Shows the roles and asks if they are right; if not, sets them up with you and tells you the <code>.env</code> names to fill. Then runs every role's login file and reports per role — passed, or what to fix; offers to fill the login selectors if they are the cause. Says which Jira connection it found and fetches your known story.</td></tr>
             <tr><td><b>1 · Inventory</b></td><td>Asks, by name, which sources exist and which it can reach — including specs, business rules, existing test cases, bug history and Jira.</td></tr>
             <tr><td><b>2 · Roam</b></td><td><b>Signed out</b>, the login screen, password reset and any public pages. Then <b>as each role</b> — starting already signed in, from that role's login file — page to page through the application: menus and areas, each screen it can reach, what the role can do there, what is missing compared with the full-access role, and the click path to each area.</td></tr>
             <tr><td><b>3 · Read</b></td><td>What you brought — specs and business rules, existing test cases, bug history, the Jira epics you named, source code, API docs.</td></tr>
@@ -936,7 +947,7 @@ npx playwright install</code></pre></div></li>
           <thead><tr><th>What</th><th>Produced by</th><th>Kept in</th><th>Committed</th></tr></thead>
           <tbody>
             <tr><td>What the harness knows about the app</td><td>context-builder</td><td><code>context/</code>, profile §2–4, <code>specs/UserFlowsUserRolePermissions/</code>, <code>specs/RegressionTags/</code></td><td>yes</td></tr>
-            <tr><td>The documents it read</td><td>you</td><td><code>context/sources/</code></td><td>no, by default</td></tr>
+            <tr><td>The documents it read</td><td>you</td><td><code>context/sources/</code></td><td>yes</td></tr>
             <tr><td>Test cases for a story</td><td>planner</td><td><code>specs/&lt;STORY-KEY&gt;.plan.md</code>, <code>.plan.csv</code></td><td>yes</td></tr>
             <tr><td><b>Test code</b> — one test per automated case</td><td>generator</td><td><code>tests/stories/&lt;release&gt;/&lt;STORY-KEY&gt;.spec.ts</code></td><td>yes</td></tr>
             <tr><td>Page objects</td><td>generator, or you</td><td><code>pages/&lt;Name&gt;Page.ts</code></td><td>yes</td></tr>
@@ -950,8 +961,12 @@ npx playwright install</code></pre></div></li>
           </tbody>
         </table>
       </div>
-      <p><code>&lt;release&gt;</code> is the client release the story ships in, so each release's tests sit in
-      their own folder and <code>npm run regression</code> runs them by release, epic or ticket.</p>
+      <p><b>Which folder.</b> The generator proposes the path and has you confirm it before writing: with a
+      release, <code>tests/stories/2.26/ACME-1234.spec.ts</code>; no release yet but an epic — it asks once
+      whether a release is known — <code>tests/stories/ACME-100/ACME-1234.spec.ts</code>; neither,
+      <code>tests/stories/ACME-1234.spec.ts</code>. <code>npm run regression</code> asks which release before
+      running anything, and lists stories without one as <em>no release</em> (<code>--release none</code>).
+      When a story gets its release, the plan gains a Release line and the file moves to that folder.</p>
 
       <h3>7 · Then</h3>
       <p>Review its drafts — setup steps 4, 7 and 8, and the <code>context/&lt;area&gt;.md</code> documents —

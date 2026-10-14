@@ -107,10 +107,21 @@ function storyField(lines: string[], name: string): string | null {
     return value && !value.startsWith('<') ? value : null;
 }
 
-/** Release a story spec lives under — `tests/stories/<release>/<STORY-KEY>.spec.ts` — or null. */
+/** How a story with no release yet is listed and selected: `npm run regression -- --release none`. */
+export const NO_RELEASE = 'none';
+
+/** Shaped like an issue key — `PROJ-100` — and so a folder named for an epic or story, not a release. */
+const ISSUE_KEY = /^[A-Z][A-Z0-9]+-\d+$/;
+
+/**
+ * Release a story spec lives under — `tests/stories/<release>/<STORY-KEY>.spec.ts` — or null. A story with
+ * no release yet lives under its epic's key (`tests/stories/<EPIC-KEY>/`) or directly in `tests/stories/`;
+ * a folder named like an issue key is an epic, never a release.
+ */
 export function releaseOfSpec(file: string): string | null {
     const parts = rel(file).split('/');
-    return parts[0] === 'tests' && parts[1] === 'stories' && parts.length === 4 ? parts[2] : null;
+    if (parts[0] !== 'tests' || parts[1] !== 'stories' || parts.length !== 4) return null;
+    return ISSUE_KEY.test(parts[2]) ? null : parts[2];
 }
 
 export function parsePlan(file: string): Plan {

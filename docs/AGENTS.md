@@ -67,15 +67,15 @@ cover. Name an area, module or role to run it for that alone. Usually the QA lea
 
 ### Before you run it
 
-- **Must have:** the application reachable from where the agent runs; `BASE_URL` and a credential pair per
-  role in `.env`; the role keys in `config/projectProfile.ts` and PROJECT-PROFILE §2, with the baseline role
-  named; one login seed per role; the Playwright MCP server connected. Its preflight runs the logins itself,
+- **Must have:** the application reachable from where the agent runs; `BASE_URL` in `.env`; your QA test
+  accounts to hand; the Playwright MCP server connected. Roles — keys, one login seed each, a credential pair
+  each — you can set up yourself, or it sets them up with you first and tells you the `.env` names to fill. Its preflight runs the logins itself,
   and offers to fill the login selectors if they are still `CHANGE_ME`.
 - **It never sees a password.** Each seed logs in inside the test runner, and `.claude/settings.json`
   denies agents reading `.env`. Still use dedicated QA test accounts.
 - **Worth gathering:** the project's existing knowledge — functional specs, business-rule documents,
   existing test cases and bug history exported into `context/sources/`, and the Jira epics or releases to
-  digest; a read-only database account; local paths to source, API docs, schema scripts and contracts; who
+  digest (live if connected, or exported as CSV into `context/sources/`); a read-only database account; local paths to source, API docs, schema scripts and contracts; who
   to ask about what.
 - **Decide:** which environment (never production), what it should stay out of, and that you will be there
   to answer its checkpoints.
@@ -119,8 +119,9 @@ Turns a story into a reviewed test plan.
 Run the command with the story's key. With the tracker server wired, the planner fetches the ticket and asks you to confirm it is complete; without one, paste the story into the conversation as text.
 
 Each plan also records the story's **release** — the client release it ships in — and its **epic**, if any:
-from Jira's fix version and parent epic when connected, otherwise asked at the first checkpoint.
-`npm run regression` selects by them. The release is the project's own, never the harness's version.
+from Jira's fix version and parent epic when connected, otherwise asked at the first checkpoint. *No release
+yet* is a valid answer; such stories are listed as *no release* by `npm run regression`. The release is the
+project's own, never the harness's version.
 
 **The story's issue key is mandatory** — the ticket's ID in the tracker, a Jira key for example. Without one
 the planner stops and asks, before doing anything else; with one that doesn't match the format in
@@ -237,8 +238,9 @@ the browser and reading back the log.
 ### Two blocking checkpoints
 
 **Target file path.** It will not assume a path from the scenario name, even when one seems obvious. It
-proposes one from the plan's `**Release:**` and story key — asking for the release only if the plan has none
-— assembles it per PROJECT-PROFILE.md section 8, has you confirm it, and checks the folder exists —
+proposes one from the plan and has you confirm it: `tests/stories/<release>/<STORY-KEY>.spec.ts` when the plan
+has a release; with no release yet, `tests/stories/<EPIC-KEY>/<STORY-KEY>.spec.ts` — after asking once whether
+a release is known — or `tests/stories/<STORY-KEY>.spec.ts` with no epic either. It checks the folder exists —
 `generator_write_test` cannot create parent folders.
 
 **New page objects.** Before implementing, it tells you which page object it's about to touch — "this page

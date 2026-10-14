@@ -47,13 +47,14 @@ Copy `_TEMPLATE.md`. The sections exist because each answers a question an agent
 
 A project rarely starts from nothing. Functional specifications, business-rule documents, earlier test cases,
 bug history, user guides, a glossary — export them and drop them in `context/sources/`, and the
-context-builder reads them there. With Jira connected it can also digest the epics and stories you name.
+context-builder reads them there. Jira tickets are digested either way: live, for the epics and releases you
+name, when Jira is connected; or from a CSV export of them in `context/sources/` when it is not.
 
 What it writes is the distillation, not the documents: each rule into the *Invariants* of its area's context
 document, citing the document and section or the issue key; earlier test cases summarized under *Existing
-coverage*; bug history under *Caveats*. The originals stay in `context/sources/`, which is gitignored by
-default — raw documents can be large or confidential. Remove that line from `.gitignore` if your team wants
-them versioned.
+coverage*; bug history under *Caveats*. The originals stay in `context/sources/` and are committed with the
+QA repo, so a rule can be re-checked against its source. Never commit credentials, personal data or production
+extracts; keep a document too large or too confidential to commit outside the repo, and give its path.
 
 ## Provenance matters
 

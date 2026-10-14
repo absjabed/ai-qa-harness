@@ -98,6 +98,9 @@ narrowed to some of its tickets or epics, so a plan without a release cannot be 
 - **With a tracker connected**, take them from the issue: its fix version is the release, its parent epic
   the epic. Show both at the first checkpoint. Several fix versions → ask which one this plan is for.
 - **Without one**, ask for the release at the first checkpoint, and the epic if there is one.
+- **No release yet** is a valid answer — a story is often planned before it is scheduled. Leave the
+  `**Release:**` line out; regression lists the story as *no release*, and its tests go under its epic's
+  folder. When it gets a release later, add the line on the next revision.
 - The release is the **project's** — the client release, as the team names it. It is never the harness's
   version; never write one where the other belongs.
 

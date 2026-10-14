@@ -10,7 +10,7 @@
 | **File tools needed** | read, search, write, edit |
 | **MCP servers** | `playwright-test` (required) · a read-only database server (optional) · an issue-tracker server (optional — to digest existing tickets) |
 | **Model guidance** | Strongest available, high reasoning effort |
-| **Writes** | `context/BASELINE.md`, `context/<area>.md`, drafts of PROJECT-PROFILE sections 2–4, navigation plans, module tags — and, with the user's agreement, the login selectors in `pages/LoginPage.ts` and `pages/DashboardPage.ts` |
+| **Writes** | `context/BASELINE.md`, `context/<area>.md`, drafts of PROJECT-PROFILE sections 2–4, navigation plans, module tags — and, with the user's agreement, the role setup (`config/projectProfile.ts`, PROJECT-PROFILE section 2, `tests/seeds/`) and the login selectors in `pages/LoginPage.ts` and `pages/DashboardPage.ts` |
 
 See [`agents/README.md`](README.md) to wire this into a tool other than Claude Code.
 
@@ -44,7 +44,22 @@ Never describe a role's permissions from one session as though you had tested al
 Run these checks yourself, before anything else, and report what you found. The user should not have to
 run them and read the output.
 
-1. **Logins.** Run the role seeds — `test_run` on `tests/seeds/`, one test per role. For each role, report
+1. **Roles.** Read the `roles` array in `config/projectProfile.ts` and the role keys in `PROJECT-PROFILE.md`
+   section 2. Show them, and ask whether they are this application's roles — the template ships the example
+   roles `admin`, `standardUser` and `readOnlyUser`, which are rarely right as they stand. If they are not,
+   ask which kinds of user log in — one per distinct set of permissions the tests need, not one per person —
+   and which one has full access. Propose a camelCase key for each (`caseWorker`, `branchManager`), and once
+   the user agrees:
+   - set the `roles` array and `baselineRole` in `config/projectProfile.ts`;
+   - write one row per role in `PROJECT-PROFILE.md` section 2 — the key, and the display name the user gave;
+     the rest of the row you draft later, from what you observe;
+   - create one login file per role in `tests/seeds/` — a copy of an existing one, renamed to the key, with
+     the role changed in its test title and its `testUsers.<key>` — and delete the files for roles that are
+     gone;
+   - list the exact `.env` variable **names** the user must add, one pair per role (`caseWorker` →
+     `CASE_WORKER_EMAIL`, `CASE_WORKER_PASSWORD`), and wait while they fill in the values. Never write the
+     values, never ask for them in the conversation, and never read `.env`.
+2. **Logins.** Run the role seeds — `test_run` on `tests/seeds/`, one test per role. For each role, report
    whether it passed, and for a failure, the cause as the failure shows it:
    - credentials not configured — the error names the `<ROLE>_EMAIL` / `<ROLE>_PASSWORD` variable to set.
      The user sets it; you never read `.env`.
@@ -65,7 +80,7 @@ run them and read the output.
    the page. Then re-run the seeds. If the login now goes through but the logged-in check fails, read that
    failure's page snapshot or screenshot under `test-results/` and propose, the same way, an element in
    `pages/DashboardPage.ts` that only appears once signed in — a heading, the account menu.
-2. **Tracker.** Say which Jira connection is available, if any — the Atlassian plugin's tools, or the
+3. **Tracker.** Say which Jira connection is available, if any — the Atlassian plugin's tools, or the
    `tracker` MCP server's. If one is, ask for one story key the user knows exists and fetch it, to confirm
    the connection really works; record the result in the inventory. If both are connected, say so: every
    Jira tool then appears twice, and the team should keep one.
@@ -83,7 +98,8 @@ exists and whether you can reach it. Ask about every one by name — teams forge
 - **functional specifications and business-rule documents** — Confluence or wiki pages, Word or PDF specs
 - **existing test cases** — spreadsheets, test-management exports, earlier manual or automated suites
 - **known defects and their history** — a bug list, recurring problem areas
-- **Jira** — the epics and stories of recent releases, if the tracker is connected, to digest
+- **Jira** — the epics and stories of recent releases to digest: read live if the tracker is connected, or
+  from a CSV export in `context/sources/` if it is not
 - user guides, release notes, training material, and any glossary of business terms
 - who to ask about what
 
@@ -146,8 +162,10 @@ For each source the inventory confirmed:
   work instead of rediscovering it — and never copies a case without checking it against the story.
 - **Known defects** — the areas that break most, and how. Note them under the area's *Caveats*; they are
   where a test plan should push hardest.
-- **Jira** — with the tracker connected, ask which epics, releases or JQL to digest; do not read a whole
-  project unasked. Read the issues only — never edit, comment or move them. Distil the business rules and
+- **Jira** — two ways, digested the same way. *Connected:* ask which epics, releases or JQL to digest; do
+  not read a whole project unasked. *Not connected:* the user exports the issues — a Jira filter or search,
+  then *Export* → CSV, with the description and acceptance-criteria columns — into `context/sources/`, and
+  you read that file. Either way, read the issues only — never edit, comment or move them. Distil the business rules and
   acceptance criteria that still hold into the areas' *Invariants*, each citing its issue key, and list in
   `context/BASELINE.md` exactly what was digested. A rule that a later ticket changed is recorded as changed,
   with both keys.

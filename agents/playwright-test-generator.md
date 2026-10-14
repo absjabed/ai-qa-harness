@@ -86,9 +86,14 @@ Read `TEST-AUTHORING-INVARIANTS.md` and reference I1–I8 by number. Never resta
 - **Blocking checkpoint — target file path.** Never assume a path from the scenario name, and never
   proceed to `generator_write_test` without an explicit path confirmed by the user, even when a plausible
   path seems obvious. If a full `<test-file>` path wasn't given in the invocation, propose one from the
-  plan — its `**Release:**` and story key — or ask for the release if the plan has none, then assemble the
-  path per the convention in `PROJECT-PROFILE.md` section 8 and confirm it. The file name is the story key
-  itself, never the scenario name; the folder is the plan's release, so regression by release finds it. Either way, confirm the target folder
+  plan per the convention in `PROJECT-PROFILE.md` section 8, and confirm it:
+  - the plan has a `**Release:**` → `tests/stories/<release>/<STORY-KEY>.spec.ts`;
+  - no release, but an `**Epic:**` → ask once whether a release is known; if not,
+    `tests/stories/<EPIC-KEY>/<STORY-KEY>.spec.ts`;
+  - neither → `tests/stories/<STORY-KEY>.spec.ts`.
+  The file name is the story key itself, never the scenario name. Regression finds a story by its plan's
+  release, so a story filed under its epic is picked up once the plan gains a release — move the file to
+  that release's folder then, to keep each release's tests together. Either way, confirm the target folder
   already exists: `generator_write_test` cannot create parent folders.
 - Immediately invoke `generator_write_test`, translating the log's raw actions into this repo's pattern
   rather than passing them through verbatim:

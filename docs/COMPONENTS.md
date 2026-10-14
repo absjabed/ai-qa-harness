@@ -53,8 +53,8 @@ inventory — sources, modules, roles, vocabulary, data layer, and a known-unkno
 `<area>.md` documents carry per-area business rules, states and transitions, recipes and verification
 queries — and an *Existing coverage* summary of earlier test cases. `_TEMPLATE.md` is the shape;
 `README.md` is the convention. `sources/` is where the team drops existing documents for the
-context-builder to read — specs, business rules, test cases, bug lists; gitignored by default, since what is
-committed is the distillation.
+context-builder to read — specs, business rules, test cases, bug lists, and Jira issues exported as CSV when
+Jira is not connected. Committed with the QA repo, so every rule can be checked against its source.
 
 **Why it exists** The harness is a separate repository from the application, so it has no sight of your
 source, schema or API. This is the only durable channel for that knowledge.
@@ -159,8 +159,10 @@ selection, runs it, and the cycle report for exactly that selection is written a
 
 **Where releases and epics come from** Each plan's `**Release:**` and `**Epic:**` — filled by the planner,
 from Jira's fix version and parent epic when the tracker is connected. A story with no `**Release:**` falls
-back to the folder its spec lives in, `tests/stories/<release>/`. These are the project's own releases; the
-harness's version never appears in them.
+back to the folder its spec lives in, `tests/stories/<release>/`; one with neither is listed as *no release*
+(`--release none`) — its spec sits under its epic's key or directly in `tests/stories/`, and a folder named
+like an issue key is never read as a release. These are the project's own releases; the harness's version
+never appears in them.
 
 **Without a terminal** Pass the answers as flags — `--release`, `--epics`, `--stories`, `--all-tests`,
 `--browser`, `--yes`. An agent asks you in the conversation, then runs it that way.

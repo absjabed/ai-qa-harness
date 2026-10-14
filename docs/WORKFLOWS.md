@@ -45,8 +45,8 @@ listed there is something the generator will have to build. If a data key is lis
 ```
 
 Point it at the plan file. It will drive the browser, then stop twice: once to confirm the target file path
-(proposed from the plan's release and story key), once for each new page object it's about to create.
-Answer both.
+(proposed from the plan's release and story key — or, with no release yet, its epic's folder), once for each
+new page object it's about to create. Answer both.
 
 Out: the spec, plus new page object methods and fixtures, implemented and wired.
 
@@ -266,7 +266,8 @@ The STLC's last phase depends on the TCIDs being intact end to end, which is why
    ```
 
    It asks, in turn:
-   - **which release** — every release that has tickets is listed, newest last, the default;
+   - **which release** — every release that has tickets is listed, newest last, the default — plus *no release
+     yet* for stories not scheduled, `--release none` as a flag;
    - **which tickets** — all of them, those in chosen **epics**, or chosen tickets one by one;
    - **only tests tagged `@Regression`?** — yes by default; say no to run every test of those tickets.
 

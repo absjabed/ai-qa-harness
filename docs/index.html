@@ -1083,9 +1083,10 @@ npx playwright test tests/example.spec.ts</code></pre>
 
         <h4>What it needs first</h4>
         <p>The application reachable, a working credential pair per role in <code>.env</code>, the role
-        keys in the profile, a passing login seed per role in <code>tests/seeds/</code>, and the Playwright
-        MCP server connected. Database access and local sources are optional extras. It never logs in by
-        hand: it starts from each role's seed, so it never sees a password. Setup step 3 has the full
+        keys in the profile, a login seed per role in <code>tests/seeds/</code>, and the Playwright MCP
+        server connected. It checks the logins itself before anything else and tells you what to fix, so you
+        need not run them first. Database access, Jira and local sources are optional extras. It never logs
+        in by hand: it starts from each role's seed, so it never sees a password. Setup step 3 has the full
         list.</p>
 
         <h4>When to run it</h4>
@@ -1195,6 +1196,12 @@ npx playwright test tests/example.spec.ts</code></pre>
         seeds a <code>Not Run</code> row in <code>specs/execution/manual-results.csv</code> for each manual
         case, so none is forgotten at closure.</p>
 
+        <h4>Release and epic</h4>
+        <p>Every plan records the client <b>release</b> the story ships in and, if there is one, its
+        <b>epic</b> — the fields <code>npm run regression</code> selects by. With Jira connected it takes them
+        from the ticket's fix version and parent epic; otherwise it asks at the first checkpoint. The release is
+        the project's own, as the team names it — never the harness's version.</p>
+
         <h4>The seven checkpoints</h4>
         <div class="table-wrap">
           <table>
@@ -1272,8 +1279,9 @@ npx playwright test tests/example.spec.ts</code></pre>
 
         <h4>Two blocking checkpoints</h4>
         <p><b>Target file path.</b> It will not assume a path from the scenario name, even when one seems
-        obvious. It asks for release and story key, assembles the path per profile section 8, and confirms
-        the folder exists — <code>generator_write_test</code> can't create parent folders.</p>
+        obvious. It proposes one from the plan's release and story key — asking for the release only if the
+        plan has none — assembles it per profile section 8, and has you confirm it. It checks the folder
+        exists — <code>generator_write_test</code> can't create parent folders.</p>
         <p><b>New page objects.</b> Before implementing it tells you which file it's about to touch and
         waits — "this page already exists, I'm going to implement <code>addRecord</code> on
         <code>RecordListPage.ts</code>".</p>
@@ -1380,9 +1388,14 @@ npx playwright test tests/example.spec.ts</code></pre>
         application.</p>
 
         <h4>Retesting fixed defects</h4>
-        <p>Asked to retest, it switches each <code>test.fixme(</code> back to <code>test(</code> and runs it
-        twice. Passes both → active again, log entry marked <code>verified</code>. Fails either → the
-        <code>fixme</code> is restored exactly and the entry stays <code>raised</code>.</p>
+        <p>Asked to retest, it works out which defects to retest — with Jira connected, the raised bugs Jira
+        shows as done; otherwise the ones you name. It switches each <code>test.fixme(</code> back to
+        <code>test(</code> and runs it twice. Passes both → active again, log entry marked
+        <code>verified</code>. Fails either → the <code>fixme</code> is restored exactly and the entry stays
+        <code>raised</code>.</p>
+        <p>With Jira connected it then offers, asking first, to comment the result on the bug and to move its
+        status. The statuses are your team's own Jira workflow: it lists the transitions that bug offers and
+        applies only the one you pick — never one of its own choosing.</p>
 
         <h4>Defect Confirmation Workflow</h4>
         <p>The single exception to "don't ask questions". It presents the test, the violated expected-result
@@ -1482,9 +1495,9 @@ npx playwright test tests/example.spec.ts</code></pre>
             <tr><td><b>Test planning</b></td><td><code>PROJECT-PROFILE.md</code> section 10 — the test types in scope, and the entry and exit criteria</td><td>A strategy every story's test design serves</td></tr>
             <tr><td><b>Test case design</b></td><td><code>playwright-test-planner</code> — equivalence partitioning, boundary values, decision tables, state transitions, pairwise, error guessing</td><td><code>specs/&lt;KEY&gt;.plan.md</code> and <code>.plan.csv</code>, one TCID per case</td></tr>
             <tr><td><b>Environment setup</b></td><td><code>.env</code>, <code>.mcp.json</code>, and the readiness check in <code>lib/globalSetup.ts</code>; <code>data/seed.ts</code> for a known data state</td><td>An environment verified reachable before any test runs</td></tr>
-            <tr><td><b>Test execution</b></td><td>Playwright, with <code>playwright-test-generator</code> automating each case against the live app and <code>playwright-test-healer</code> triaging failures; manual cases recorded in <code>specs/execution/</code></td><td><code>test-results/results.json</code>, <code>manual-results.csv</code></td></tr>
+            <tr><td><b>Test execution</b></td><td>Playwright, with <code>playwright-test-generator</code> automating each case against the live app and <code>playwright-test-healer</code> triaging failures; regression per client release with <code>npm run regression</code>; manual cases recorded in <code>specs/execution/</code></td><td><code>test-results/results.json</code>, <code>manual-results.csv</code></td></tr>
             <tr><td><b>Defect management</b></td><td>Healer confirms with a person → <code>playwright-defect-raiser</code> files it → the healer retests once fixed</td><td>A bug in the tracker, or <code>specs/defects.csv</code> to import; a defect log with each defect's status</td></tr>
-            <tr><td><b>Cycle closure</b></td><td><code>npm run report:cycle</code></td><td>A summary with pass rates, acceptance-criteria coverage, open defects, and each exit criterion met or not</td></tr>
+            <tr><td><b>Cycle closure</b></td><td>The cycle report — written as every run ends, for what ran; <code>npm run report:cycle</code> rebuilds it by hand</td><td>A summary with pass rates, acceptance-criteria coverage, open defects, and each exit criterion met or not</td></tr>
           </tbody>
         </table>
       </div>
@@ -1581,8 +1594,11 @@ npx playwright test tests/example.spec.ts</code></pre>
         testing through the UI, database and API. Accessibility is covered, optionally, by
         <code>BasePage.expectNoAccessibilityViolations()</code> — automated checks find roughly a third of
         accessibility problems, so a pass means "no obvious barriers", not "accessible".</li>
-        <li><b>Tracker sync.</b> Defects leave as a CSV for import; nothing reads ticket status back. The
-        tracker's key is recorded in the defect log by hand.</li>
+        <li><b>Tracker sync without Jira connected.</b> With Jira connected, stories are fetched, bugs created
+        and their status read back. Without it, defects leave as a CSV for import and the tracker's key is
+        recorded in the defect log by hand. Other trackers need their own MCP server and rule names.</li>
+        <li><b>A pipeline.</b> There is no CI by design: regression runs on QA team members' own machines, and
+        <code>npm run check</code> is run by hand before pushing.</li>
         <li><b>Change-impact analysis.</b> Tags select what to run; nothing maps a code change to the tests it
         affects.</li>
         <li><b>Test data content.</b> The seeding mechanism exists; what to seed is yours to write.</li>
@@ -1693,6 +1709,8 @@ npx playwright test tests/example.spec.ts</code></pre>
         verifies.</div></li>
         <li><div>The tags on the test — <code>@Regression</code>, <code>@Priority1</code>, a module tag —
         decide whether it ran at all under a filtered <code>--grep</code>.</div></li>
+        <li><div>When the run ends, <code>lib/cycleReporter.ts</code> writes the cycle report for the
+        stories that ran — the TCID in each title is how it knows which — to <code>reports/</code>.</div></li>
       </ol>
 
       <div class="note">
@@ -2104,6 +2122,16 @@ npx playwright test tests/example.spec.ts</code></pre>
               <td><code>… contains a term from the originating project</code></td>
               <td>A copy still named <code>ai-qa-harness</code> in <code>package.json</code>, so the template's neutrality check runs against your application's name</td>
               <td>Rename <code>name</code> in <code>package.json</code>. <code>npm run export</code> does this for you.</td>
+            </tr>
+            <tr>
+              <td><code>regression: not a terminal, so pass the release</code></td>
+              <td><code>npm run regression</code> run by an agent or a script, which cannot answer its questions</td>
+              <td>Pass the answers as flags — <code>--release 2.26</code>, optionally <code>--epics</code> / <code>--stories</code>, and <code>--yes</code>.</td>
+            </tr>
+            <tr>
+              <td><code>regression: no releases found</code></td>
+              <td>No plan has a <code>**Release:**</code>, and no spec sits in <code>tests/stories/&lt;release&gt;/</code></td>
+              <td>Fill each plan's Release — the planner asks for it, or takes Jira's fix version.</td>
             </tr>
             <tr>
               <td>A seed in <code>tests/seeds/</code> fails</td>

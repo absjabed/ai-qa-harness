@@ -572,7 +572,7 @@ container) live in `common/`; screen-specific page objects live in `pages/`.
 
 | File | Role |
 |---|---|
-| `specs/TEMPLATES/plan-template.md` | Canonical plan shape, with the field rules spelled out. |
+| `specs/TEMPLATES/plan-template.md` | Canonical plan shape, with the field rules spelled out — including the story's Key, Title, Release and Epic, which regression selects by. |
 | `specs/TEMPLATES/plan-template.csv` | Matching CSV header and two worked rows. |
 | `specs/RegressionTags/regression-tags.md` | Tag registry. The generator looks up a scenario's module here and will not invent a name — it asks, then writes the row itself. Includes a Gotchas section covering false-positive `--grep` matches. |
 | `specs/ScenarioGenerationPatterns/pageWiseAndRoleWiseCoverage.plan.md` | When and how to replicate a scenario set across pages and roles, and which checks are exceptions. The planner reads it at flow analysis. |

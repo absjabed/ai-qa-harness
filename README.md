@@ -86,7 +86,7 @@ application stays in your copy. That is the line that keeps this template reusab
 | Test planning | `PROJECT-PROFILE.md` section 10 — scope, entry and exit criteria |
 | Test case design | `playwright-test-planner` — ISTQB techniques, Given/When/Then, one TCID per case |
 | Environment setup | `.env`, `.mcp.json`, and the readiness check in `lib/globalSetup.ts`; `data/seed.ts` |
-| Execution | Playwright; `playwright-test-generator` automates, `playwright-test-healer` triages; manual results in `specs/execution/` |
+| Execution | Playwright; `playwright-test-generator` automates, `playwright-test-healer` triages; `npm run regression` per client release; manual results in `specs/execution/` |
 | Defect management | healer → defect log → `playwright-defect-raiser` → a bug in the tracker (or a CSV to import); retest confirms the fix |
 | Cycle closure | The cycle report — written after every run, and by `npm run regression` for a release's chosen tickets: metrics, AC coverage and exit criteria |
 

@@ -16,7 +16,8 @@ asks you to confirm what it read is complete. Without one, paste the story into 
 title, description, acceptance criteria as plain text.
 
 **The key is required** — the ticket's issue key, e.g. `PROJ-1234`. Without one the planner stops and asks;
-it is the root of every TCID, test title and defect that follows (I8).
+it is the root of every TCID, test title and defect that follows (I8). It also records the story's client
+release and epic — from Jira's fix version and parent epic, or by asking — which regression selects by.
 
 ```
 /playwright-test-planner
@@ -43,8 +44,9 @@ listed there is something the generator will have to build. If a data key is lis
 /playwright-test-generator
 ```
 
-Point it at the plan file. It will drive the browser, then stop twice: once for the target file path
-(release + story key), once for each new page object it's about to create. Answer both.
+Point it at the plan file. It will drive the browser, then stop twice: once to confirm the target file path
+(proposed from the plan's release and story key), once for each new page object it's about to create.
+Answer both.
 
 Out: the spec, plus new page object methods and fixtures, implemented and wired.
 
@@ -53,6 +55,8 @@ Out: the spec, plus new page object methods and fixtures, implemented and wired.
 ```bash
 npx playwright test "tests/stories/<release>/<KEY>.spec.ts"
 ```
+
+When the run ends, the cycle report for that story is written to `reports/` — no separate step.
 
 ### Step 5 — Heal what fails
 

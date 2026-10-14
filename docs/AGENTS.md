@@ -115,6 +115,10 @@ Turns a story into a reviewed test plan.
 
 Run the command with the story's key. With the tracker server wired, the planner fetches the ticket and asks you to confirm it is complete; without one, paste the story into the conversation as text.
 
+Each plan also records the story's **release** — the client release it ships in — and its **epic**, if any:
+from Jira's fix version and parent epic when connected, otherwise asked at the first checkpoint.
+`npm run regression` selects by them. The release is the project's own, never the harness's version.
+
 **The story's issue key is mandatory** — the ticket's ID in the tracker, a Jira key for example. Without one
 the planner stops and asks, before doing anything else; with one that doesn't match the format in
 `PROJECT-PROFILE.md` section 1, it asks you to confirm. There is no key-less mode, because every TCID,
@@ -230,8 +234,9 @@ the browser and reading back the log.
 ### Two blocking checkpoints
 
 **Target file path.** It will not assume a path from the scenario name, even when one seems obvious. It
-asks for release and story key, assembles the path per PROJECT-PROFILE.md section 8, and confirms the
-folder exists — `generator_write_test` cannot create parent folders.
+proposes one from the plan's `**Release:**` and story key — asking for the release only if the plan has none
+— assembles it per PROJECT-PROFILE.md section 8, has you confirm it, and checks the folder exists —
+`generator_write_test` cannot create parent folders.
 
 **New page objects.** Before implementing, it tells you which page object it's about to touch — "this page
 already exists, I'm going to implement `addRecord` on `RecordListPage.ts`", or "no page object exists for

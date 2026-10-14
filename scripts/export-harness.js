@@ -65,16 +65,18 @@ try {
     fail('run this from a git checkout of the template — it copies tracked files only, and records the commit.');
 }
 
-const dirty = git('status', '--porcelain').length > 0;
+// Changes to tracked files. Untracked files do not count: only tracked files are copied, so they cannot
+// make the recorded commit wrong — they are listed at the end instead.
+const dirty = git('status', '--porcelain', '--untracked-files=no').length > 0;
 if (dirty && !allowDirty) {
     fail('the template has uncommitted changes, so the commit recorded in the copy would not describe what\n' +
         'was copied. Commit or stash them first — or pass --allow-dirty to record the commit as "-dirty".');
 }
 if (dirty) commit += '-dirty';
 
-// Only tracked files are copied. With --allow-dirty, a new file nobody has `git add`ed yet would be left
-// out without a word — say which.
-const untracked = dirty ? git('ls-files', '--others', '--exclude-standard').split('\n').filter(Boolean) : [];
+// Only tracked files are copied, so a new file nobody has committed yet would be left out without a
+// word — say which.
+const untracked = git('ls-files', '--others', '--exclude-standard').split('\n').filter(Boolean);
 
 const templatePkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
 
@@ -207,7 +209,7 @@ export: copied ${toCopy.length} files into ${target}
   check:docs       ${verified ? 'passed in the copy' : 'FAILED in the copy — see above'}
 `);
 if (untracked.length) {
-    console.log(`  note: ${untracked.length} untracked file(s) in the template were NOT copied — git add them first if they belong:`);
+    console.log(`  note: ${untracked.length} untracked file(s) in the template were not copied — commit them first if they belong:`);
     untracked.forEach((f) => console.log(`        ${f}`));
     console.log('');
 }

@@ -48,12 +48,12 @@ version number, marked **Adopt**, **Optional** or **New copies only**.
 
 ## 1.0.0 — pre-release
 
-A Playwright + TypeScript test harness driven by six agents, application-agnostic by construction: every
+A Playwright + TypeScript test harness driven by seven agents, application-agnostic by construction: every
 project-specific value lives in `PROJECT-PROFILE.md`, `.env`, `.mcp.json` and `context/`.
 
 **What it contains**
 
-- **Six agent definitions** in `agents/`, canonical and vendor-neutral. Claude Code wrappers in
+- **Seven agent definitions** in `agents/`, canonical and vendor-neutral. Claude Code wrappers in
   `.claude/commands/` carry no instructions, so they cannot drift. `agents/README.md` covers porting to
   another agentic tool.
   - `playwright-context-builder` — learns the application once at setup, writes the baseline the rest read;
@@ -69,6 +69,10 @@ project-specific value lives in `PROJECT-PROFILE.md`, `.env`, `.mcp.json` and `c
     fixed ones and records the result on the bug
   - `playwright-defect-raiser` — files the confirmed defects you choose, after one confirmation: in the
     tracker, linked to the story with the evidence attached, or as a CSV
+  - `playwright-harness-improver` — adapts a QA repo's harness when it does not behave as the team needs:
+    traces the cause to the right layer, proposes the smallest change, applies it on a yes with the docs
+    that restate it, never lowers a credential or data protection, and records every change in
+    `HARNESS-CHANGES.md` with whether it is worth sending upstream
 - **Eight authoring invariants** (I1–I8) in `TEST-AUTHORING-INVARIANTS.md`, cited by number. I8 is
   traceability: every story carries its issue key, every test case a `<STORY-KEY>-TC<NNN>` ID that starts
   its test's title and travels with any defect. `npm run check:trace` enforces it.
@@ -107,7 +111,7 @@ project-specific value lives in `PROJECT-PROFILE.md`, `.env`, `.mcp.json` and `c
   its guards produce the right messages, and its PostgreSQL path has been tested against a real server —
   but no agent has been observed running end to end, and the Jira integration and permission rules have not
   been exercised against a live Jira site. Treat the first project as the real test of it.
-- Five of the six agents are interactive by design. The suite runs on QA team members' own machines; there
+- Six of the seven agents are interactive by design. The suite runs on QA team members' own machines; there
   is no CI pipeline, and `npm run check` is run by hand before pushing.
 - The documentation restates things the code owns, so it drifts. `npm run check:docs` catches the
   countable cases; the rest is habit.

@@ -398,3 +398,32 @@ Steps:
 
 Small drift does not need the agent. When one test fails because a `context/` document no longer matches
 the application, fix the document in the same change as the test.
+
+---
+
+## 12. When the harness does not do what you need
+
+An agent did something you did not want — marked everything Priority 1, put a spec in the wrong folder, kept
+asking for SQL you do not have — or the harness does not fit how the team works: a field your bugs need, a
+browser you never test on, a CSV your test tool cannot import.
+
+```
+/playwright-harness-improver
+```
+
+1. **Bring one real case** — the plan, spec, report or defect entry, and what you expected instead. It
+   restates the problem; confirm or correct it.
+2. **It finds the cause** and says which file the behavior comes from. Often it is not the agent: a thin
+   severity rubric, a missing context rule or a wrong role description makes a correct agent produce the
+   wrong result, and the fix is the fact.
+3. **It shows the change** — exact text, what else it touches, how to check it — and makes it on your yes,
+   with the docs, then runs `npm run check`.
+4. **Check it** by running the same agent on the same case again. When it behaves, tell the improver, or
+   mark the entry in `HARNESS-CHANGES.md` as `verified`.
+
+Not ready to change anything? Ask it to **note** the problem: it records it with its view of the cause.
+Before a template update, ask it to **summarize**: it lists this repo's changes and which would help other
+projects, ready for the template's maintainers.
+
+Some protections it will not lower — agents never read `.env` or write to the database, and nothing deletes
+Jira issues. Others it changes only when you say so knowingly, and records who agreed.

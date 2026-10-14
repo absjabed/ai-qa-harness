@@ -1,6 +1,6 @@
 # Agent Reference
 
-Six agents, defined in [`agents/`](../agents/) as vendor-neutral markdown and wired into Claude Code by
+Seven agents, defined in [`agents/`](../agents/) as vendor-neutral markdown and wired into Claude Code by
 thin wrappers in `.claude/commands/` — and the reviewer also as a sub-agent in `.claude/agents/`. They form a pipeline but each runs alone.
 
 Not using Claude Code? [`agents/README.md`](../agents/README.md) covers porting — it is a one-line wrapper
@@ -32,7 +32,10 @@ story ──▶ planner ──▶ plan.md + plan.csv ──▶ generator ──�
 generator writes, always; a plan before the planner saves it, when you agree. The healer has its own guard
 on top: it never changes what a test expects without the plan agreeing or you approving.
 
-All six read `PROJECT-PROFILE.md` first. Four of them also read
+**Changing the harness.** When an agent does not behave as the team needs, `playwright-harness-improver`
+finds where the behavior comes from and changes it there — see its section at the end.
+
+All seven read `PROJECT-PROFILE.md` first. Five of them also read
 `TEST-AUTHORING-INVARIANTS.md` and cite invariants by number rather than restating them — one file,
 so a convention has a single place to change.
 
@@ -511,6 +514,48 @@ verifies. An entry that can't be traced to a TCID is left `pending` and reported
 
 It never alters the facts of a defect — summary, steps, actual/expected, evidence, severity all came from
 the human-confirmed healer finding. Its only judgment is a table lookup.
+
+---
+
+## `/playwright-harness-improver`
+
+Adapts this QA repo's harness when it does not behave as the team needs. It changes the harness, never the
+application or the tests' results.
+
+| | |
+|---|---|
+| **Model** | opus |
+| **Tools** | Read/Edit/Write, and `npm run check` |
+| **Input** | One concrete case — what an agent was given, what it did, what you expected — or a convention the team wants followed |
+| **Output** | The agreed change, the docs that restate the old behavior updated, `npm run check` passing, and an entry in `HARNESS-CHANGES.md` |
+| **Modes** | **Improve** (the default) · **Note** — record a problem, change nothing yet · **Summarize** — list this repo's changes and which are worth sending to the template |
+
+### How it works
+
+1. **Evidence.** It asks for one real case and restates the problem for you to confirm. "Make the planner
+   better" gets one question back: show me one time it went wrong.
+2. **Cause.** It traces the behavior to its layer, most specific first: project facts (`PROJECT-PROFILE.md`,
+   `context/`, navigation plans, `data/`), team conventions (profile sections 7–10, templates, tags, config),
+   an agent's instructions, the invariants, scripts, guard rails. A wrong fact is fixed as a fact — never by
+   bending an agent around it.
+3. **Proposal.** The smallest change in that layer, shown exactly, with everything else it touches — other
+   agents reading the same file, docs restating it — and how to check it worked.
+4. **Apply.** On your yes: the change, the docs, `npm run check`.
+5. **Record.** An entry in `HARNESS-CHANGES.md`: problem, cause, change, how to check, status, whether it
+   would help other projects, and any protection changed.
+
+### Protections
+
+| Never changed, whoever asks | Changed only on an explicit, informed yes, recorded |
+|---|---|
+| Agents reading `.env` or `.mcp.json`, or handling a password, token or key | Asking before any write to Jira |
+| Database writes through the agents' account; production environments or data | The healer's expected-value guard; never skipping or deleting a test to pass |
+| Deleting Jira issues; Jira admin actions | The generator's live drive and its test review |
+| | TCIDs — planner-assigned, immutable, at the start of every title |
+| | A person confirming every defect before it is recorded or filed |
+
+It does not claim an agent now behaves differently — only that the change is made and how to check it on the
+same case.
 
 ---
 

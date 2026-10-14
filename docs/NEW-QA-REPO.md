@@ -47,14 +47,15 @@ step 9, which says what to edit when you remove something.
 
 | Folder / file | What it is | In the new repo you… |
 |---|---|---|
-| `.claude/commands/` (6 files), `.claude/agents/` | The six agents' Claude Code commands, and the reviewer as a sub-agent | leave as they are |
+| `.claude/commands/` (7 files), `.claude/agents/` | The seven agents' Claude Code commands, and the reviewer as a sub-agent | leave as they are |
 | `.claude/settings.json` | Guard rails — what agents may never do | leave, unless you rename an MCP server |
 | `.env.example` | Every setting the suite reads, labelled required/optional | copy to `.env` and fill in |
 | `.mcp.json.example` | Browser, database and Jira connections for the agents | copy to `.mcp.json` and fill in |
 | `.gitignore`, `.gitattributes` | Keep `.env`, `.mcp.json` and results out of git | leave — **never skip `.gitignore`** |
 | `PROJECT-PROFILE.md` | The project's identity: roles, vocabulary, modules, strategy | fill in |
 | `SETUP.md`, `TEST-AUTHORING-INVARIANTS.md` | The setup reference, and the eight test rules | read |
-| `agents/` (6 files) | The agent definitions | leave |
+| `agents/` | The seven agent definitions, and how to port them | leave — change them through `/playwright-harness-improver` |
+| `HARNESS-CHANGES.md` | The record of changes this repo makes to its own harness | `/playwright-harness-improver` adds to it |
 | `config/` (`projectProfile.ts`, `testConfig.ts`, `DbConnection.ts`, `testDbConnection.ts`, `db/` ×3) | Settings and the database connection | set the roles in `projectProfile.ts` |
 | `context/` (3 files) | Where the context-builder writes what it learns | review what it writes |
 | `data/` (`auth_data.ts`, `testData.ts`, `sql_queries.ts`, `seed.ts`) | Credentials lookup, test data, queries, data seeding | fill in as you go |
@@ -358,6 +359,7 @@ recorded. Everything is files in the new QA repo, reviewed and committed like an
 | The cycle's final report | `npm run report:cycle -- --closure` | `specs/execution/closure/` | yes |
 | Confirmed defects, before and after filing, and their screenshots | healer, defect-raiser | `specs/defects/defect-log.json`, `specs/defects/evidence/` | yes |
 | Bugs to import, when Jira is not connected | defect-raiser | `specs/defects/defects.csv` | yes |
+| Changes to the harness itself, and why | harness-improver | `HARNESS-CHANGES.md` | yes |
 
 **Which folder the test code goes in.** The generator proposes the path and asks you to confirm it before
 writing anything:

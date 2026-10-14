@@ -11,7 +11,7 @@ Ordered by how often you touch it — configuration first, then the layers a tes
 
 ### `agents/`
 
-**What** The six agent definitions, canonical and vendor-neutral — plain markdown with no tool's
+**What** The seven agent definitions, canonical and vendor-neutral — plain markdown with no tool's
 frontmatter and no tool's tool names. Each opens with a header stating its role, interaction model, file
 access, MCP servers and model guidance.
 
@@ -76,7 +76,7 @@ agent will act on it confidently. Fix the document in the same change as the tes
 `.mcp.json.example`; gitignored, because the database entry carries a password.
 
 **The required entry** `playwright-test` — `npx playwright run-test-mcp-server`, which ships with
-`@playwright/test`, nothing extra to install. Three of the six agents cannot work without it.
+`@playwright/test`, nothing extra to install. Three of the seven agents cannot work without it.
 
 **The optional entries**
 - `database` — `@executeautomation/database-server`, PostgreSQL or SQL Server, version pinned. Biggest
@@ -224,13 +224,22 @@ private. The template's README records the full reasoning.
 
 ## Configuration layer
 
+### `HARNESS-CHANGES.md`
+
+**What** In a QA repo, the record of every change it made to its own harness: the problem, the cause, the
+change, how to check it, and whether it would help other projects. `playwright-harness-improver` writes an
+entry for each change it makes; add one yourself for a change made by hand. Ships with no entries.
+
+**Why** A copy drifts from the template on purpose. Without this file nobody can tell, six months on, which
+differences were deliberate, whether a fix worked, or what is worth sending upstream.
+
 ### `PROJECT-PROFILE.md`
 
 **What** The single source of project identity. Eleven sections: application, roles, domain vocabulary,
 modules, data layer, API layer, severity rubric, file layout, knowledge sources, test strategy (scope,
 entry and exit criteria), setup checklist.
 
-**Who reads it** All six agents, every run, before doing anything else. You, when onboarding.
+**Who reads it** All seven agents, every run, before doing anything else. You, when onboarding.
 
 **How to use** Fill in every `<...>` placeholder. Delete rows that don't apply. Never delete a section
 heading — the agents look sections up by name and number.

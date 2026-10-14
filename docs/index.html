@@ -569,7 +569,7 @@ td code { white-space: nowrap; }
     <option value="#knowledge">How it learns your app</option>
     <option value="#new-repo">New QA repo — step by step</option>
     <option value="#setup">Setup — 10 steps</option>
-    <option value="#agents">The six agents</option>
+    <option value="#agents">The agents</option>
     <option value="#lifecycle">Testing lifecycle</option>
     <option value="#invariants">Invariants I1–I8</option>
     <option value="#components">Components</option>
@@ -587,7 +587,7 @@ td code { white-space: nowrap; }
       <span class="brand-mark">QA</span>
       <span class="brand-name">Harness Handbook</span>
     </div>
-    <p class="brand-sub">playwright · typescript · 6 agents</p>
+    <p class="brand-sub">playwright · typescript · 7 agents</p>
 
     <nav class="nav" id="nav">
       <a href="#orientation"><span class="ord">·</span> Orientation</a>
@@ -600,7 +600,7 @@ td code { white-space: nowrap; }
       <a href="#cycle"><span class="ord">→</span> Follow a whole cycle</a>
 
       <div class="nav-group">Reference</div>
-      <a href="#agents"><span class="ord">6</span> The agents</a>
+      <a href="#agents"><span class="ord">7</span> The agents</a>
       <a href="#lifecycle"><span class="ord">·</span> Testing lifecycle</a>
       <a href="#invariants"><span class="ord">I1–8</span> Invariants</a>
       <a href="#components"><span class="ord">·</span> Components</a>
@@ -621,7 +621,7 @@ td code { white-space: nowrap; }
       <p class="eyebrow">Handbook</p>
       <h1>AI-driven QA test harness</h1>
       <p class="lede">Six agents learn your application, plan, generate, review, heal, and file defects against a Playwright + TypeScript
-      suite built on the Page Object / Page Factory pattern. Everything project-specific lives in two files —
+      suite built on the Page Object / Page Factory pattern; a seventh adapts the harness when it does not fit. Everything project-specific lives in two files —
       <code>PROJECT-PROFILE.md</code> and <code>.env</code>. Nothing in the agents, the config, or the
       fixtures names an application.</p>
       <p class="meta-line">Setup ≈ 1 hour · Node 18+ · Playwright Test MCP required · database MCP optional but recommended · Jira MCP optional</p>
@@ -769,12 +769,13 @@ npx playwright install</code></pre></div></li>
         <table>
           <thead><tr><th>Folder / file</th><th>What it is</th><th>In the new repo you…</th></tr></thead>
           <tbody>
-            <tr><td><code>.claude/</code> — 6 commands, the reviewer sub-agent, <code>settings.json</code></td><td>The agents' Claude Code commands; the guard rails</td><td>leave</td></tr>
+            <tr><td><code>.claude/</code> — 7 commands, the reviewer sub-agent, <code>settings.json</code></td><td>The agents' Claude Code commands; the guard rails</td><td>leave</td></tr>
             <tr><td><code>.env.example</code>, <code>.mcp.json.example</code></td><td>Every suite setting; the agents' browser, database and Jira connections</td><td>copy to <code>.env</code> / <code>.mcp.json</code> and fill in</td></tr>
             <tr><td><code>.gitignore</code>, <code>.gitattributes</code></td><td>Keep passwords and results out of git</td><td>leave — never skip <code>.gitignore</code></td></tr>
             <tr><td><code>PROJECT-PROFILE.md</code></td><td>The project's roles, vocabulary, modules, strategy</td><td>fill in</td></tr>
             <tr><td><code>SETUP.md</code>, <code>TEST-AUTHORING-INVARIANTS.md</code>, <code>docs/</code></td><td>The setup reference, the eight test rules, this handbook and the references</td><td>read</td></tr>
-            <tr><td><code>agents/</code></td><td>The six agent definitions</td><td>leave</td></tr>
+            <tr><td><code>agents/</code></td><td>The seven agent definitions</td><td>leave — change them through <code>/playwright-harness-improver</code></td></tr>
+            <tr><td><code>HARNESS-CHANGES.md</code></td><td>The record of changes this repo makes to its own harness</td><td>the improver adds to it</td></tr>
             <tr><td><code>config/</code></td><td>Settings, roles, the database connection</td><td>set the roles</td></tr>
             <tr><td><code>context/</code></td><td>Where the context-builder writes what it learns</td><td>review</td></tr>
             <tr><td><code>data/</code></td><td>Credentials lookup, test data, queries, seeding</td><td>fill in as you go</td></tr>
@@ -985,6 +986,7 @@ npx playwright install</code></pre></div></li>
             <tr><td>The cycle's final report</td><td><code>report:cycle --closure</code></td><td><code>specs/execution/closure/</code></td><td>yes</td></tr>
             <tr><td>Confirmed defects and their screenshots</td><td>healer, defect-raiser</td><td><code>specs/defects/defect-log.json</code>, <code>specs/defects/evidence/</code></td><td>yes</td></tr>
             <tr><td>Bugs to import, without Jira</td><td>defect-raiser</td><td><code>specs/defects/defects.csv</code></td><td>yes</td></tr>
+            <tr><td>Changes to the harness itself</td><td>harness-improver</td><td><code>HARNESS-CHANGES.md</code></td><td>yes</td></tr>
           </tbody>
         </table>
       </div>
@@ -1455,6 +1457,7 @@ Run it? [Y/n]: y</code></pre>
             <tr><td>Retest</td><td><code>/playwright-test-healer</code> — retest</td><td>Comment? Which transition?</td><td>Test active again; Jira updated</td></tr>
             <tr><td>Regression</td><td><code>npm run regression</code></td><td>Release → epics or tickets</td><td>Release cycle report</td></tr>
             <tr><td>Closure</td><td><code>npm run report:cycle -- --closure</code></td><td>Close or not</td><td>The committed final report</td></tr>
+            <tr><td>The harness falls short</td><td><code>/playwright-harness-improver</code></td><td>The problem, the change</td><td>The harness changed, recorded in <code>HARNESS-CHANGES.md</code></td></tr>
           </tbody>
         </table>
       </div>
@@ -1463,12 +1466,12 @@ Run it? [Y/n]: y</code></pre>
     <!-- ================= AGENTS ================= -->
     <section id="agents">
       <p class="eyebrow">Reference</p>
-      <h2>The six agents</h2>
-      <p class="lede">Think of them as six roles on a QA team: someone who learns the product, an analyst who plans, an
+      <h2>The agents</h2>
+      <p class="lede">Think of the six testing agents as six roles on a QA team: someone who learns the product, an analyst who plans, an
       engineer who automates, a reviewer who checks work they did not do, an engineer who triages failures,
       and an administrator who files the paperwork. Each
       hands off to the next, but each also works alone and reads its input from disk — a plan reviewed on
-      Monday generates fine on Wednesday.</p>
+      Monday generates fine on Wednesday. A seventh, the improver, looks after the harness itself.</p>
       <p>You are the seventh role, and not an optional one. The first three stop and ask for your approval at
       every decision that would be expensive to get wrong; the reviewer checks the generator's every spec, and
       the planner's plan when you agree; the healer asks before calling anything a defect, and before changing
@@ -1986,6 +1989,40 @@ Run it? [Y/n]: y</code></pre>
         only judgment is a table lookup.</p>
       </article>
 
+      <!-- improver -->
+      <article class="agent">
+        <div class="agent-head">
+          <span class="agent-name">/playwright-harness-improver</span>
+          <span class="agent-role">a case where the harness fell short → the right change, recorded</span>
+        </div>
+        <div class="pills">
+          <span class="pill on-accent">opus</span>
+          <span class="pill">no browser</span>
+          <span class="pill">changes only on your yes</span>
+          <span class="pill">writes HARNESS-CHANGES.md</span>
+        </div>
+
+        <p class="agent-plain"><b>The role it plays:</b> the team member who owns the harness. When an agent
+        does something you did not want, or the harness does not fit how you work, you bring it one real case.
+        It works out where the behavior comes from — often a fact in the profile or <code>context/</code>, not
+        the agent — proposes the smallest change in that place, and makes it when you agree, docs included.</p>
+
+        <h4>Three modes</h4>
+        <ul>
+          <li><b>Improve</b> — evidence, cause, proposal, your yes, the change, <code>npm run check</code>, a record.</li>
+          <li><b>Note</b> — record a problem in <code>HARNESS-CHANGES.md</code> without changing anything yet.</li>
+          <li><b>Summarize</b> — this repo's changes, and which would help other projects.</li>
+        </ul>
+
+        <h4>What it will not do</h4>
+        <ul>
+          <li>Let agents read <code>.env</code>, handle passwords, write to the database, touch production or delete Jira issues — whoever asks</li>
+          <li>Lower the healer's expected-value guard, the test review, asking before Jira writes, TCIDs or human defect confirmation without your explicit, recorded yes</li>
+          <li>Bend an agent around a wrong fact — it fixes the fact</li>
+          <li>Claim an agent now behaves differently — it tells you how to check on the same case</li>
+        </ul>
+      </article>
+
       <p><a href="AGENTS.md">Full agent reference →</a></p>
     </section>
 
@@ -2266,7 +2303,7 @@ Run it? [Y/n]: y</code></pre>
       <div class="comp">
         <div class="comp-head"><code class="comp-name">.mcp.json</code><span class="comp-tag you">you fill this in</span></div>
         <p class="comp-plain">How agents reach the browser and, optionally, the database and the tracker.</p>
-        <p>The Playwright entry is required — three of the six agents cannot work without a browser. The
+        <p>The Playwright entry is required — three of the seven agents cannot work without a browser. The
         database entry is optional and is the single biggest reduction in friction available: with it,
         agents read your schema instead of asking you for every query. Use a read-only account against QA —
         the example server has no read-only mode of its own. The tracker entry connects Jira, so stories are
@@ -2604,6 +2641,14 @@ Run it? [Y/n]: y</code></pre>
 }</code></pre>
       <p>The generator follows this exact shape, so a hand-written page object and a generated one are
       indistinguishable in review. That's the point.</p>
+
+      <h3>When the harness does not do what you need</h3>
+      <p>An agent did something you did not want, or the harness does not fit how the team works. Run
+      <code>/playwright-harness-improver</code> with one real case — the plan, spec or report, and what you
+      expected. It confirms the problem with you, finds which file the behavior comes from, shows the smallest
+      change there, and makes it on your yes with the docs and <code>npm run check</code>. Check it by running
+      the same agent on the same case again. Every change goes into <code>HARNESS-CHANGES.md</code>, marked
+      whether it would help other projects. Not ready to change anything? Ask it to <b>note</b> the problem.</p>
 
       <h3>Refreshing what the harness knows</h3>
       <p>The context-builder is a setup agent, not a per-story one. Re-run it when the application gains a

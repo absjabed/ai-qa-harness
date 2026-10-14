@@ -1,6 +1,6 @@
 # MCP servers — how agents reach the browser, the database and the tracker
 
-Three of the six agents cannot work without a browser, and several work considerably better with read
+Three of the seven agents cannot work without a browser, and several work considerably better with read
 access to the database and the issue tracker. All three arrive through MCP servers configured in
 `.mcp.json`.
 

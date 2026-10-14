@@ -1,6 +1,6 @@
 # `agents/` — the canonical agent definitions
 
-The six agents live here as plain markdown, with no vendor's frontmatter and no vendor's tool names.
+The seven agents live here as plain markdown, with no vendor's frontmatter and no vendor's tool names.
 Everything under `.claude/` is a thin wrapper that points at these files.
 
 **Edit these. Never edit a wrapper's prose** — a wrapper that carries instructions of its own is a second
@@ -14,6 +14,7 @@ copy waiting to drift.
 | [`playwright-test-reviewer`](playwright-test-reviewer.md) | Independent check: plan against ticket, test against plan | No | No — returns findings |
 | [`playwright-test-healer`](playwright-test-healer.md) | Triages failures | Yes | At decisions |
 | [`playwright-defect-raiser`](playwright-defect-raiser.md) | Files confirmed defects | No | Asks once |
+| [`playwright-harness-improver`](playwright-harness-improver.md) | Changes the harness itself when it does not fit | No | Yes |
 
 ---
 
@@ -117,7 +118,7 @@ thing to suspect — not the prompt.
 
 ## Interaction model
 
-Five of the six need to ask a question and wait for an answer, so none of those is CI-shaped on any vendor.
+Six of the seven need to ask a question and wait for an answer, so none of those is CI-shaped on any vendor.
 `playwright-defect-raiser` asks the least of them: it makes no judgments, and asks once — which pending
 defects to file — before filing anything.
 

@@ -55,7 +55,8 @@ The export copies exactly the files a project needs — dotfiles included — le
 behind, names the package, and records which harness version and commit the copy came from. Copying by
 hand works too; [SETUP.md](SETUP.md) step 0 lists what not to miss.
 
-Then work through **[SETUP.md](SETUP.md)** — about an hour, and the copy is testing your application.
+Then follow **[docs/NEW-QA-REPO.md](docs/NEW-QA-REPO.md)** — the step-by-step for a new QA repo — with
+[SETUP.md](SETUP.md) as the reference behind each step.
 
 Improvements you make while working on a project belong back here **only if they are application-agnostic**:
 a sharper agent prompt, a new `BasePage` helper, a better error message. Anything that names your
@@ -66,6 +67,7 @@ application stays in your copy. That is the line that keeps this template reusab
 | Doc | For |
 |---|---|
 | **[docs/index.html](docs/index.html)** | **The handbook** — everything in one navigable page. Open from a local clone, not GitHub's web UI (see above). |
+| **[docs/NEW-QA-REPO.md](docs/NEW-QA-REPO.md)** | **Starting a project's QA repo** — the files copied into it, the minimum to configure, and the checklist before the context-builder |
 | [SETUP.md](SETUP.md) | The ten setup steps, with the reasoning behind each |
 | [docs/COMPONENTS.md](docs/COMPONENTS.md) | Every file: purpose, usage, extension points, failure modes |
 | [docs/AGENTS.md](docs/AGENTS.md) | The five agents: inputs, outputs, checkpoints, what to expect, what they refuse |
@@ -183,6 +185,7 @@ tests/
 docs/
   index.html                     the handbook - `npm run docs` opens it
   qa-harness-intro.html          three-slide introduction for a QA team
+  NEW-QA-REPO.md                 starting a project's QA repo - files, minimum config, checklist
 scripts/
   open-docs.js                   opens the handbook cross-platform
   export-harness.js              copies the harness into a project's QA repo

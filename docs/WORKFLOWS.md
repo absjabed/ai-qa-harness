@@ -217,20 +217,16 @@ reviewing agent output is most of the job.
 
 ## 7. Starting a new project from the template
 
-This repository is a template. You don't move a configured harness between projects — you take a fresh
-copy of the template each time, which is always already at the pristine state.
+This repository is a template. You don't move a configured harness between projects, and you don't clone
+the template for one — each project gets its own new QA repository, and the harness's files are copied into
+it:
 
 ```bash
-gh repo create <org>/<app>-tests --private --template <org>/ai-qa-harness --clone
+npm run export -- <path-to-the-new-repo>
 ```
 
-Or without git history, if the copy shouldn't be linked to the template at all:
-
-```bash
-git clone --depth 1 <template-url> <app>-tests && rm -rf <app>-tests/.git && git -C <app>-tests init
-```
-
-Then work through [SETUP.md](../SETUP.md).
+Then follow [NEW-QA-REPO.md](NEW-QA-REPO.md): the files that are copied, the minimum to configure, the
+checklist before the context-builder, and what it does.
 
 ### Feeding improvements back
 

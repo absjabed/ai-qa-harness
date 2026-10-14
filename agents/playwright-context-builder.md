@@ -86,7 +86,12 @@ inside the test runner, so you start already signed in and never handle a passwo
 logging in by hand; if a seed fails, the login itself is broken — report that, since nothing else can be
 mapped for that role until it works.
 
-As each role:
+**Signed out first.** Call `generator_setup_page` with `tests/seed.spec.ts`, which starts signed out, and look
+at what a visitor sees before logging in: the login screen, password reset, sign-up and any public pages.
+Record their labels, links and the messages they show — but do not submit anything on them, not even the
+login form.
+
+Then, as each role:
 
 - What are the top-level areas a user can reach? Those become the module list.
 - From each area, what can this role do — and what is visibly absent or disabled compared with the baseline

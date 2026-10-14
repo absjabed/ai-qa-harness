@@ -155,7 +155,8 @@ harness's version, not this project's: the project's releases are its client's, 
 
 ## Start here
 
-- **Setting up:** [SETUP.md](SETUP.md), from step 1 — the copy is already made.
+- **Setting up:** [docs/NEW-QA-REPO.md](docs/NEW-QA-REPO.md), from section 1 step 3 — the copy is already
+  made. [SETUP.md](SETUP.md) is the reference behind each step.
 - **Handbook:** \`npm run docs\` — setup, the agents, every component, the day-to-day workflows.
 - **What this project is:** [PROJECT-PROFILE.md](PROJECT-PROFILE.md) — roles, vocabulary, modules, test strategy.
 - **Rules every test follows:** [TEST-AUTHORING-INVARIANTS.md](TEST-AUTHORING-INVARIANTS.md).
@@ -215,7 +216,8 @@ console.log(`Next, in ${target}:
   ${fs.existsSync(path.join(target, '.git')) ? '' : 'git init\n  '}npm install
   npx playwright install
 
-then SETUP.md from step 1. Before the first commit, confirm \`git status\` does not list .env or .mcp.json.
+then docs/NEW-QA-REPO.md — the minimum to configure, and the checklist before the context-builder.
+Before the first commit, confirm \`git status\` does not list .env or .mcp.json.
 `);
 
 process.exit(verified ? 0 : 1);

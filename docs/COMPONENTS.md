@@ -94,7 +94,8 @@ with a direct query before writing it into a context document. Full reasoning in
 
 **What** The documentation set. `index.html` is the handbook — a self-contained page covering setup, the
 agents, the components and the workflows. Alongside it, this file, `AGENTS.md`, `WORKFLOWS.md` and
-`MCP.md` carry the deeper per-topic reference. `qa-harness-intro.html` is a three-slide deck for
+`MCP.md` carry the deeper per-topic reference, and `NEW-QA-REPO.md` is the step-by-step for starting a
+project's QA repository. `qa-harness-intro.html` is a three-slide deck for
 introducing the harness to a QA team — how a story is tested by hand today, how it is tested with the
 harness, and what changes for them. Open it in a browser; arrow keys move between slides, F goes full
 screen, and printing gives one slide per page.

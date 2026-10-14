@@ -78,12 +78,13 @@ cover. Name an area, module or role to run it for that alone. Usually the QA lea
 - **Decide:** which environment (never production), what it should stay out of, and that you will be there
   to answer its checkpoints.
 
-`SETUP.md` step 3 has the full list.
+The full checklist is in `docs/NEW-QA-REPO.md` section 3.
 
 ### How it gathers
 
 Preflight — it runs every role's login seed and reports per role what passed and what to fix, and confirms
-the Jira connection by fetching one known story → inventory what is reachable → roam the application as each role → read the supplied sources → introspect
+the Jira connection by fetching one known story → inventory what is reachable → **roam**: the signed-out
+pages (login screen, password reset, public pages), then each role page to page, read-only → read the supplied sources → introspect
 the database, if wired → distil into the documents above, each with its provenance and date. It checkpoints
 after the preflight, after the inventory and after the roam.
 

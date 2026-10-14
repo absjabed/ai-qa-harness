@@ -13,61 +13,22 @@ in `PROJECT-PROFILE.md` instead.
 
 ## 0. Take a copy
 
-This repository is a template. Work in a copy, never in the template itself — the template stays free of
-application-specific content so the next project can start clean.
+**Setting up a new QA repo? Follow [docs/NEW-QA-REPO.md](docs/NEW-QA-REPO.md)** — it is the step-by-step
+for exactly that: create the project's QA repository, copy the harness's files into it, and configure it
+there. It lists every file that is copied and why, and the checklist to complete before the context-builder
+runs. This file is the reference behind those steps.
 
-### Recommended: export into the project's QA repository
-
-From a checkout of the template — no `npm install` needed for this step:
-
-```bash
-npm run export -- ../<app>-qa
-```
-
-The target can be an empty folder or a fresh clone of the QA repository. The export:
-
-- copies every file the harness needs — including the dotfiles a hand-made copy tends to miss, `.gitignore`
-  above all — and leaves behind the three that describe the template: `README.md`, `CHANGELOG.md` and the
-  export script itself
-- names the package after the target folder, and writes a starter `README.md` if the target has none
-- records the **harness** version (the newest entry in its `CHANGELOG.md`) and commit in
-  `PROJECT-PROFILE.md` section 1 — kept apart from the project's own release versions, which are the
-  client's and live in `tests/stories/<release>/` and each plan's `**Release:**`
-- runs `check:docs` against the copy, so anything missing shows up now rather than later
-
-It never overwrites. If any file it would write already exists in the target, it lists them and writes
-nothing. It also refuses to run from a template with uncommitted changes, because the commit it records
-would not describe what was copied.
-
-### Copying by hand instead
-
-Take every tracked file (`git ls-files` lists them) except `README.md`, `CHANGELOG.md` and
-`scripts/export-harness.js`. None of the rest is optional — the suite, the agents, the checks and the docs
-refer to each other, and `check:docs` fails on a link into a file that was left out. The ones most often
-missed:
-
-- **`.gitignore`** — without it, `.env` and its passwords are committed on the first push
-- `.gitattributes`, `.env.example`, `.mcp.json.example`
-- `.claude/`
-- `tests/stories/.gitkeep` — the generator cannot create that folder itself
-
-Then do by hand what the export does:
-
-1. **Rename `name` in `package.json`.** While it is `ai-qa-harness`, `check:docs` treats the copy as the
-   template and fails the moment your application's name appears in a file.
-2. **Record where the copy came from**, in `PROJECT-PROFILE.md` section 1: the harness version — the
-   newest entry in the template's `CHANGELOG.md` — and its commit, from `git rev-parse --short HEAD` run in
-   the template. This is the only moment it is free, and it is what lets you tell later whether a
-   difference is yours or just the harness having moved on.
-
-### Or the whole repository, as a GitHub template
+The template itself is never configured for a project — it stays free of application-specific content so
+the next project can start clean. The copy is made with:
 
 ```bash
-gh repo create <you>/<app>-tests --private --template <you>/ai-qa-harness --clone
+npm run export -- <path-to-the-new-repo>
 ```
 
-This brings the template's README and changelog along. Rename `name` in `package.json` and record the
-version and commit, exactly as for a hand copy.
+run from the template. It copies the files the harness needs into that folder — no clone, no git history —
+and records the **harness** version (the newest entry in the template's `CHANGELOG.md`) and commit in the
+copy's `PROJECT-PROFILE.md` section 1. That is the harness's version, kept apart from the project's own
+release versions: those are the client's, in each plan's `**Release:**` and `tests/stories/<release>/`.
 
 Everything below happens inside the copy.
 
@@ -200,62 +161,30 @@ own is a second copy waiting to drift.
 This is the step that answers "how does a separate repository learn anything about my application". It
 will:
 
+- check that every role can log in and the Jira connection works, and tell you what to fix
 - ask you what sources exist and which are reachable — the running app, the database, the source, API
   docs, contracts, who to ask about what
-- log in as each role and walk the application, mapping modules, navigation paths and permission
-  boundaries
+- **roam the application**: the signed-out pages first — the login screen, password reset, public pages —
+  then, as each role, page to page through every area it can reach, read-only, mapping modules,
+  navigation paths and what each role can and cannot do
 - read whatever local sources you pointed it at, and introspect the database if one is wired
 - write `context/BASELINE.md`, and draft `PROJECT-PROFILE.md` sections 2–4, the navigation-flow plans, and
   the module tag table
 
 ### Before you run it
 
-It asks about most of this at its first checkpoint, but a run started without it stalls there or comes back
-thin.
+Work through the checklist in [docs/NEW-QA-REPO.md](docs/NEW-QA-REPO.md) section 3 — what must be done,
+what is worth having, and what to decide. In short: the environment reachable; `.env` with the base URL and
+one dedicated QA test account per role; the role keys in `config/projectProfile.ts` and section 2 of the
+profile; one login file per role in `tests/seeds/`; the login selectors in `pages/LoginPage.ts` and the
+logged-in check in `pages/DashboardPage.ts`; `.mcp.json` with the Playwright server connected; and someone
+available to answer its checkpoints.
 
-**Must be in place** — without these it cannot walk the application:
+**You do not need to test the logins yourself.** Its first step runs every role's login file and reports
+per role what passed and what to fix. `npx playwright test tests/seeds/` runs the same check by hand.
 
-- **The application reachable** from the machine the agent runs on — VPN, allow-listed IP, whatever your QA
-  environment needs — and not mid-deploy.
-- **Working credentials in `.env`** — `BASE_URL`, and one `<ROLE>_EMAIL`/`<ROLE>_PASSWORD` pair per role.
-- **The role keys** — in the `roles` array of `config/projectProfile.ts` *and* the *Role key* column of
-  `PROJECT-PROFILE.md` section 2, with the baseline role named. It logs in as each role listed there. It
-  drafts the rest of each row, but it cannot guess which accounts exist.
-- **A working login for each role.** The agent never logs in by hand — it starts from each role's seed,
-  `tests/seeds/<role>.spec.ts`, which logs in inside the test runner. So do the login half of step 5 now:
-  replace the `CHANGE_ME` selectors in `pages/LoginPage.ts` and the logged-in check in
-  `pages/DashboardPage.ts`, and keep one seed per role (copy one and change the role).
-
-  **You do not need to check them yourself first.** The context-builder's first step runs every seed and
-  reports per role — passed, or what failed and what to fix: a variable missing from `.env`, a selector
-  still `CHANGE_ME`, an account rejected. To check before involving the agent, run it yourself:
-
-  ```bash
-  npx playwright test tests/seeds/
-  ```
-- **The Playwright MCP server connected** — confirm with `/mcp` in Claude Code before starting.
-- **Browsers installed** — `npx playwright install`, from step 1.
-
-**Passwords stay out of the AI conversation.** The seeds read `.env` inside the test runner, and
-`.claude/settings.json` denies agents reading `.env` themselves. Still use QA-only accounts that exist for
-testing — never a person's own account, and never one that also works in production.
-
-**Gather if you have them** — each one widens what it can establish; none is required:
-
-- **Database access** — a read-only QA account, wired in `.mcp.json` (step 2).
-- **Local paths** to the application source, an OpenAPI or Swagger file, schema scripts, integration
-  contracts, and exported requirement or wiki pages. It asks for each path and checks it can read it.
-- **Who to ask about what** — it records contacts in the baseline so the other agents know who settles a
-  question.
-
-**Decide before starting:**
-
-- **Which environment** — QA or staging, never production. It roams read-only, but the environment is
-  shared; let the people testing in it know.
-- **What to stay out of** — any area that is out of scope, or where even opening a screen has an effect.
-  Tell it at the first checkpoint.
-- **Time to stay with it.** It stops at every checkpoint and waits for you; it is not a job to start and
-  walk away from.
+**Passwords stay out of the AI conversation.** The login files read `.env` inside the test runner, and
+`.claude/settings.json` denies agents reading `.env` themselves.
 
 ### Running it
 

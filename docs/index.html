@@ -332,6 +332,18 @@ td code { white-space: nowrap; }
 
 /* ---------- steps ---------- */
 
+.checklist { list-style: none; padding: 0; margin: 6px 0 14px; }
+.checklist li { position: relative; padding-left: 26px; margin: 6px 0; }
+.checklist li::before {
+  content: "";
+  position: absolute; left: 0; top: 4px;
+  width: 13px; height: 13px;
+  border: 1.5px solid var(--line-strong);
+  border-radius: 3px;
+  background: var(--surface);
+}
+.flow-diagram { font-family: var(--mono); font-size: 12.5px; line-height: 1.6; color: var(--ink-soft); overflow-x: auto; }
+
 .steps { list-style: none; padding: 0; margin: 0; max-width: none; counter-reset: step; }
 .step {
   display: grid;
@@ -555,6 +567,7 @@ td code { white-space: nowrap; }
   <select id="mobile-nav" aria-label="Jump to section">
     <option value="#orientation">Orientation</option>
     <option value="#knowledge">How it learns your app</option>
+    <option value="#new-repo">New QA repo — step by step</option>
     <option value="#setup">Setup — 10 steps</option>
     <option value="#agents">The five agents</option>
     <option value="#lifecycle">Testing lifecycle</option>
@@ -581,6 +594,7 @@ td code { white-space: nowrap; }
 
       <div class="nav-group">Get running</div>
       <a href="#knowledge"><span class="ord">·</span> How it learns your app</a>
+      <a href="#new-repo"><span class="ord">→</span> New QA repo</a>
       <a href="#setup"><span class="ord">1–10</span> Setup</a>
       <a href="#first-test"><span class="ord">→</span> First real test</a>
 
@@ -637,7 +651,7 @@ td code { white-space: nowrap; }
         and credentials. If you find yourself editing something else to make the harness fit, it probably
         belongs in the profile.</p>
         <p>This repo is a <b>template</b>: you copy it per project rather than working in it directly.
-        <a href="#setup">Setup</a> opens with how to take a copy.</p>
+        <a href="#new-repo">New QA repo</a> is the step-by-step for starting a project's own QA repository.</p>
       </div>
     </section>
 
@@ -709,6 +723,149 @@ td code { white-space: nowrap; }
       as the test.</p>
     </section>
 
+    <!-- ================= NEW QA REPO ================= -->
+    <section id="new-repo">
+      <p class="eyebrow">Get running</p>
+      <h2>A new QA repo, step by step</h2>
+      <p class="lede">Each project gets its own new QA repository. The harness's files are copied into it, and
+      all configuration happens there. This template is never cloned for a project and never configured — it
+      stays clean for the next one.</p>
+
+      <pre class="flow-diagram"><code>  ai-qa-harness (this repo)                     &lt;project&gt;-qa (the new repo)
+  the template — never configured   ── copy ──▶ the project's QA suite
+  stays application-neutral                     configured, tests written, regression run</code></pre>
+
+      <h3>1 · Create the repo and copy the harness in</h3>
+      <ol class="steps">
+        <li class="step"><span class="step-n">1</span><div class="step-body">
+          <h3>Create the QA repository</h3>
+          <p>Wherever your team keeps repositories, then clone it — or start from an empty folder. A README
+          in it is fine; nothing else yet.</p></div></li>
+        <li class="step"><span class="step-n">2</span><div class="step-body">
+          <h3>Copy the harness in — from this template</h3>
+          <pre><code>npm run export -- &lt;path-to-the-new-repo&gt;</code></pre>
+          <p>No clone, no git history, no install needed here. It copies the files below — dotfiles included,
+          which copying by hand tends to miss — names the package, writes a starter README unless one exists,
+          records the <em>harness</em> version and commit in the copy's profile (never the project's release
+          numbers), and checks nothing is missing. It never overwrites.</p></div></li>
+        <li class="step"><span class="step-n">3</span><div class="step-body">
+          <h3>Install, inside the new repo</h3>
+          <pre><code>npm install
+npx playwright install</code></pre></div></li>
+        <li class="step"><span class="step-n">4</span><div class="step-body">
+          <h3>First commit</h3>
+          <p>Run <code>git status</code> first: neither <code>.env</code> nor <code>.mcp.json</code> may be
+          listed. If one is, <code>.gitignore</code> did not come across.</p></div></li>
+      </ol>
+
+      <h4>What gets copied</h4>
+      <p><b>Copy all of it, even what you may not need</b> — the files refer to each other, and the consistency
+      check fails when one is missing. Trim afterwards, in setup step 9.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Folder / file</th><th>What it is</th><th>In the new repo you…</th></tr></thead>
+          <tbody>
+            <tr><td><code>.claude/</code> — 5 commands, <code>settings.json</code></td><td>The agents' Claude Code commands; the guard rails</td><td>leave</td></tr>
+            <tr><td><code>.env.example</code>, <code>.mcp.json.example</code></td><td>Every suite setting; the agents' browser, database and Jira connections</td><td>copy to <code>.env</code> / <code>.mcp.json</code> and fill in</td></tr>
+            <tr><td><code>.gitignore</code>, <code>.gitattributes</code></td><td>Keep passwords and results out of git</td><td>leave — never skip <code>.gitignore</code></td></tr>
+            <tr><td><code>PROJECT-PROFILE.md</code></td><td>The project's roles, vocabulary, modules, strategy</td><td>fill in</td></tr>
+            <tr><td><code>SETUP.md</code>, <code>TEST-AUTHORING-INVARIANTS.md</code>, <code>docs/</code></td><td>The setup reference, the eight test rules, this handbook and the references</td><td>read</td></tr>
+            <tr><td><code>agents/</code></td><td>The five agent definitions</td><td>leave</td></tr>
+            <tr><td><code>config/</code></td><td>Settings, roles, the database connection</td><td>set the roles</td></tr>
+            <tr><td><code>context/</code></td><td>Where the context-builder writes what it learns</td><td>review</td></tr>
+            <tr><td><code>data/</code></td><td>Credentials lookup, test data, queries, seeding</td><td>fill in as you go</td></tr>
+            <tr><td><code>lib/</code></td><td>Fixtures, readiness check, the after-run report, API client</td><td>add a fixture per page object</td></tr>
+            <tr><td><code>pages/</code></td><td>Page objects</td><td>replace the <code>CHANGE_ME</code> selectors</td></tr>
+            <tr><td><code>scripts/</code></td><td>Checks, regression, the cycle report</td><td>leave</td></tr>
+            <tr><td><code>specs/</code></td><td>Plan templates and the knowledge the agents read</td><td>the agents fill most of it</td></tr>
+            <tr><td><code>tests/</code></td><td>Starting points, one login per role, a reference test</td><td>one login file per role</td></tr>
+            <tr><td><code>package.json</code>, lockfile, <code>tsconfig.json</code>, <code>playwright.config.ts</code></td><td>Tooling</td><td>leave</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><b>Not copied:</b> the template's <code>README.md</code> and <code>CHANGELOG.md</code>, the export
+      script, and — never — <code>.env</code>, <code>.mcp.json</code>, <code>node_modules/</code> or run
+      output. Copying by hand instead? <code>docs/NEW-QA-REPO.md</code> lists every file, and the two things to
+      do afterwards: rename <code>name</code> in <code>package.json</code>, and record the harness version and
+      commit in the profile.</p>
+
+      <h3>2 · Configure the minimum</h3>
+      <ol>
+        <li><b><code>.env</code></b> from <code>.env.example</code> — the keys marked REQUIRED:
+        <code>APP_NAME</code>, <code>TRACKER_PROJECT_KEY</code>, <code>BASE_URL</code>, and one
+        <code>&lt;ROLE&gt;_EMAIL</code>/<code>_PASSWORD</code> pair per role.</li>
+        <li><b>Roles</b> — the same role keys in the <code>roles</code> array of
+        <code>config/projectProfile.ts</code> and the Role key column of profile section 2, with the baseline
+        role named.</li>
+        <li><b>One login file per role</b> — <code>tests/seeds/&lt;role&gt;.spec.ts</code>: copy one, rename it,
+        change the role inside. <code>npm run check</code> fails until every role has one.</li>
+        <li><b>The login page</b> — real selectors in <code>pages/LoginPage.ts</code> and the logged-in check in
+        <code>pages/DashboardPage.ts</code>. <code>npx playwright codegen &lt;BASE_URL&gt;</code> lets you
+        click the fields to find them.</li>
+        <li><b><code>.mcp.json</code></b> from the example — keep <code>playwright-test</code>; fill
+        <code>database</code> with a read-only account or delete it; for Jira, use the Atlassian plugin in
+        Claude Code (and delete <code>tracker</code>), or keep <code>tracker</code> with another tool.</li>
+        <li><b>Open Claude Code in the new repo's folder</b>, approve its MCP servers when asked, and check
+        <code>/mcp</code> shows <code>playwright-test</code> connected.</li>
+      </ol>
+
+      <h3>3 · Checklist before <code>/playwright-context-builder</code></h3>
+      <h4>Must be done</h4>
+      <ul class="checklist">
+        <li>Harness copied in; <code>npm install</code> and <code>npx playwright install</code> run</li>
+        <li>The QA environment opens in a browser from this machine — VPN on if needed — and is not mid-deploy</li>
+        <li><code>.env</code> has <code>APP_NAME</code>, <code>TRACKER_PROJECT_KEY</code>, <code>BASE_URL</code></li>
+        <li>Role keys match in <code>config/projectProfile.ts</code> and profile section 2; baseline role named</li>
+        <li>One credential pair per role in <code>.env</code> — dedicated QA test accounts, never a person's own,
+        never one that works in production</li>
+        <li>One login file per role in <code>tests/seeds/</code></li>
+        <li>Login selectors filled in <code>LoginPage.ts</code>; logged-in check in <code>DashboardPage.ts</code></li>
+        <li><code>.mcp.json</code> created; <code>/mcp</code> shows <code>playwright-test</code> connected</li>
+        <li><code>npm run check</code> passes</li>
+      </ul>
+      <h4>Worth having</h4>
+      <ul class="checklist">
+        <li>A read-only QA database account, in <code>.mcp.json</code></li>
+        <li>Jira connected and signed in — and one story key you know exists, to test it</li>
+        <li>Local paths to the source, OpenAPI/Swagger, schema scripts, contracts, requirement docs</li>
+        <li>Who to ask about which area</li>
+      </ul>
+      <h4>Decided before starting</h4>
+      <ul class="checklist">
+        <li>Which environment — QA or staging, never production</li>
+        <li>Areas it must stay out of</li>
+        <li>The people testing in that environment know someone is exploring it</li>
+        <li>Someone stays with it — it stops at every checkpoint and waits</li>
+      </ul>
+      <p>You do not need to test the logins yourself — its first step does, and tells you what to fix.</p>
+
+      <h3>4 · Does the context-builder roam the app? Yes — that is most of its job</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Step</th><th>What it does</th></tr></thead>
+          <tbody>
+            <tr><td><b>0 · Preflight</b></td><td>Runs every role's login file and reports per role — passed, or what to fix. Says which Jira connection it found and fetches your known story.</td></tr>
+            <tr><td><b>1 · Inventory</b></td><td>Asks which sources exist and which it can reach; checks it can read each local path.</td></tr>
+            <tr><td><b>2 · Roam</b></td><td><b>Signed out</b>, it looks at the login screen, password reset and any public pages. Then <b>as each role</b> — starting already signed in, from that role's login file — it clicks through the application page to page: menus and areas, each screen it can reach, what the role can do there, what is missing compared with the full-access role, and the click path to each area.</td></tr>
+            <tr><td><b>3 · Read</b></td><td>The local sources you confirmed — source code, API docs, contracts.</td></tr>
+            <tr><td><b>4 · Introspect</b></td><td>The database schema, read-only, if one is connected.</td></tr>
+            <tr><td><b>5 · Write</b></td><td>Drafts the baseline, profile sections 2–4, a navigation plan per role, the permission matrix and the module tags — showing each before writing.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note">
+        <p><strong>While roaming it never</strong> types a password — the login file signs in; never submits a
+        form, creates, deletes or changes anything — not even on the login screen; never guesses — gaps go in the
+        baseline's <em>known unknowns</em>; and never writes tests. It runs once at setup, then again only when
+        the application changes.</p>
+      </div>
+
+      <h3>5 · Then</h3>
+      <p>Review its drafts — setup steps 4, 7 and 8 — then finish setup: page objects (5), test data (6),
+      trimming (9) and the final check (10). Your first story: give <code>/playwright-test-planner</code> its
+      Jira key.</p>
+    </section>
+
     <!-- ================= SETUP ================= -->
     <section id="setup">
       <p class="eyebrow">Get running</p>
@@ -718,30 +875,9 @@ td code { white-space: nowrap; }
       is why step 3 comes before step 4.</p>
 
       <div class="note">
-        <p><strong>First, get a copy.</strong> This repository is a template, not a project. You copy it,
-        point the copy at your application, and that copy becomes your project's test suite — the template
-        itself never gains application-specific content.</p>
-        <p style="margin-top:10px"><b>Recommended: export it</b> into the project's QA repository — an empty
-        folder or a fresh clone. From the template, no install needed:</p>
-        <pre style="margin-top:8px"><code>npm run export -- ../&lt;app&gt;-qa</code></pre>
-        <p style="margin-top:10px">It copies every file the harness needs, dotfiles included, and leaves
-        behind the three that describe the template — <code>README.md</code>, <code>CHANGELOG.md</code> and
-        the export script. It names the package after the folder, writes a starter README, records the
-        <em>harness</em> version and commit in <code>PROJECT-PROFILE.md</code> section 1 — never mixed up
-        with the project's own release versions — and runs
-        <code>check:docs</code> against the copy. It never overwrites: if the target already has any of its
-        files, it lists them and writes nothing.</p>
-        <p style="margin-top:10px"><b>Copying by hand?</b> Take every file <code>git ls-files</code> lists
-        except those three — none of the rest is optional. The one never to miss is
-        <b><code>.gitignore</code></b>: without it, <code>.env</code> and its passwords are committed on the
-        first push. Then do what the export would: rename <code>name</code> in <code>package.json</code>
-        (while it reads <code>ai-qa-harness</code>, <code>check:docs</code> treats the copy as the template
-        and fails on your application's name), and record the harness version and commit in profile
-        section 1. <code>SETUP.md</code> step 0 has the full list, and the GitHub-template route.</p>
-        <p style="margin-top:10px">Recording the version and commit is what lets you tell later whether a
-        difference is yours or just the template having moved on. The template's changelog marks each entry
-        <b>Adopt</b>, <b>Optional</b> or <b>New copies only</b>, so you can tell what is worth pulling into
-        an existing copy.</p>
+        <p><strong>First, get a copy.</strong> Each project gets its own QA repository with the harness's
+        files copied in — <a href="#new-repo">A new QA repo, step by step</a> covers it, and these ten steps are
+        the reference behind it. The template itself never gains application-specific content.</p>
         <p style="margin-top:10px">Improvements you make while working on a project come back upstream
         <b>only if they are application-agnostic</b> — a sharper agent prompt, a new <code>BasePage</code>
         helper, a better error message. Anything that names your application stays in your copy. That line
@@ -853,46 +989,15 @@ cp .mcp.json.example .mcp.json</code></pre>
             walking the application — that alone is most of the value. Everything else widens what it can
             establish.</p>
             <h4 style="font-size:14px;margin:18px 0 6px">Before you run it</h4>
-            <p>It asks about most of this at its first checkpoint, but a run started without it stalls there
-            or comes back thin.</p>
-            <div class="table-wrap">
-              <table>
-                <thead><tr><th></th><th>What to have ready</th></tr></thead>
-                <tbody>
-                  <tr><td><b>Must have</b></td><td>
-                    The application reachable from where the agent runs — VPN or allow-listed IP if needed,
-                    and not mid-deploy.<br>
-                    <code>BASE_URL</code> and a working <code>&lt;ROLE&gt;_EMAIL</code>/<code>_PASSWORD</code>
-                    pair per role in <code>.env</code>.<br>
-                    The role keys in <code>config/projectProfile.ts</code> <em>and</em> the Role key column of
-                    profile section 2, with the baseline role named. It logs in as each role listed there and
-                    drafts the rest of the row, but cannot guess which accounts exist.<br>
-                    <b>A working login per role.</b> The agent starts from each role's seed,
-                    <code>tests/seeds/&lt;role&gt;.spec.ts</code>, so do the login half of step 5 now — real
-                    selectors in <code>LoginPage.ts</code> and the logged-in check. You need not test them
-                    first: the agent's first step runs every seed and reports per role what passed and what to
-                    fix. (<code>npx playwright test tests/seeds/</code> runs the same check by hand.)<br>
-                    The Playwright MCP server connected (<code>/mcp</code>), browsers installed.</td></tr>
-                  <tr><td><b>Worth gathering</b></td><td>
-                    A read-only QA database account, wired in <code>.mcp.json</code> (step 2).<br>
-                    Local paths to the application source, an OpenAPI or Swagger file, schema scripts,
-                    integration contracts, exported requirement or wiki pages — it asks for each and checks it
-                    can read it.<br>
-                    Who to ask about which area.</td></tr>
-                  <tr><td><b>Decide</b></td><td>
-                    Which environment — QA or staging, never production. It roams read-only, but the
-                    environment is shared, so tell the people testing in it.<br>
-                    What it should stay out of — anything out of scope, or where even opening a screen has an
-                    effect. Tell it at the first checkpoint.<br>
-                    That you will be there: it stops at every checkpoint and waits.</td></tr>
-                </tbody>
-              </table>
-            </div>
+            <p>Work through the <a href="#new-repo">checklist in A new QA repo</a>: the environment reachable,
+            <code>.env</code> with the base URL and a dedicated QA test account per role, the role keys, one
+            login file per role, the login selectors, the Playwright server connected — and someone there for
+            its checkpoints. You need not test the logins first: its first step does, and reports per role
+            what to fix.</p>
             <div class="note">
-              <p><strong>Passwords stay out of the AI conversation.</strong> Each seed logs in inside the
+              <p><strong>Passwords stay out of the AI conversation.</strong> Each login file signs in inside the
               test runner, which reads <code>.env</code> itself; agents are handed a signed-in page and are
-              denied reading <code>.env</code>. Still use QA-only accounts that exist for testing — never a
-              person's own account, and never one that also works in production.</p>
+              denied reading <code>.env</code>.</p>
             </div>
             <p>Skipping is allowed: write the profile and flow plans by hand instead. Same work, no first
             draft.</p>
@@ -1132,9 +1237,10 @@ npx playwright test tests/example.spec.ts</code></pre>
           fix; checks which Jira connection exists and fetches one known story to confirm it works.</li>
           <li><b>Inventory</b> — it asks what exists and what is reachable. It cannot detect most of this,
           and rows routinely move from "yes" to "no" once someone checks.</li>
-          <li><b>Roam</b> — logs in as each role and walks the application read-only, mapping modules,
-          entry paths, and what is visibly absent for one role compared with another. That absence is the
-          permission boundary.</li>
+          <li><b>Roam</b> — first signed out (login screen, password reset, public pages), then as each role,
+          starting from that role's login file, it walks the application page to page, read-only, mapping
+          modules, entry paths, and what is visibly absent for one role compared with another. That absence is
+          the permission boundary.</li>
           <li><b>Read</b> — whatever local sources you confirmed: application source (for validation rules,
           enum values, state machines), API documentation, contracts, requirement docs.</li>
           <li><b>Introspect</b> — the database, read-only, if a server is wired.</li>

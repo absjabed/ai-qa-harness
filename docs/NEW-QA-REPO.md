@@ -14,9 +14,9 @@ cloned for a project and never configured. It stays clean so the next project ca
 [SETUP.md](../SETUP.md) has the reasoning behind each piece. This guide is the order to do them in.
 
 **New to the harness? Practise first.** `npm run export -- <dir> --example fleetkeep` builds a ready practice
-repo against a small demo app that ships with the template, with one planted defect to find —
-`examples/fleetkeep/README.md` in the harness template (examples are not copied into a project's repo). The real project's repo is then the second time,
-not the first.
+repo against a small demo app that ships with the template, with one planted defect to find — see
+`examples/fleetkeep/README.md` in the harness template; examples are never copied into a project's repo. The
+real project's repo is then the second time, not the first.
 
 ---
 
@@ -78,7 +78,8 @@ step 9, which says what to edit when you remove something.
 |---|---|
 | `README.md` | It describes the template; the copy gets its own |
 | `CHANGELOG.md` | The template's history; the copy records the version it came from instead |
-| `scripts/export-harness.js` | A copy has nothing to export |
+| `scripts/export-harness.js`, `scripts/lib/overlay.js` | A copy has nothing to export, and no example layers to apply |
+| `examples/` | The FleetKeep practice app and worked cycle — for learning on, never part of a project's repo |
 | `.env`, `.mcp.json` | They hold passwords — each project creates its own from the `.example` files |
 | `node_modules/`, `test-results/`, `playwright-report/`, `reports/` | Installed or generated |
 

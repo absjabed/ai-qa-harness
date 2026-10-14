@@ -238,7 +238,7 @@ try {
 
 // ---------------------------------------------------------------- report
 
-const skipped = TEMPLATE_ONLY.filter((f) => files.includes(f));
+const skipped = [...TEMPLATE_ONLY.filter((f) => files.includes(f)), ...TEMPLATE_ONLY_DIRS.filter((d) => files.some((f) => f.startsWith(d)))];
 console.log(`
 export: copied ${toCopy.length} files into ${target}
   package name     ${projectName}

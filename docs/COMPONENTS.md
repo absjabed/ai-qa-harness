@@ -213,13 +213,17 @@ unmet, for use as a gate — by default it only reports, because closing a cycle
 **What** `npm run export -- <dir>` — copies the harness into a project's QA repository. Template only; it
 is not copied, since a copy has nothing to export.
 
-**Copies** Every tracked file except `README.md`, `CHANGELOG.md` and itself — dotfiles included. A
-hand-made copy most often misses `.gitignore`, and without it `.env` is committed on the first push.
+**Copies** Every tracked file except `README.md`, `CHANGELOG.md`, itself, `scripts/lib/overlay.js` and
+`examples/` — dotfiles included. A hand-made copy most often misses `.gitignore`, and without it `.env` is
+committed on the first push.
 
 **Also** Names the package after the target folder, writes a starter README if the target has none,
 records the harness version — the newest `CHANGELOG.md` entry — and commit in PROJECT-PROFILE.md section 1,
 and runs `check:docs` against the copy. The copy's `package.json` version is left at `0.0.0`: the harness's
 version is not the project's, and nothing should suggest it is.
+
+**Practice repos** `--example fleetkeep` applies `examples/fleetkeep/qa-setup` on top of the copy and writes
+`.env` from its `.env.example` (demo accounts only); `--worked` adds the worked cycle. See `examples/` below.
 
 **What to expect** It never overwrites — any existing file it would write stops it before it writes
 anything. It refuses a template with uncommitted changes unless given `--allow-dirty`, which records the

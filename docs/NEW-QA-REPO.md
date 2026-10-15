@@ -390,3 +390,5 @@ file moves to that release's folder.
 2. Finish the rest of [SETUP.md](../SETUP.md): page objects (5), test data (6), trimming what you do not use
    (9), and the final check (10).
 3. Your first story: give `/playwright-test-planner` its Jira key — [WORKFLOWS.md](WORKFLOWS.md) workflow 1.
+   [qa-harness-walkthrough.html](qa-harness-walkthrough.html) shows the whole cycle with an example — what each
+   agent asks, and what comes out — open it in a browser.

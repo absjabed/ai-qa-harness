@@ -75,6 +75,7 @@ application stays in your copy. That is the line that keeps this template reusab
 | [docs/WORKFLOWS.md](docs/WORKFLOWS.md) | End-to-end recipes — first story, healing a regression, onboarding, porting |
 | [docs/MCP.md](docs/MCP.md) | Wiring the browser, database and Jira MCP servers, and the guard rails |
 | [docs/qa-harness-intro.html](docs/qa-harness-intro.html) | Three slides for introducing the harness to a QA team: how they test today, how they will with it |
+| [docs/qa-harness-walkthrough.html](docs/qa-harness-walkthrough.html) | One example cycle, step by step: setup, one ticket, regression and closure — what you run, what each agent asks, what comes out |
 | [examples/fleetkeep/README.md](examples/fleetkeep/README.md) | A practice app to learn the harness on before a real project — `npm run export -- <dir> --example fleetkeep` — and one ticket's whole cycle, worked |
 | [context/README.md](context/README.md) | What project knowledge goes in `context/`, and in what shape |
 | [PROJECT-PROFILE.md](PROJECT-PROFILE.md) | The file you fill in per project |

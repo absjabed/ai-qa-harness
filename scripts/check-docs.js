@@ -212,20 +212,47 @@ for (const file of trackedFiles().filter((f) => f.endsWith('.md'))) {
 
 // ---------------------------------------------------------------- vendor neutrality
 
-const BANNED = /(?!)/; // term list removed
-// This file necessarily contains every banned term — it is the list. Exempting it is not a loophole:
-// nothing else is exempt, and a term added to BANNED is still enforced everywhere else.
-const NEUTRALITY_EXEMPT = ['package-lock.json', 'scripts/check-docs.js'];
+// Terms from the originating project, kept as SHA-256 hashes so that no file, this one included,
+// spells them out. A word matches when its first N letters hash to a listed prefix, or the whole
+// word hashes to a listed word; an issue key ("ABC-123") matches when its letters hash to a listed key.
+const BANNED_PREFIXES = [
+    [5, 'ef7c6cba58cf82997b990feec6b78b1cf73b4a0b3a6b1b0c46fac8a56ca70549'],
+    [5, '789e9f339e7d1b50c8fb9ac1ea04f6e38998e3724447e4449b0f8b18a7b02149'],
+    [7, '48271388865ea681686696f7bf9dadb03ce44f343b84cec90417cc44429d2868'],
+    [11, '0866c7a19dbd7e4b7f23f1080859a3f63c6a22b8758cfe92228c9a417624893c'],
+];
+const BANNED_WORDS = new Set([
+    'd0715322452baa1b53a82a5e8fbd1550e132cd298b3fd65511225b8da3588a2f',
+    '5b5ef7445a3108a338605972c7b34add041ec47bf981d2fa47d7c968fca1e76d',
+    '9abe7d4b3293d02ea8381764e35cd06587c5b0b775984ba00f584a3a708984ef',
+]);
+const BANNED_KEYS = new Set(['e925260155c960671fc199590a3e8faabde99eeb2768238b46a7a517ecf40439']);
+const sha256 = (s) => require('crypto').createHash('sha256').update(s.toLowerCase()).digest('hex');
+
+function bannedTerm(text) {
+    for (const [, key] of text.matchAll(/\b([A-Za-z]{2,10})-\d/g)) {
+        if (BANNED_KEYS.has(sha256(key))) return key;
+    }
+    for (const [word] of text.matchAll(/[A-Za-z]+/g)) {
+        if (BANNED_WORDS.has(sha256(word))) return word;
+        for (const [n, hash] of BANNED_PREFIXES) {
+            if (word.length >= n && sha256(word.slice(0, n)) === hash) return word;
+        }
+    }
+    return null;
+}
+
+const NEUTRALITY_EXEMPT = ['package-lock.json'];
 
 // Template only: a project copy is supposed to name its application.
 if (isTemplate) {
     for (const file of trackedFiles().filter((f) => !NEUTRALITY_EXEMPT.some((e) => f.endsWith(e)))) {
         const text = read(file);
-        const hit = text.match(BANNED);
+        const hit = bannedTerm(text);
         check(
             `${file} contains a term from the originating project`,
             !hit,
-            `found "${hit ? hit[0] : ''}" — this template must name no client, product or domain. ` +
+            `found "${hit || ''}" — this template must name no client, product or domain. ` +
                 `If this is a project copy, not the template, rename "name" in package.json (SETUP.md step 0).`
         );
     }

@@ -1,5 +1,7 @@
 # AI Test Harness — Playwright + TypeScript
 
+**A QA harness layer for Claude Code:** test agents, a Playwright + TypeScript suite and the scripts around it, sitting on top of Claude Code's own agent runtime.
+
 An AI-driven test automation harness. Six agents learn your application, plan, generate, review, heal,
 and file defects against a Playwright + TypeScript suite built on the Page Object / Page Factory pattern. A
 seventh adapts the harness itself when it does not behave as your team needs.

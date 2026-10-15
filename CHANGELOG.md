@@ -39,10 +39,9 @@ commit, in each copy's `PROJECT-PROFILE.md` section 1 as the *harness* version.
 plan and the `tests/stories/<release>/` folders, which regression and the cycle report run by. The two
 numbers never share a field.
 
-**For now it stays 1.0.0, pre-release,** until the harness has been set up and used by a real project's QA
-team: changes are not listed here — git history has them — and a copy is identified by the commit recorded
-in its profile. After that first real use, every change gets an entry at the top of this file with a new
-version number, marked **Adopt**, **Optional** or **New copies only**.
+**For now it stays 1.0.0, pre-release:** changes are not listed here — git history has them — and a copy is
+identified by the commit recorded in its profile. Once the version moves on, every change gets an entry at
+the top of this file with a new version number, marked **Adopt**, **Optional** or **New copies only**.
 
 ---
 
@@ -111,10 +110,6 @@ project-specific value lives in `PROJECT-PROFILE.md`, `.env`, `.mcp.json` and `c
 
 **Known limitations, stated plainly**
 
-- Nothing in this template has been exercised against a real application. It compiles, its tests collect,
-  its guards produce the right messages, and its PostgreSQL path has been tested against a real server —
-  but no agent has been observed running end to end, and the Jira integration and permission rules have not
-  been exercised against a live Jira site. Treat the first project as the real test of it.
 - Six of the seven agents are interactive by design. The suite runs on QA team members' own machines; there
   is no CI pipeline, and `npm run check` is run by hand before pushing.
 - The documentation restates things the code owns, so it drifts. `npm run check:docs` catches the

@@ -1348,9 +1348,8 @@ npx playwright test tests/example.spec.ts</code></pre>
       <p>An online store. Jira project <code>ACME</code>, connected through the Atlassian plugin. Three kinds of
       user: store admins, warehouse staff, customers. Release <code>2.26</code>, epic <code>ACME-100</code>
       "Checkout discounts", and the ticket to test: <code>ACME-1234</code> "Customer applies a discount code at
-      checkout", with four acceptance criteria. The QA repo has been exported into a plain folder; you have
-      one QA test account per kind of user, a business-rules PDF, last release's test cases as a spreadsheet,
-      and a bug list.</p>
+      checkout", with four acceptance criteria. You have one QA test account per kind of user, a business-rules
+      PDF, last release's test cases as a spreadsheet, and a bug list.</p>
 
       <h4>Words you will see</h4>
       <div class="table-wrap">
@@ -1366,6 +1365,24 @@ npx playwright test tests/example.spec.ts</code></pre>
           </tbody>
         </table>
       </div>
+
+      <h3>Part 0 · Before setup day — prepare the folder</h3>
+      <ol>
+        <li><b>Make the prep folder</b> — <code>npm run prep -- &lt;path-to&gt;/acme-qa --name "Acme"</code>, from the
+        template. It writes <code>setup/</code> — start-here, filling guide, checklist, and a file each for
+        accounts and roles, Jira, decisions, contacts and paths — and the <code>context/sources/</code> folders.</li>
+        <li><b>Fill in the answers.</b> The three kinds of user go in <code>accounts.md</code>, with the
+        password-manager entry each password lives in — never the password. <code>ACME</code>, a known story and
+        the epics to digest in <code>jira.md</code>; the QA address, no-go areas and severity examples in
+        <code>decisions.md</code>. <code>FILLING-GUIDE.md</code> says how.</li>
+        <li><b>Collect the documents</b> — the rules PDF into <code>context/sources/specs/</code>, the test cases as
+        CSV into <code>test-cases/</code>, the bug list into <code>defects/</code>, each checked for personal data
+        and credentials first.</li>
+        <li><b>Setup day</b> — <code>npm run export -- &lt;path-to&gt;/acme-qa</code> copies the harness into the
+        same folder, leaving <code>setup/</code> and <code>context/sources/</code> as they are; then
+        <code>git init</code>, <code>npm install</code>, <code>npx playwright install</code>, and <code>.env</code>
+        from the password manager.</li>
+      </ol>
 
       <h3>Part 1 · The context-builder — once, at setup</h3>
       <p><code>/playwright-context-builder</code> builds what the harness knows about the application, from the
@@ -1478,6 +1495,7 @@ Run it? [Y/n]: y</code></pre>
         <table>
           <thead><tr><th>Stage</th><th>Run</th><th>You decide</th><th>Out</th></tr></thead>
           <tbody>
+            <tr><td>Prepare, before setup day</td><td><code>npm run prep -- &lt;dir&gt; --name "&lt;Project&gt;"</code></td><td>Every answer in <code>setup/</code></td><td>The folder the QA repo becomes, filled in</td></tr>
             <tr><td>Setup, once</td><td><code>/playwright-context-builder</code></td><td>Roles, sources, the drafts</td><td><code>context/</code>, profile 2–4, navigation plans, tags</td></tr>
             <tr><td>Plan</td><td><code>/playwright-test-planner &lt;KEY&gt;</code></td><td>The AC reading, the scenario list</td><td>The plan, its CSV, manual rows</td></tr>
             <tr><td>Generate</td><td><code>/playwright-test-generator &lt;plan&gt;</code></td><td>Path, new page objects, SQL</td><td><code>tests/stories/&lt;release&gt;/&lt;KEY&gt;.spec.ts</code>, reviewed against the plan</td></tr>

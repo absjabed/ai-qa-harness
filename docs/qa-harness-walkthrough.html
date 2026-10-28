@@ -201,6 +201,7 @@
   <div class="wrap">
     <b>QA Harness Walkthrough</b>
     <nav aria-label="Phases">
+      <a href="#prepare">Prepare</a>
       <a href="#setup">Setup</a>
       <a href="#ticket">One ticket</a>
       <a href="#regression">Regression</a>
@@ -238,13 +239,62 @@
   </div>
 </header>
 
+<!-- ============================== PREPARE ============================== -->
+<section class="phase" id="prepare">
+  <div class="phase-head">
+    <span class="phase-tag">BEFORE</span>
+    <h2>Before setup day: prepare the folder</h2>
+    <p>The answers and documents are gathered before anyone opens Claude Code, in the folder the QA repo will
+    become. On setup day the harness is exported into the same folder, around them.</p>
+  </div>
+
+  <div class="sheet" role="table" aria-label="Preparing the folder">
+    <div class="cols" role="row"><div>Step</div><div>You</div><div>The harness asks</div><div>You get</div></div>
+
+    <div class="row" role="row">
+      <div class="step"><small>1</small>Make the prep folder</div>
+      <div><span class="cell-label">You</span><code class="cmd">npm run prep -- &lt;path-to&gt;/acme-qa --name "Acme"</code><p class="do">From the <code>ai-qa-harness</code> template.</p></div>
+      <div><span class="cell-label">The harness asks</span><div class="talk"><p class="say note">Nothing. It writes the folder and stops; it never overwrites a file that is already there.</p></div></div>
+      <div class="out"><span class="cell-label">You get</span>
+        <p class="file"><code>setup/</code> <span class="pill c">committed</span><span>a start-here page, a filling guide, a checklist, and one file each for accounts and roles, Jira, decisions, contacts and local paths</span></p>
+        <p class="file"><code>context/sources/</code> <span class="pill c">committed</span><span>folders for specs, test cases, defects, Jira exports and guides</span></p>
+      </div>
+    </div>
+
+    <div class="row" role="row">
+      <div class="step"><small>2</small>Fill in the answers</div>
+      <div><span class="cell-label">You</span><p class="do">Open <code>setup/START-HERE.md</code>. Fill each file — <code>setup/FILLING-GUIDE.md</code> says how, with examples.</p></div>
+      <div><span class="cell-label">The harness asks</span><div class="talk">
+        <p class="say note">Three kinds of user — store admin, warehouse staff, customer — go in <code>accounts.md</code>, each with the password-manager entry its password lives in. Never the password.</p>
+        <p class="say note">Project key <code>ACME</code>, story <code>ACME-1100</code>, epics to digest in <code>jira.md</code>. The QA address, no-go areas and severity examples in <code>decisions.md</code>.</p>
+      </div></div>
+      <div class="out"><span class="cell-label">You get</span><p class="file">Every setup question answered<span>or marked <code>TBD — &lt;who&gt;</code>; nothing guessed</span></p></div>
+    </div>
+
+    <div class="row" role="row">
+      <div class="step"><small>3</small>Collect the documents</div>
+      <div><span class="cell-label">You</span><p class="do">The rules PDF into <code>specs/</code>, last release's test cases as CSV into <code>test-cases/</code>, the bug list into <code>defects/</code>.</p></div>
+      <div><span class="cell-label">The harness asks</span><div class="talk"><p class="say note">Personal data, credentials and production extracts are taken out first. Anything too confidential to commit stays outside; its path goes in <code>paths.md</code>.</p></div></div>
+      <div class="out"><span class="cell-label">You get</span><p class="file">The project's knowledge, ready to read<span>the context-builder's sources</span></p></div>
+    </div>
+
+    <div class="row" role="row">
+      <div class="step"><small>4</small>Setup day: copy the harness in</div>
+      <div><span class="cell-label">You</span><code class="cmd">npm run export -- &lt;path-to&gt;/acme-qa</code><p class="do">Then <code>git init</code>, <code>npm install</code>, <code>npx playwright install</code>, and <code>.env</code> from the password manager.</p></div>
+      <div><span class="cell-label">The harness asks</span><div class="talk"><p class="say note">The export writes only harness files. <code>setup/</code> and <code>context/sources/</code> stay exactly as the team left them.</p></div></div>
+      <div class="out"><span class="cell-label">You get</span><p class="file">The QA repo, ready for the context-builder<span>every answer it will ask for already written down</span></p></div>
+    </div>
+  </div>
+</section>
+
 <!-- ============================== SETUP ============================== -->
 <section class="phase" id="setup">
   <div class="phase-head">
     <span class="phase-tag">ONCE</span>
     <h2>Setup: the context-builder learns the application</h2>
     <p><code>/playwright-context-builder</code> runs once, after the files are copied into the new QA repo. It
-    stops at every checkpoint and waits for you. It runs again only when the application changes.</p>
+    stops at every checkpoint and waits for you — the answers are already in <code>setup/</code>. It runs again
+    only when the application changes.</p>
   </div>
 
   <div class="sheet" role="table" aria-label="Context-builder steps">
@@ -585,6 +635,7 @@
     <table>
       <thead><tr><th>Stage</th><th>Run</th><th>You decide</th><th>Comes out</th></tr></thead>
       <tbody>
+        <tr><td>Prepare, before setup day</td><td><code>npm run prep -- &lt;dir&gt; --name "&lt;Project&gt;"</code></td><td>Every answer in <code>setup/</code>; which documents to bring</td><td>The folder the QA repo becomes, filled in</td></tr>
         <tr><td>Setup, once</td><td><code>/playwright-context-builder</code></td><td>Roles, sources, the drafts</td><td>What the harness knows about the app</td></tr>
         <tr><td>Plan</td><td><code>/playwright-test-planner &lt;KEY&gt;</code></td><td>How to read the AC, which scenarios</td><td>The plan and its test case IDs</td></tr>
         <tr><td>Generate</td><td><code>/playwright-test-generator &lt;plan&gt;</code></td><td>File path, new page objects, SQL</td><td>The test code, reviewed against the plan</td></tr>

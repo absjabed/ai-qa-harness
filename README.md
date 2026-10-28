@@ -201,9 +201,12 @@ docs/
   NEW-QA-REPO.md                 starting a project's QA repo - files, minimum config, checklist
 examples/
   fleetkeep/                     a practice app and one ticket's worked cycle - never exported to a project
+prep/
+  setup/                         the prep-folder templates npm run prep fills in - never exported
 scripts/
   open-docs.js                   opens the handbook cross-platform
   export-harness.js              copies the harness into a project's QA repo
+  prep-folder.js                 makes a project's prep folder - setup/ to fill in, context/sources/ folders
   check-docs.js                  asserts the docs still match the repo
   check-trace.ts                 enforces I8 - TCIDs present, planned, unique
   regression.ts                  regression for a client release - pick its tickets or epics

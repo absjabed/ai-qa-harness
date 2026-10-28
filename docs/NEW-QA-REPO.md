@@ -20,6 +20,28 @@ real project's repo is then the second time, not the first.
 
 ---
 
+## 0. Before setup day — prepare the folder
+
+Setup goes faster when the answers and documents are ready before anyone opens Claude Code. From this template:
+
+```bash
+npm run prep -- <path-to>/<project>-qa --name "<Project name>"
+```
+
+It makes the folder the project's QA repo will become, with:
+
+- `setup/` — `START-HERE.md` and `FILLING-GUIDE.md` for the team, `checklist.md`, and one file per thing to
+  gather: `accounts.md` (roles and test accounts — never passwords), `jira.md`, `decisions.md` (environment,
+  no-go areas, scope, severity, releases, exit criteria), `contacts.md`, `paths.md`;
+- `context/sources/specs/`, `test-cases/`, `defects/`, `jira/`, `guides/` — where the project's documents go.
+
+The team fills those in; the filling guide says how, in what format, and what to remove first. On setup day the
+export goes into **the same folder** — it writes only harness files, never touches `setup/` or the source
+folders, and stops rather than overwrite anything. Every answer then has a home in the steps below. Nothing
+in the folder is a password: those stay in the team's password manager until `.env` is made, in step 2a.
+
+---
+
 ## 1. Create the new repo and copy the harness into it
 
 **1. Create the QA repository** wherever your team keeps repositories, and clone it to your machine — or
@@ -80,6 +102,7 @@ step 9, which says what to edit when you remove something.
 | `CHANGELOG.md` | The template's history; the copy records the version it came from instead |
 | `scripts/export-harness.js`, `scripts/lib/overlay.js` | A copy has nothing to export, and no example layers to apply |
 | `examples/` | The FleetKeep practice app and worked cycle — for learning on, never part of a project's repo |
+| `prep/`, `scripts/prep-folder.js` | The prep-folder templates and the command that writes them — `npm run prep` runs from the template |
 | `.env`, `.mcp.json` | They hold passwords — each project creates its own from the `.example` files |
 | `node_modules/`, `test-results/`, `playwright-report/`, `reports/` | Installed or generated |
 
@@ -353,6 +376,7 @@ recorded. Everything is files in the new QA repo, reviewed and committed like an
 | What | Produced by | Kept in | Committed? |
 |---|---|---|---|
 | What the harness knows about the app | context-builder | `context/BASELINE.md`, `context/<area>.md`, `PROJECT-PROFILE.md` §2–4, `specs/UserFlowsUserRolePermissions/`, `specs/RegressionTags/` | yes |
+| Answers gathered before setup day — accounts (no passwords), Jira, decisions, contacts | you, with `npm run prep` | `setup/` | yes |
 | The documents it read | you | `context/sources/` | yes |
 | Test cases for a story — TCIDs, steps, expected results | planner | `specs/<STORY-KEY>.plan.md` and `.plan.csv` | yes |
 | **Test code** — one test per automated test case | generator | `tests/stories/<release>/<STORY-KEY>.spec.ts` — see below for a story with no release yet | yes |

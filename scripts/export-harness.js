@@ -32,8 +32,8 @@ const root = path.join(__dirname, '..');
  * Tracked files that describe the template, not a project. Everything else is copied.
  * README.md is replaced by one written for the project; the template's history stays with the template.
  */
-const TEMPLATE_ONLY = ['README.md', 'CHANGELOG.md', 'scripts/export-harness.js', 'scripts/lib/overlay.js'];
-const TEMPLATE_ONLY_DIRS = ['examples/'];
+const TEMPLATE_ONLY = ['README.md', 'CHANGELOG.md', 'scripts/export-harness.js', 'scripts/lib/overlay.js', 'scripts/prep-folder.js'];
+const TEMPLATE_ONLY_DIRS = ['examples/', 'prep/'];
 
 function fail(message) {
     console.error(`\nexport: ${message}\n`);
@@ -140,6 +140,7 @@ const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
 pkg.name = projectName;
 pkg.description = 'Playwright QA suite.';
 delete pkg.scripts.export;
+delete pkg.scripts.prep;
 fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
 
 // package-lock.json carries the name too; keep the two in step so npm does not rewrite it on first install.

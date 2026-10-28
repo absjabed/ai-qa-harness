@@ -749,6 +749,17 @@ td code { white-space: nowrap; }
   the template — never configured   ── copy ──▶ the project's QA suite
   stays application-neutral                     configured, tests written, regression run</code></pre>
 
+      <h3>0 · Before setup day — prepare the folder</h3>
+      <p>Setup goes faster when the answers and documents are ready before anyone opens Claude Code. From this
+      template:</p>
+      <pre><code>npm run prep -- &lt;path-to&gt;/&lt;project&gt;-qa --name "&lt;Project name&gt;"</code></pre>
+      <p>It makes the folder the project's QA repo will become: <code>setup/</code> — a start-here page, a
+      filling guide, a checklist, and one file each for accounts and roles (never passwords), Jira, decisions,
+      contacts and local paths — and <code>context/sources/</code> subfolders for specs, test cases, defects,
+      Jira exports and guides. The team fills them in. On setup day the export goes into <b>the same folder</b>:
+      it writes only harness files, never touches <code>setup/</code> or the source folders, and stops rather
+      than overwrite anything.</p>
+
       <h3>1 · Create the repo and copy the harness in</h3>
       <ol class="steps">
         <li class="step"><span class="step-n">1</span><div class="step-body">
@@ -799,7 +810,8 @@ npx playwright install</code></pre></div></li>
         </table>
       </div>
       <p><b>Not copied:</b> the template's <code>README.md</code> and <code>CHANGELOG.md</code>, the export
-      script and its example-layer helper, the <code>examples/</code> practice material, and — never — <code>.env</code>, <code>.mcp.json</code>, <code>node_modules/</code> or run
+      script and its example-layer helper, the <code>examples/</code> practice material, the prep-folder
+      templates in <code>prep/</code> with their command, and — never — <code>.env</code>, <code>.mcp.json</code>, <code>node_modules/</code> or run
       output. Copying by hand instead? <code>docs/NEW-QA-REPO.md</code> lists every file, and the two things to
       do afterwards: rename <code>name</code> in <code>package.json</code>, and record the harness version and
       commit in the profile.</p>
@@ -986,6 +998,7 @@ npx playwright install</code></pre></div></li>
           <thead><tr><th>What</th><th>Produced by</th><th>Kept in</th><th>Committed</th></tr></thead>
           <tbody>
             <tr><td>What the harness knows about the app</td><td>context-builder</td><td><code>context/</code>, profile §2–4, <code>specs/UserFlowsUserRolePermissions/</code>, <code>specs/RegressionTags/</code></td><td>yes</td></tr>
+            <tr><td>Answers gathered before setup day — no passwords</td><td>you, with <code>npm run prep</code></td><td><code>setup/</code></td><td>yes</td></tr>
             <tr><td>The documents it read</td><td>you</td><td><code>context/sources/</code></td><td>yes</td></tr>
             <tr><td>Test cases for a story</td><td>planner</td><td><code>specs/&lt;STORY-KEY&gt;.plan.md</code>, <code>.plan.csv</code></td><td>yes</td></tr>
             <tr><td><b>Test code</b> — one test per automated case</td><td>generator</td><td><code>tests/stories/&lt;release&gt;/&lt;STORY-KEY&gt;.spec.ts</code></td><td>yes</td></tr>
@@ -2870,6 +2883,7 @@ Run it? [Y/n]: y</code></pre>
             <tr><td><code>npm run report</code></td><td>Open the last HTML report</td></tr>
             <tr><td><code>npm run setup</code></td><td><code>playwright install</code></td></tr>
             <tr><td><code>npm run export -- &lt;dir&gt;</code></td><td>Template only: copy the harness into a project's QA repository</td></tr>
+            <tr><td><code>npm run prep -- &lt;dir&gt; --name "&lt;Project&gt;"</code></td><td>Template only: a project's prep folder — <code>setup/</code> files to fill in and <code>context/sources/</code> folders — before setup day</td></tr>
             <tr><td><code>npm run export -- &lt;dir&gt; --example fleetkeep</code></td><td>Template only: a practice repo against the FleetKeep demo app; <code>--worked</code> adds one ticket's finished cycle</td></tr>
           </tbody>
         </table>

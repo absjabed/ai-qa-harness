@@ -84,6 +84,11 @@ project-specific value lives in `PROJECT-PROFILE.md`, `.env`, `.mcp.json` and `c
   them for the full regression — then all of its tickets,
   some epics, or chosen tickets, runs them, and reports on exactly that selection. Each plan records its
   release and epic — from Jira's fix version and parent epic when the tracker is connected.
+- **A prep folder for setup day** — `npm run prep -- <dir> --name "<Project>"` makes the folder a project's QA
+  repo will become: `setup/` files to fill in before setup day (start-here, filling guide, checklist, accounts
+  and roles, Jira, decisions, contacts, paths — never passwords) and `context/sources/` subfolders for the
+  documents. The export then goes into the same folder without touching them. Templates in `prep/`, never
+  exported.
 - **A practice example** — `examples/fleetkeep/`: a small fictional fleet-maintenance app with one planted
   defect, and layers that turn an export into a ready practice repo (`npm run export -- <dir> --example
   fleetkeep`, `--worked` for one ticket's finished cycle). Layers carry changes, not copies, and

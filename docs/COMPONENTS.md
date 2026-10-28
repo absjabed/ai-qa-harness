@@ -93,6 +93,20 @@ with a direct query before writing it into a context document. Full reasoning in
 
 ---
 
+### `prep/`
+
+**What** The templates for a project's prep folder — `prep/setup/`: `START-HERE.md`, `FILLING-GUIDE.md`,
+`checklist.md`, `accounts.md`, `jira.md`, `decisions.md`, `contacts.md`, `paths.md` — with `{{PROJECT}}`,
+`{{FOLDER}}` and `{{SLUG}}` placeholders. Never copied into a project's QA repo.
+
+**How to use** `npm run prep -- <dir> --name "<Project>"` (`scripts/prep-folder.js`) writes them into `<dir>/setup/`
+with the project's name filled in, and creates `context/sources/specs/`, `test-cases/`, `defects/`, `jira/` and
+`guides/`. It never overwrites. The team fills the folder in before setup day; the export then goes into the
+same folder without touching it — see `docs/NEW-QA-REPO.md` section 0.
+
+**Keep in step** When a setup step, a profile section or a `.env` key changes, check the templates that
+mention it — `checklist.md` and `FILLING-GUIDE.md` above all.
+
 ### `examples/`
 
 **What** Practice material, never copied into a project's QA repo. `examples/fleetkeep/` holds a small
@@ -213,8 +227,8 @@ unmet, for use as a gate — by default it only reports, because closing a cycle
 **What** `npm run export -- <dir>` — copies the harness into a project's QA repository. Template only; it
 is not copied, since a copy has nothing to export.
 
-**Copies** Every tracked file except `README.md`, `CHANGELOG.md`, itself, `scripts/lib/overlay.js` and
-`examples/` — dotfiles included. A hand-made copy most often misses `.gitignore`, and without it `.env` is
+**Copies** Every tracked file except `README.md`, `CHANGELOG.md`, itself, `scripts/lib/overlay.js`,
+`scripts/prep-folder.js`, `examples/` and `prep/` — dotfiles included. A hand-made copy most often misses `.gitignore`, and without it `.env` is
 committed on the first push.
 
 **Also** Names the package after the target folder, writes a starter README if the target has none,

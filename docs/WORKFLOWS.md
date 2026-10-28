@@ -245,7 +245,13 @@ reviewing agent output is most of the job.
 
 This repository is a template. You don't move a configured harness between projects, and you don't clone
 the template for one — each project gets its own new QA repository, and the harness's files are copied into
-it:
+it. Before setup day, prepare the folder so the team can gather answers and documents:
+
+```bash
+npm run prep -- <path-to-the-new-repo> --name "<Project name>"
+```
+
+then, on setup day, copy the harness into the same folder:
 
 ```bash
 npm run export -- <path-to-the-new-repo>

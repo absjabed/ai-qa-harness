@@ -19,7 +19,9 @@ there. It lists every file that is copied and why, and the checklist to complete
 runs. This file is the reference behind those steps.
 
 The template itself is never configured for a project — it stays free of application-specific content so
-the next project can start clean. The copy is made with:
+the next project can start clean. Before setup day, `npm run prep -- <path-to-the-new-repo> --name "<Project>"`
+makes the folder ready for the team to gather answers and documents in (`docs/NEW-QA-REPO.md` section 0). The
+copy is made with:
 
 ```bash
 npm run export -- <path-to-the-new-repo>

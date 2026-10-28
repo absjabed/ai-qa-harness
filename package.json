@@ -7,6 +7,7 @@
     "test": "playwright test",
     "docs": "node scripts/open-docs.js",
     "export": "node scripts/export-harness.js",
+    "prep": "node scripts/prep-folder.js",
     "test:headed": "playwright test --headed",
     "test:debug": "playwright test --debug",
     "test:ui": "playwright test --ui",

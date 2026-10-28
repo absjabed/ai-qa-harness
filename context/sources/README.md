@@ -9,6 +9,10 @@ Drop exported project documents here before running `/playwright-context-builder
 - Jira issues, when Jira is not connected — a filter or search, then *Export* → CSV, with the description and
   acceptance-criteria columns
 
+**Suggested subfolders** — `npm run prep` creates them: `specs/` (specifications, business rules),
+`test-cases/` (existing cases, CSV), `defects/` (bug history, CSV), `jira/` (Jira exports, only when Jira is
+not connected), `guides/` (user guides, release notes, glossary). Any layout works; these keep it findable.
+
 **Formats:** Markdown, text, CSV and PDF read best. Export a Word document as PDF, and a spreadsheet as CSV —
 one file per sheet that matters.
 

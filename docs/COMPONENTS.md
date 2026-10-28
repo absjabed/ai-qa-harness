@@ -95,8 +95,9 @@ with a direct query before writing it into a context document. Full reasoning in
 
 ### `prep/`
 
-**What** The templates for a project's prep folder — `prep/setup/`: `START-HERE.md`, `FILLING-GUIDE.md`,
-`checklist.md`, `accounts.md`, `jira.md`, `decisions.md`, `contacts.md`, `paths.md` — with `{{PROJECT}}`,
+**What** The templates for a project's prep folder — `prep/setup/`: `1-START-HERE.md` (read first),
+`2-CHECKLIST.md` (work from it), `3-FILLING-GUIDE.md` (look things up), and the files to fill in —
+`accounts.md`, `jira.md`, `decisions.md`, `contacts.md`, `paths.md` — with `{{PROJECT}}`,
 `{{FOLDER}}` and `{{SLUG}}` placeholders. Never copied into a project's QA repo.
 
 **How to use** `npm run prep -- <dir> --name "<Project>"` (`scripts/prep-folder.js`) writes them into `<dir>/setup/`
@@ -105,7 +106,7 @@ with the project's name filled in, and creates `context/sources/specs/`, `test-c
 same folder without touching it — see `docs/NEW-QA-REPO.md` section 0.
 
 **Keep in step** When a setup step, a profile section or a `.env` key changes, check the templates that
-mention it — `checklist.md` and `FILLING-GUIDE.md` above all.
+mention it — `2-CHECKLIST.md` and `3-FILLING-GUIDE.md` above all.
 
 ### `examples/`
 

@@ -1,6 +1,10 @@
 # {{PROJECT}} QA — setup checklist
 
-Tick as you go. The file in brackets is where the answer is written down.
+> **You are here: 2 of 3 — work from this.** Go top to bottom. Each item names the file to fill in; for how to
+> answer it, open `3-FILLING-GUIDE.md` at the section named after *Guide:*. Tick an item only when it is done.
+> Lost? `1-START-HERE.md` is the map.
+
+Part A is before setup day; parts B and C are on setup day.
 
 ## A. Before setup day — gather
 
@@ -12,29 +16,32 @@ Tick as you go. The file in brackets is where the answer is written down.
 - [ ] The {{PROJECT}} QA environment opens in a browser from this machine — VPN on if needed
 - [ ] A time agreed when the QA environment is not being redeployed
 
-**Accounts** (`accounts.md`) — dedicated QA accounts only, never a person's own, never production
+**Accounts** — fill in `accounts.md` · *Guide: accounts.md* · dedicated QA accounts only, never a person's own, never production
 - [ ] Every kind of user listed — one per set of permissions, not one per person
 - [ ] One QA test account per kind of user, its password in the team's password manager
 - [ ] Which one has full access — the baseline role
 - [ ] Optional: a **read-only** QA database account for the agents
 - [ ] Optional: a separate suite database account, if tests will seed or reset data
 
-**Jira** (`jira.md`)
+**Jira** — fill in `jira.md` · *Guide: jira.md*
 - [ ] The project key, and the issue key format
 - [ ] One story key that exists, to test the connection
 - [ ] Which epics, releases or JQL the context-builder should digest
 - [ ] Connected, or exported as CSV into `context/sources/jira/`
 - [ ] The bug issue type, its priority values, and whether it has a severity field
 
-**Existing knowledge** (`context/sources/`, `paths.md`)
+**Existing knowledge** — documents into `context/sources/`, then `contacts.md` and `paths.md` · *Guide: Part 2,
+the folder's own section; and contacts.md, paths.md*
 - [ ] Specs and business rules → `context/sources/specs/`
 - [ ] Existing test cases, as CSV → `context/sources/test-cases/`
 - [ ] Bug list and problem areas, as CSV → `context/sources/defects/`
 - [ ] User guides, release notes, glossary → `context/sources/guides/`
 - [ ] Optional: paths to source, API docs, schema scripts → `paths.md`
-- [ ] Who to ask about what (`contacts.md`)
+- [ ] Who to ask about what → `contacts.md`
+- [ ] Every document checked for personal data, credentials and production extracts · *Guide: Part 2, "Before
+      anything goes in"*
 
-**Decisions** (`decisions.md`)
+**Decisions** — fill in `decisions.md` · *Guide: decisions.md*
 - [ ] The environment — QA or staging, never production
 - [ ] Areas the agents must stay out of
 - [ ] The people testing in that environment know someone will be exploring it
@@ -42,7 +49,7 @@ Tick as you go. The file in brackets is where the answer is written down.
 
 ## B. Setup day — before `/playwright-context-builder`
 
-- [ ] Harness exported into this folder (`START-HERE.md`, step 4); `git init`, `npm install`, `npx playwright install`
+- [ ] Harness exported into this folder (`1-START-HERE.md`, "The order", step 4); `git init`, `npm install`, `npx playwright install`
 - [ ] `.env` made from `.env.example`: `APP_NAME`, `TRACKER_PROJECT_KEY`, `BASE_URL` (with `https://`, no trailing slash)
 - [ ] Roles set up yourself — role keys, one login file each, one email/password pair each in `.env` — or left for the context-builder, which does it with you first
 - [ ] Issue key format in `PROJECT-PROFILE.md` section 1; `storyKeyPattern` in `config/projectProfile.ts` tightened to it

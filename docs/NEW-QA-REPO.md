@@ -30,8 +30,8 @@ npm run prep -- <path-to>/<project>-qa --name "<Project name>"
 
 It makes the folder the project's QA repo will become, with:
 
-- `setup/` — `START-HERE.md` and `FILLING-GUIDE.md` for the team, `checklist.md`, and one file per thing to
-  gather: `accounts.md` (roles and test accounts — never passwords), `jira.md`, `decisions.md` (environment,
+- `setup/` — three numbered files for the team: `1-START-HERE.md` to read first, `2-CHECKLIST.md` to work from,
+  `3-FILLING-GUIDE.md` to look things up in — and one file per thing to gather: `accounts.md` (roles and test accounts — never passwords), `jira.md`, `decisions.md` (environment,
   no-go areas, scope, severity, releases, exit criteria), `contacts.md`, `paths.md`;
 - `context/sources/specs/`, `test-cases/`, `defects/`, `jira/`, `guides/` — where the project's documents go.
 

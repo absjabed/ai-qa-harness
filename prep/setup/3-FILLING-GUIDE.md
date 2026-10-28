@@ -1,8 +1,12 @@
 # How to fill this folder
 
+> **You are here: 3 of 3 — look things up here.** Don't read it front to back: `2-CHECKLIST.md` tells you which
+> file to fill next; come here to that file's section — Part 1 for the `setup/` files, Part 2 for each
+> `context/sources/` folder.
+
 A guide to every file in `setup/` and every folder in `context/sources/`: what goes in, in what format, how
-to get it out of the tool it lives in, and what to take out before it goes in. `START-HERE.md` has the order;
-this is the detail.
+to get it out of the tool it lives in, and what to take out before it goes in. `1-START-HERE.md` has the map,
+`2-CHECKLIST.md` the order; this is the detail.
 
 **Who fills what.** One person owns the folder and chases answers; the rest come from whoever knows — the
 QA lead, the product owner, whoever administers Jira and the QA environment. Put a name next to anything
@@ -100,7 +104,7 @@ Only if the team has these on the setup machine: a checkout of {{PROJECT}}'s sou
 schema scripts. Full paths: `<path-to>/{{SLUG}}-source`. Also the path to any document that must not be committed —
 it can be read from where it is.
 
-### `checklist.md`
+### `2-CHECKLIST.md`
 
 Tick a box only when it is really done. Part A before setup day; B and C on the day.
 
@@ -243,4 +247,4 @@ users say.
 - [ ] Every `setup/` file filled, open items marked `TBD — <who>`
 - [ ] Each `context/sources/` folder has what the team has, or is knowingly empty
 - [ ] Every document checked for personal data, credentials and production extracts
-- [ ] `checklist.md` part A ticked
+- [ ] `2-CHECKLIST.md` part A ticked

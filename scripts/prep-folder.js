@@ -3,7 +3,8 @@
  * `npm run prep -- <target-dir> [--name "<Project name>"]` — make the folder a project's QA repo will grow in,
  * ready for the team to prepare before setup day.
  *
- * It writes `setup/` — a start-here page, a filling guide, a checklist, and one file per thing to gather
+ * It writes `setup/` — `1-START-HERE.md` (read first), `2-CHECKLIST.md` (work from it), `3-FILLING-GUIDE.md`
+ * (look things up), and one file per thing to gather
  * (accounts and roles, Jira, decisions, contacts, local paths) — and the `context/sources/` subfolders the
  * project's documents go in. Nothing in it is a password or a harness file, so on setup day `npm run export`
  * goes into the same folder without moving anything.
@@ -72,8 +73,9 @@ prep: ${target} is ready for ${project}
   setup/            ${templates.join(', ')}
   context/sources/  ${SOURCE_FOLDERS.join('/, ')}/
 
-Next: the team opens setup/START-HERE.md, fills in setup/ (setup/FILLING-GUIDE.md has the detail) and
-drops the project's documents into context/sources/. On setup day, from this template:
+Next: the team reads setup/1-START-HERE.md, then works through setup/2-CHECKLIST.md part A — filling in
+each setup/ file it names, with setup/3-FILLING-GUIDE.md open at that file's section — and drops the
+project's documents into context/sources/. On setup day, from this template:
 
   npm run export -- ${targetArg}
 

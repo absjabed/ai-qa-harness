@@ -624,6 +624,12 @@ td code { white-space: nowrap; }
       suite built on the Page Object / Page Factory pattern; a seventh adapts the harness when it does not fit. Everything project-specific lives in two files —
       <code>PROJECT-PROFILE.md</code> and <code>.env</code>. Nothing in the agents, the config, or the
       fixtures names an application.</p>
+      <p><b>Built on established QA practice:</b> ISTQB test design techniques and risk-based prioritisation, a
+      full test life cycle with entry and exit criteria, end-to-end traceability from acceptance criterion to
+      defect, Playwright best practice with Page Objects and WCAG accessibility checks, and least-privilege access
+      throughout. People stay in control: agents stop at checkpoints, every defect is confirmed by a person, and
+      every generated test is independently reviewed against its plan.
+      <a href="#built-on">What it is built on</a>.</p>
       <p class="meta-line">Setup ≈ 1 hour · Node 18+ · Playwright Test MCP required · database MCP optional but recommended · Jira MCP optional</p>
 
       <h3>The pipeline</h3>
@@ -636,6 +642,40 @@ td code { white-space: nowrap; }
         <li class="pipe-step"><span class="pipe-n">05</span><b>defect-raiser</b><span class="desc">Files the bug — in the tracker, or as a CSV row — and marks the test <code>fixme</code>.</span></li>
         <li class="pipe-step"><span class="pipe-n">06</span><b>harness-improver</b><span class="desc">When the harness does not fit, changes it in the right place and records why.</span></li>
       </ol>
+
+      <h3 id="built-on">What it is built on, and why it matters</h3>
+      <p>The harness is a ready-made foundation for a software QA team's test automation. It combines Playwright
+      and TypeScript with seven AI agents, run in Claude Code, that work alongside testers through the whole
+      testing life cycle: learning the application, planning test cases from Jira stories, writing the automated
+      tests, checking them, diagnosing failures, raising defects and reporting at release closure.</p>
+      <p>It is built on established quality-assurance practice:</p>
+      <ul>
+        <li><b>Test design</b> — the ISTQB test design techniques: equivalence partitioning, boundary values,
+        decision tables, state transitions, pairwise and error guessing, with test cases prioritised by risk.</li>
+        <li><b>Test management</b> — the standard test life cycle, from requirement analysis through closure. Each
+        project sets its test strategy, entry and exit criteria, and a defect severity scale kept separate from
+        test priority.</li>
+        <li><b>Traceability</b> — every test case has a permanent ID that links the acceptance criterion to its
+        test, result, defect and Jira bug, so coverage can be shown for any release.</li>
+        <li><b>Engineering</b> — Playwright best practice: the Page Object and Page Factory patterns, accessible
+        locators, and accessibility checks against WCAG 2 A/AA.</li>
+        <li><b>Security</b> — least privilege throughout. Agents never see credentials, their database access is
+        read-only, and nothing is written to Jira without a person's approval.</li>
+      </ul>
+      <p>What makes it dependable is that people stay in control. Agents stop at checkpoints and wait for a
+      decision. A person confirms every defect. An independent reviewer checks each generated test against its
+      plan, and the healer may not change what a test expects to make it pass. Every result, defect and closure
+      report is kept in the team's repository as a shared record.</p>
+      <p><b>For a QA team, this means:</b></p>
+      <ul>
+        <li>regression runs as a single command per client release;</li>
+        <li>bug reports arrive complete, with steps, screenshots and traceability;</li>
+        <li>the team's knowledge of the application is written down once and reused;</li>
+        <li>release decisions rest on the actual numbers.</li>
+      </ul>
+      <p>It does not depend on any one application. Each project gets its own repository with its own settings,
+      and when a team needs it to work differently, a dedicated agent adapts the harness and records every
+      change.</p>
 
       <h3>What makes this different from asking an LLM to write tests</h3>
       <p><b>The generator does not write from plan text.</b> It drives the real browser through the

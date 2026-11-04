@@ -203,7 +203,11 @@ if (isTemplate) {
 
 // ---------------------------------------------------------------- markdown links
 
-for (const file of trackedFiles().filter((f) => f.endsWith('.md'))) {
+// context/sources/ is exempt: it holds documents copied in from a team's wiki or knowledge base, whose links point at
+// pages that were never copied. They are raw input, not harness docs. context/*.md, which the context-builder writes,
+// is still checked.
+const LINKS_EXEMPT = /^context\/sources\//;
+for (const file of trackedFiles().filter((f) => f.endsWith('.md') && !LINKS_EXEMPT.test(f))) {
     const dir = path.dirname(path.join(root, file));
     for (const [, link] of read(file).matchAll(/\]\(([^)#:]+\.md)\)/g)) {
         check(`${file} links to a missing file`, fs.existsSync(path.resolve(dir, link)), link);

@@ -16,6 +16,9 @@ not connected), `guides/` (user guides, release notes, glossary). Any layout wor
 **Formats:** Markdown, text, CSV and PDF read best. Export a Word document as PDF, and a spreadsheet as CSV —
 one file per sheet that matters.
 
+**Links inside these documents are not checked.** A page copied from a wiki or knowledge base usually links to
+pages that were not copied; `npm run check` skips this folder's links, so leave them as they are.
+
 **What happens to them:** the context-builder reads them and writes the *distillation* into
 `context/<area>.md` — rules into *Invariants*, earlier test cases into *Existing coverage*, bug history into
 *Caveats* — each citing the file and section it came from. These originals are not what the other agents

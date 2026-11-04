@@ -132,6 +132,8 @@ area are worth more than a 300-page manual.
   One sheet per file — split a workbook into one CSV per sheet.
 - **PDF:** must have selectable text; a scanned PDF reads as nothing.
 - **Size:** keep a single file under ~20 MB; split a huge export by area or release.
+- **Links:** a page copied from a wiki or knowledge base usually links to pages that were not copied. Links
+  inside `context/sources/` are not checked, so they don't need fixing — leave them as they are.
 
 ### File names
 

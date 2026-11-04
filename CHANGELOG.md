@@ -111,7 +111,8 @@ project-specific value lives in `PROJECT-PROFILE.md`, `.env`, `.mcp.json` and `c
   records where the copy came from.
 - **Documentation** — a self-contained handbook at `docs/index.html` (`npm run docs`), component, agent,
   workflow and MCP references, and an introductory deck for QA teams at `docs/qa-harness-intro.html`.
-  `npm run check:docs` catches the documentation drifting from the repository.
+  `npm run check:docs` catches the documentation drifting from the repository. Its link check skips
+  `context/sources/`, whose documents are copied in from a team's wiki and link to pages that were not.
 
 **Known limitations, stated plainly**
 

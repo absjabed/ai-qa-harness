@@ -86,7 +86,8 @@ Propose the **smallest change in the right layer**, and show it exactly before m
 - why this layer and this wording;
 - **what else it touches** — every other agent that reads the same file or cites the same rule, and every
   doc that restates it (`docs/index.html`, `docs/AGENTS.md`, `docs/WORKFLOWS.md`, `docs/COMPONENTS.md`,
-  `SETUP.md`, `README.md`, `docs/NEW-QA-REPO.md`, `docs/qa-harness-walkthrough.html`). Search for how the
+  `SETUP.md`, `README.md`, `docs/NEW-QA-REPO.md`, `docs/qa-harness-walkthrough.html`,
+  `docs/harness-docs/ai-qa-harness.md` and its draw.io diagrams). Search for how the
   behavior is *described*, not only for the agent's name;
 - **how to check it worked** — the same input run again, and what should now come out.
 

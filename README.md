@@ -84,6 +84,7 @@ application stays in your copy. That is the line that keeps this template reusab
 | [docs/MCP.md](docs/MCP.md) | Wiring the browser, database and Jira MCP servers, and the guard rails |
 | [docs/qa-harness-intro.html](docs/qa-harness-intro.html) | Three slides for introducing the harness to a QA team: how they test today, how they will with it |
 | [docs/qa-harness-walkthrough.html](docs/qa-harness-walkthrough.html) | One example cycle, step by step: setup, one ticket, regression and closure — what you run, what each agent asks, what comes out |
+| [docs/harness-docs/ai-qa-harness.md](docs/harness-docs/ai-qa-harness.md) | Developer guide: how the agent system works — architecture, agent pattern, each workflow, guardrails, harness improvement — with editable draw.io diagrams |
 | [examples/fleetkeep/README.md](examples/fleetkeep/README.md) | A practice app to learn the harness on before a real project — `npm run export -- <dir> --example fleetkeep` — and one ticket's whole cycle, worked |
 | [context/README.md](context/README.md) | What project knowledge goes in `context/`, and in what shape |
 | [PROJECT-PROFILE.md](PROJECT-PROFILE.md) | The file you fill in per project |
@@ -205,6 +206,7 @@ docs/
   qa-harness-intro.html          three-slide introduction for a QA team
   qa-harness-walkthrough.html    one example cycle, step by step - what you run, what it asks, what comes out
   NEW-QA-REPO.md                 starting a project's QA repo - files, minimum config, checklist
+  harness-docs/                  developer guide to the agent system, with draw.io diagrams and their PNGs
 examples/
   fleetkeep/                     a practice app and one ticket's worked cycle - never exported to a project
 prep/

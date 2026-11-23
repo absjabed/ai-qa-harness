@@ -134,6 +134,9 @@ harness, and what changes for them. Open it in a browser; arrow keys move betwee
 screen, and printing gives one slide per page. `qa-harness-walkthrough.html` follows one example through a
 whole cycle — setup, one ticket, regression and closure — showing for each step what you run, what the
 harness asks and what comes out; the handbook's *Follow a whole cycle* covers the same in reference form.
+`harness-docs/` is the developer guide to the agent system: `ai-qa-harness.md`, with one editable multi-page
+draw.io file and a PNG per page, covering the architecture, the agent pattern, each workflow, the guardrails
+and harness improvement.
 
 **How to use** `npm run docs` opens the handbook. The markdown files are read in place, and are also what
 the agents read when they need a convention rather than an instruction.

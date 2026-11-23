@@ -35,7 +35,7 @@ on top: it never changes what a test expects without the plan agreeing or you ap
 **Changing the harness.** When an agent does not behave as the team needs, `playwright-harness-improver`
 finds where the behavior comes from and changes it there — see its section at the end.
 
-All seven read `PROJECT-PROFILE.md` first. Five of them also read
+All seven read `PROJECT-PROFILE.md` first. Six of them also read
 `TEST-AUTHORING-INVARIANTS.md` and cite invariants by number rather than restating them — one file,
 so a convention has a single place to change.
 

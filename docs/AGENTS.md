@@ -1,6 +1,6 @@
 # Agent Reference
 
-Seven agents, defined in [`agents/`](../agents/) as vendor-neutral markdown and wired into Claude Code by
+Eight agents, defined in [`agents/`](../agents/) as vendor-neutral markdown and wired into Claude Code by
 thin wrappers in `.claude/commands/` — and the reviewer also as a sub-agent in `.claude/agents/`. They form a pipeline but each runs alone.
 
 Not using Claude Code? [`agents/README.md`](../agents/README.md) covers porting — it is a one-line wrapper
@@ -35,7 +35,7 @@ on top: it never changes what a test expects without the plan agreeing or you ap
 **Changing the harness.** When an agent does not behave as the team needs, `playwright-harness-improver`
 finds where the behavior comes from and changes it there — see its section at the end.
 
-All seven read `PROJECT-PROFILE.md` first. Six of them also read
+All eight read `PROJECT-PROFILE.md` first. Six of them also read
 `TEST-AUTHORING-INVARIANTS.md` and cite invariants by number rather than restating them — one file,
 so a convention has a single place to change.
 
@@ -514,6 +514,47 @@ verifies. An entry that can't be traced to a TCID is left `pending` and reported
 
 It never alters the facts of a defect — summary, steps, actual/expected, evidence, severity all came from
 the human-confirmed healer finding. Its only judgment is a table lookup.
+
+---
+
+## `/playwright-test-reporter`
+
+Writes the formal test report: for one story, several, an epic or a release.
+
+| | |
+|---|---|
+| **Model** | sonnet — the numbers come from the script; it asks, enriches and words |
+| **Tools** | Read, Write (its own input files under `reports/.inputs/`), `npm run report:cycle`; the tracker's read tools and, on your yes, its comment tool |
+| **Input** | The scope and the formats, both asked every time |
+| **Output** | `specs/execution/reports/QA-Report_<app>_<scope>_<version>_<date-time>.md`, and `.html` / `.pdf` beside it on request |
+
+### How it works
+
+1. **Asks which report.** `npm run report:cycle -- --list` shows what there is; it suggests the scope the last
+   run covered — a story after a story run, the release after a regression.
+2. **Asks the format.** Markdown is always written and committed; HTML and PDF are made from it.
+   `QA_REPORT_FORMAT` in `.env` is the suggested answer. Who generated it comes from `QA_TESTER_NAME`, then the
+   git user name; if neither is set it asks.
+3. **Reads Jira**, if connected: each story's title and status, and for a release every ticket in it — so
+   tickets with no test plan yet show up in the report.
+4. **Previews the numbers** (`--preview`, which writes nothing), then writes two to five sentences of summary
+   from those numbers only.
+5. **Writes the report** with `--formal`.
+6. **Offers a test-summary comment** on each story in Jira — or an on-hold note on a blocked story — shown
+   first, posted only on your yes.
+
+### Every figure comes from the script
+
+The agent never counts or restates a number from memory. `npm run report:cycle` computes every figure from the
+plans, the results record, the manual results and the defect log; the agent adds only Jira details and the
+written summary. The HTML and PDF open with a verdict banner, the headline figures and a bar of how the test
+cases ended, then the tickets, exit criteria, results, priorities, acceptance-criteria coverage, defects,
+sign-off, and a short guide to reading it.
+
+### What it will not do
+
+Count or recalculate a figure; comment on a bug (the defect-raiser owns bugs); change any ticket's status or
+fields; read `.env`.
 
 ---
 

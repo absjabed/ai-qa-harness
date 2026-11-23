@@ -74,14 +74,14 @@ step 9, which says what to edit when you remove something.
 
 | Folder / file | What it is | In the new repo you… |
 |---|---|---|
-| `.claude/commands/` (7 files), `.claude/agents/` | The seven agents' Claude Code commands, and the reviewer as a sub-agent | leave as they are |
+| `.claude/commands/` (8 files), `.claude/agents/` | The eight agents' Claude Code commands, and the reviewer as a sub-agent | leave as they are |
 | `.claude/settings.json` | Guard rails — what agents may never do | leave, unless you rename an MCP server |
 | `.env.example` | Every setting the suite reads, labelled required/optional | copy to `.env` and fill in |
 | `.mcp.json.example` | Browser, database and Jira connections for the agents | copy to `.mcp.json` and fill in |
 | `.gitignore`, `.gitattributes` | Keep `.env`, `.mcp.json` and results out of git | leave — **never skip `.gitignore`** |
 | `PROJECT-PROFILE.md` | The project's identity: roles, vocabulary, modules, strategy | fill in |
 | `SETUP.md`, `TEST-AUTHORING-INVARIANTS.md` | The setup reference, and the eight test rules | read |
-| `agents/` | The seven agent definitions, and how to port them | leave — change them through `/playwright-harness-improver` |
+| `agents/` | The eight agent definitions, and how to port them | leave — change them through `/playwright-harness-improver` |
 | `HARNESS-CHANGES.md` | The record of changes this repo makes to its own harness | `/playwright-harness-improver` adds to it |
 | `config/` (`projectProfile.ts`, `testConfig.ts`, `DbConnection.ts`, `testDbConnection.ts`, `db/` ×3) | Settings and the database connection | set the roles in `projectProfile.ts` |
 | `context/` (3 files) | Where the context-builder writes what it learns | review what it writes |

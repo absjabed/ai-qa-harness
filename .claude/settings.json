@@ -3,6 +3,7 @@
   "permissions": {
     "allow": [
       "Bash(npm run defect:evidence:*)",
+      "Bash(npm run report:cycle:*)",
       "mcp__database__read_query",
       "mcp__database__list_tables",
       "mcp__database__describe_table",

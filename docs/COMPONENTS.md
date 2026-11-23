@@ -11,7 +11,7 @@ Ordered by how often you touch it — configuration first, then the layers a tes
 
 ### `agents/`
 
-**What** The seven agent definitions, canonical and vendor-neutral — plain markdown with no tool's
+**What** The eight agent definitions, canonical and vendor-neutral — plain markdown with no tool's
 frontmatter and no tool's tool names. Each opens with a header stating its role, interaction model, file
 access, MCP servers and model guidance.
 
@@ -76,7 +76,7 @@ agent will act on it confidently. Fix the document in the same change as the tes
 `.mcp.json.example`; gitignored, because the database entry carries a password.
 
 **The required entry** `playwright-test` — `npx playwright run-test-mcp-server`, which ships with
-`@playwright/test`, nothing extra to install. Three of the seven agents cannot work without it.
+`@playwright/test`, nothing extra to install. Three of the eight agents cannot work without it.
 
 **The optional entries**
 - `database` — `@executeautomation/database-server`, PostgreSQL or SQL Server, version pinned. Biggest
@@ -218,6 +218,13 @@ or nothing for every story; `--since <date>` ignores results from before the cyc
 `reports/cycle-summary-<scope>-<time>.md`, which is not committed — or, with `--closure`, to
 `specs/execution/closure/`, which is: the cycle's final report, kept for the record.
 
+**Formal reports** `--formal` writes `QA-Report_<app>_<scope>_<version>_<date-time>.md` to the committed
+`specs/execution/reports/`, with a sign-off block — the report `/playwright-test-reporter` produces. Also:
+`--epics`, `--format md,html,pdf` (Markdown always; HTML and PDF from `scripts/lib/report-render.ts`, PDF printed
+by Playwright's Chromium), `--by`, `--jira <file>` (ticket titles and status, and the scope's tickets with no
+plan), `--notes <file>`, and for the agent `--list`, `--defaults` and `--preview` (the numbers as JSON, nothing
+written). A report never overwrites another: one of the same scope in the same minute gets `-2`.
+
 **Reads** Plans, `specs/execution/automated-results.csv` (each test case's latest result across runs),
 `specs/execution/manual-results.csv` and `specs/defects/defect-log.json` — all optional; it says plainly which
 were missing. It names the build under test (`BUILD_UNDER_TEST`) and warns when results come from several.
@@ -281,7 +288,7 @@ differences were deliberate, whether a fix worked, or what is worth sending upst
 modules, data layer, API layer, severity rubric, file layout, knowledge sources, test strategy (scope,
 entry and exit criteria), setup checklist.
 
-**Who reads it** All seven agents, every run, before doing anything else. You, when onboarding.
+**Who reads it** All eight agents, every run, before doing anything else. You, when onboarding.
 
 **How to use** Fill in every `<...>` placeholder. Delete rows that don't apply. Never delete a section
 heading — the agents look sections up by name and number.

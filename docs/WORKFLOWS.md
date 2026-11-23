@@ -336,6 +336,10 @@ The STLC's last phase depends on the TCIDs being intact end to end, which is why
    with a reason written down — is a legitimate outcome. One missed because nobody looked is not.
 7. **Keep the final report** — the same command with `--closure` writes it to `specs/execution/closure/`.
    Commit it, with `specs/execution/` and `specs/defects/`.
+8. **Share it** — `/playwright-test-reporter` writes the formal report for the release — or a story, an epic,
+   several stories — as Markdown, HTML or PDF, with a verdict, the headline figures, every ticket and its Jira
+   status, tickets with no plan yet, and a sign-off block. On your yes it comments a test summary on each
+   ticket in Jira.
 
 **The report after every run.** Any `playwright test` run — one spec, a whole folder — writes a cycle report
 for the stories it ran, without being asked. `AUTO_CYCLE_REPORT=false` in `.env` turns that off.

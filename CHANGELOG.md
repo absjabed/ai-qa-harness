@@ -47,12 +47,12 @@ the top of this file with a new version number, marked **Adopt**, **Optional** o
 
 ## 1.0.0 — pre-release
 
-A Playwright + TypeScript test harness driven by seven agents, application-agnostic by construction: every
+A Playwright + TypeScript test harness driven by eight agents, application-agnostic by construction: every
 project-specific value lives in `PROJECT-PROFILE.md`, `.env`, `.mcp.json` and `context/`.
 
 **What it contains**
 
-- **Seven agent definitions** in `agents/`, canonical and vendor-neutral. Claude Code wrappers in
+- **Eight agent definitions** in `agents/`, canonical and vendor-neutral. Claude Code wrappers in
   `.claude/commands/` carry no instructions, so they cannot drift. `agents/README.md` covers porting to
   another agentic tool.
   - `playwright-context-builder` — learns the application once at setup, writes the baseline the rest read;
@@ -116,7 +116,7 @@ project-specific value lives in `PROJECT-PROFILE.md`, `.env`, `.mcp.json` and `c
 
 **Known limitations, stated plainly**
 
-- Six of the seven agents are interactive by design. The suite runs on QA team members' own machines; there
+- Seven of the eight agents are interactive by design. The suite runs on QA team members' own machines; there
   is no CI pipeline, and `npm run check` is run by hand before pushing.
 - The documentation restates things the code owns, so it drifts. `npm run check:docs` catches the
   countable cases; the rest is habit.

@@ -4,6 +4,8 @@
     "allow": [
       "Bash(npm run defect:evidence:*)",
       "Bash(npm run report:cycle:*)",
+      "Bash(npm run regression:*)",
+      "Bash(npm run results:last:*)",
       "mcp__database__read_query",
       "mcp__database__list_tables",
       "mcp__database__describe_table",

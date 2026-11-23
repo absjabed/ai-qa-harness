@@ -11,7 +11,7 @@ Ordered by how often you touch it — configuration first, then the layers a tes
 
 ### `agents/`
 
-**What** The eight agent definitions, canonical and vendor-neutral — plain markdown with no tool's
+**What** The nine agent definitions, canonical and vendor-neutral — plain markdown with no tool's
 frontmatter and no tool's tool names. Each opens with a header stating its role, interaction model, file
 access, MCP servers and model guidance.
 
@@ -76,7 +76,7 @@ agent will act on it confidently. Fix the document in the same change as the tes
 `.mcp.json.example`; gitignored, because the database entry carries a password.
 
 **The required entry** `playwright-test` — `npx playwright run-test-mcp-server`, which ships with
-`@playwright/test`, nothing extra to install. Three of the eight agents cannot work without it.
+`@playwright/test`, nothing extra to install. Three of the nine agents cannot work without it.
 
 **The optional entries**
 - `database` — `@executeautomation/database-server`, PostgreSQL or SQL Server, version pinned. Biggest
@@ -169,6 +169,7 @@ pairing, thin wrappers, section and invariant totals, links, and that `.gitignor
 | `check-docs.js` | `npm run check:docs` | Asserts the docs still match the repository |
 | `check-trace.ts` | `npm run check:trace` | Enforces I8 — TCIDs present, planned, unique, not retired |
 | `regression.ts` | `npm run regression` | Regression for a client release, on the tickets or epics you choose |
+| `last-run.ts` | `npm run results:last` | The last run's results, failures grouped by spec and error — what the executor reads |
 | `cycle-report.ts` | `npm run report:cycle` | Rebuilds the test-cycle closure report by hand, for any scope |
 | `lib/cycle.ts` | — | Builds the cycle report — used by the two above and by `lib/cycleReporter.ts` |
 | `lib/trace.ts` | — | The one parser all of them share, so they cannot disagree about what a TCID is |
@@ -205,7 +206,23 @@ like an issue key is never read as a release. These are the project's own releas
 never appears in them.
 
 **Without a terminal** Pass the answers as flags — `--release`, `--epics`, `--stories`, `--all-tests`,
-`--browser`, `--yes`. An agent asks you in the conversation, then runs it that way.
+`--browser`, `--yes`. An agent asks you in the conversation, then runs it that way. `--stories` or `--epics`
+without `--release` look across every release.
+
+**For the executor** `--dry-run` prints the selection as JSON — tickets, test count, browsers, build, tickets
+with no spec — and runs nothing; the record is untouched. `--grep <text>` narrows the run (combined with
+`@Regression` when only regression tests run); `--headless` runs without a visible browser.
+
+---
+
+### `scripts/last-run.ts`
+
+**What** `npm run results:last` — the last run, from Playwright's JSON results: when it started, its stories,
+the totals (passed, failed, flaky, skipped), the failures grouped by spec and error signature with each test's
+TCID and browser, and the manual cases still *Not Run*. JSON by default, `--text` for a person.
+
+**Who reads it** `/playwright-test-executor`, after every run and every hand-over, so it never counts from
+memory.
 
 ---
 
@@ -289,7 +306,7 @@ differences were deliberate, whether a fix worked, or what is worth sending upst
 modules, data layer, API layer, severity rubric, file layout, knowledge sources, test strategy (scope,
 entry and exit criteria), setup checklist.
 
-**Who reads it** All eight agents, every run, before doing anything else. You, when onboarding.
+**Who reads it** All nine agents, every run, before doing anything else. You, when onboarding.
 
 **How to use** Fill in every `<...>` placeholder. Delete rows that don't apply. Never delete a section
 heading — the agents look sections up by name and number.
@@ -732,6 +749,7 @@ helpers from `tests/common/`, and keeping two implementations in sync is a bug w
 | `npm test` | Full suite |
 | `npm run regression` | Regression for a client release — choose its tickets or epics; writes the cycle report |
 | `npm run test:regression` | Every test tagged `@Regression`, no selection |
+| `npm run results:last` | The last run's results, failures grouped — `--text` for a summary |
 | `npm run test:headed` / `test:debug` / `test:ui` | Watched, stepped, interactive |
 | `npm run test:api` | The `api` project only |
 | `npm run db:check` | Database connectivity |

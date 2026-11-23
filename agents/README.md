@@ -1,6 +1,6 @@
 # `agents/` — the canonical agent definitions
 
-The eight agents live here as plain markdown, with no vendor's frontmatter and no vendor's tool names.
+The nine agents live here as plain markdown, with no vendor's frontmatter and no vendor's tool names.
 Everything under `.claude/` is a thin wrapper that points at these files.
 
 **Edit these. Never edit a wrapper's prose** — a wrapper that carries instructions of its own is a second
@@ -12,6 +12,7 @@ copy waiting to drift.
 | [`playwright-test-planner`](playwright-test-planner.md) | Story → reviewed test plan | No | Yes |
 | [`playwright-test-generator`](playwright-test-generator.md) | Plan → spec, driven live | Yes | Yes |
 | [`playwright-test-reviewer`](playwright-test-reviewer.md) | Independent check: plan against ticket, test against plan | No | No — returns findings |
+| [`playwright-test-executor`](playwright-test-executor.md) | Runs the tests and sees the run through | Yes, through the CLI | Yes |
 | [`playwright-test-healer`](playwright-test-healer.md) | Triages failures | Yes | At decisions |
 | [`playwright-defect-raiser`](playwright-defect-raiser.md) | Files confirmed defects | No | Asks once |
 | [`playwright-test-reporter`](playwright-test-reporter.md) | Writes the formal test report | No | Yes |
@@ -119,7 +120,7 @@ thing to suspect — not the prompt.
 
 ## Interaction model
 
-Seven of the eight need to ask a question and wait for an answer, so none of those is CI-shaped on any vendor.
+Eight of the nine need to ask a question and wait for an answer, so none of those is CI-shaped on any vendor.
 `playwright-defect-raiser` asks the least of them: it makes no judgments, and asks once — which pending
 defects to file — before filing anything.
 

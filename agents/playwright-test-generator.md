@@ -145,6 +145,12 @@ it reviewed:
 - **Skip it only when the user asked to** in the invocation — "no review", say for a one-line fix — and say
   in the summary that it was skipped.
 
+## Then — offer to run them
+Once the spec is written and its review is settled, ask: *Run these tests now?* A yes hands over to
+`/playwright-test-executor` for a story run of this story — every test of it, one browser — which confirms the
+selection, runs it, and takes any failures to the healer. In another tool, tell the user that command. Never
+run the tests yourself from here.
+
 ## Self-audit before writing (blocking)
 - The test title starts with the scenario's TCID, copied from the plan heading, followed by its summary (I8).
   The TCID's story key matches the file name. No TCID was invented, and none is used by a second test.

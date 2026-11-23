@@ -190,8 +190,8 @@ harness's version, not this project's: the project's releases are its client's, 
 
 Defined in [agents/](agents/), wired into Claude Code by \`.claude/commands/\`:
 \`/playwright-context-builder\`, \`/playwright-test-planner\`, \`/playwright-test-generator\`,
-\`/playwright-test-reviewer\`, \`/playwright-test-healer\`, \`/playwright-defect-raiser\`,
-\`/playwright-test-reporter\` — and \`/playwright-harness-improver\` when the harness itself does not fit; it records each change in
+\`/playwright-test-reviewer\`, \`/playwright-test-executor\`, \`/playwright-test-healer\`,
+\`/playwright-defect-raiser\`, \`/playwright-test-reporter\` — and \`/playwright-harness-improver\` when the harness itself does not fit; it records each change in
 [HARNESS-CHANGES.md](HARNESS-CHANGES.md).
 
 Every story must arrive with its issue key — the planner stops and asks for one if it is missing.

@@ -1,6 +1,6 @@
 # Agent Reference
 
-Eight agents, defined in [`agents/`](../agents/) as vendor-neutral markdown and wired into Claude Code by
+Nine agents, defined in [`agents/`](../agents/) as vendor-neutral markdown and wired into Claude Code by
 thin wrappers in `.claude/commands/` — and the reviewer also as a sub-agent in `.claude/agents/`. They form a pipeline but each runs alone.
 
 Not using Claude Code? [`agents/README.md`](../agents/README.md) covers porting — it is a one-line wrapper
@@ -35,7 +35,7 @@ on top: it never changes what a test expects without the plan agreeing or you ap
 **Changing the harness.** When an agent does not behave as the team needs, `playwright-harness-improver`
 finds where the behavior comes from and changes it there — see its section at the end.
 
-All eight read `PROJECT-PROFILE.md` first. Six of them also read
+All nine read `PROJECT-PROFILE.md` first. Six of them also read
 `TEST-AUTHORING-INVARIANTS.md` and cite invariants by number rather than restating them — one file,
 so a convention has a single place to change.
 
@@ -330,6 +330,46 @@ finds what the author never thought to look for.
 
 The agent that started it fixes every `must fix` and shows you each `consider` with a recommendation. The
 generator re-reviews what it changed once, then shows you whatever still fails rather than looping.
+
+---
+
+## `/playwright-test-executor`
+
+Runs the tests and sees the run through to a report.
+
+| | |
+|---|---|
+| **Model** | opus |
+| **Tools** | Read, Edit (manual results only), `npm run regression`, `npm run results:last`, `npm run report:cycle -- --list` |
+| **Input** | A story to run, or a release's regression |
+| **Output** | A finished run: results recorded, failures taken to the healer, defects to the defect-raiser, manual results recorded, the report offered |
+
+### Two modes, always confirmed
+
+- **Story run** — every test of the chosen stories. Usually right after the generator: it asks *run these tests
+  now?* and hands over.
+- **Regression run** — a client release's stories, or chosen epics or tickets, `@Regression` tests by default;
+  `all` for every release.
+
+It shows the selection from a dry run — tickets, test count, browsers, build — and waits for a yes. Running
+touches a shared environment, so it never starts without one.
+
+### After the run
+
+1. `npm run results:last` groups the failures by spec and error. It asks **once**: heal all, heal these groups,
+   skip, or stop.
+2. It hands over to the healer with that scope, then re-reads the results and the defect log to say where the
+   run stands — it never relies on memory for a count.
+3. It offers the defect-raiser for pending defects.
+4. It asks about manual cases still not run: enter results now, or leave them.
+5. It offers the report, suggesting this run's scope.
+
+A session that ends mid-way picks up from the last run: everything it needs is on disk.
+
+### What it will not do
+
+Start a run without your yes; fix a test or a locator (the healer does); mark `fixme`, file bugs or post to
+Jira; count a figure the scripts did not print; read `.env`.
 
 ---
 

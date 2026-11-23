@@ -587,7 +587,7 @@ td code { white-space: nowrap; }
       <span class="brand-mark">QA</span>
       <span class="brand-name">Harness Handbook</span>
     </div>
-    <p class="brand-sub">playwright · typescript · 8 agents</p>
+    <p class="brand-sub">playwright · typescript · 9 agents</p>
 
     <nav class="nav" id="nav">
       <a href="#orientation"><span class="ord">·</span> Orientation</a>
@@ -600,7 +600,7 @@ td code { white-space: nowrap; }
       <a href="#cycle"><span class="ord">→</span> Follow a whole cycle</a>
 
       <div class="nav-group">Reference</div>
-      <a href="#agents"><span class="ord">8</span> The agents</a>
+      <a href="#agents"><span class="ord">9</span> The agents</a>
       <a href="#lifecycle"><span class="ord">·</span> Testing lifecycle</a>
       <a href="#invariants"><span class="ord">I1–8</span> Invariants</a>
       <a href="#components"><span class="ord">·</span> Components</a>
@@ -620,8 +620,8 @@ td code { white-space: nowrap; }
     <section id="orientation">
       <p class="eyebrow">Handbook</p>
       <h1>AI-driven QA test harness</h1>
-      <p class="lede">Seven agents learn your application, plan, generate, review, heal, file defects and report against a Playwright + TypeScript
-      suite built on the Page Object / Page Factory pattern; an eighth adapts the harness when it does not fit. Everything project-specific lives in two files —
+      <p class="lede">Eight agents learn your application, plan, generate, review, run, heal, file defects and report against a Playwright + TypeScript
+      suite built on the Page Object / Page Factory pattern; a ninth adapts the harness when it does not fit. Everything project-specific lives in two files —
       <code>PROJECT-PROFILE.md</code> and <code>.env</code>. Nothing in the agents, the config, or the
       fixtures names an application.</p>
       <p><b>Built on established QA practice:</b> ISTQB test design techniques and risk-based prioritisation, a
@@ -638,10 +638,11 @@ td code { white-space: nowrap; }
         <li class="pipe-step"><span class="pipe-n">01</span><b>planner</b><span class="desc">A story — fetched by its key, or pasted — becomes a reviewed plan + CSV.</span></li>
         <li class="pipe-step"><span class="pipe-n">02</span><b>generator</b><span class="desc">Drives the real browser, then writes the spec and any page objects — and has each test reviewed.</span></li>
         <li class="pipe-step"><span class="pipe-n">03</span><b>reviewer</b><span class="desc">Checks every spec against its plan — and the plan against the ticket, when you agree — in a fresh context.</span></li>
-        <li class="pipe-step"><span class="pipe-n">04</span><b>healer</b><span class="desc">Fixes failures — never by changing what a test expects on its own — or confirms a genuine bug with you.</span></li>
-        <li class="pipe-step"><span class="pipe-n">05</span><b>defect-raiser</b><span class="desc">Files the bug — in the tracker, or as a CSV row — and marks the test <code>fixme</code>.</span></li>
-        <li class="pipe-step"><span class="pipe-n">06</span><b>reporter</b><span class="desc">Writes the formal report — story, epic or release; Markdown, HTML or PDF — every figure from the records.</span></li>
-        <li class="pipe-step"><span class="pipe-n">07</span><b>harness-improver</b><span class="desc">When the harness does not fit, changes it in the right place and records why.</span></li>
+        <li class="pipe-step"><span class="pipe-n">04</span><b>executor</b><span class="desc">Runs a story's tests or a release's regression, confirmed first, and sees the run through to a report.</span></li>
+        <li class="pipe-step"><span class="pipe-n">05</span><b>healer</b><span class="desc">Fixes failures — never by changing what a test expects on its own — or confirms a genuine bug with you.</span></li>
+        <li class="pipe-step"><span class="pipe-n">06</span><b>defect-raiser</b><span class="desc">Files the bug — in the tracker, or as a CSV row — and marks the test <code>fixme</code>.</span></li>
+        <li class="pipe-step"><span class="pipe-n">07</span><b>reporter</b><span class="desc">Writes the formal report — story, epic or release; Markdown, HTML or PDF — every figure from the records.</span></li>
+        <li class="pipe-step"><span class="pipe-n">08</span><b>harness-improver</b><span class="desc">When the harness does not fit, changes it in the right place and records why.</span></li>
       </ol>
 
       <h3 id="built-on">What it is built on, and why it matters</h3>
@@ -831,12 +832,12 @@ npx playwright install</code></pre></div></li>
         <table>
           <thead><tr><th>Folder / file</th><th>What it is</th><th>In the new repo you…</th></tr></thead>
           <tbody>
-            <tr><td><code>.claude/</code> — 8 commands, the reviewer sub-agent, <code>settings.json</code></td><td>The agents' Claude Code commands; the guard rails</td><td>leave</td></tr>
+            <tr><td><code>.claude/</code> — 9 commands, the reviewer sub-agent, <code>settings.json</code></td><td>The agents' Claude Code commands; the guard rails</td><td>leave</td></tr>
             <tr><td><code>.env.example</code>, <code>.mcp.json.example</code></td><td>Every suite setting; the agents' browser, database and Jira connections</td><td>copy to <code>.env</code> / <code>.mcp.json</code> and fill in</td></tr>
             <tr><td><code>.gitignore</code>, <code>.gitattributes</code></td><td>Keep passwords and results out of git</td><td>leave — never skip <code>.gitignore</code></td></tr>
             <tr><td><code>PROJECT-PROFILE.md</code></td><td>The project's roles, vocabulary, modules, strategy</td><td>fill in</td></tr>
             <tr><td><code>SETUP.md</code>, <code>TEST-AUTHORING-INVARIANTS.md</code>, <code>docs/</code></td><td>The setup reference, the eight test rules, this handbook and the references</td><td>read</td></tr>
-            <tr><td><code>agents/</code></td><td>The eight agent definitions</td><td>leave — change them through <code>/playwright-harness-improver</code></td></tr>
+            <tr><td><code>agents/</code></td><td>The nine agent definitions</td><td>leave — change them through <code>/playwright-harness-improver</code></td></tr>
             <tr><td><code>HARNESS-CHANGES.md</code></td><td>The record of changes this repo makes to its own harness</td><td>the improver adds to it</td></tr>
             <tr><td><code>config/</code></td><td>Settings, roles, the database connection</td><td>set the roles</td></tr>
             <tr><td><code>context/</code></td><td>Where the context-builder writes what it learns</td><td>review</td></tr>
@@ -1546,7 +1547,7 @@ Run it? [Y/n]: y</code></pre>
             <tr><td>Raise</td><td><code>/playwright-defect-raiser</code></td><td>Which to file</td><td>Jira bug, linked, evidence attached; <code>test.fixme</code></td></tr>
             <tr><td>Manual</td><td>you</td><td>Each outcome</td><td><code>manual-results.csv</code></td></tr>
             <tr><td>Retest</td><td><code>/playwright-test-healer</code> — retest</td><td>Comment? Which transition?</td><td>Test active again; Jira updated</td></tr>
-            <tr><td>Regression</td><td><code>npm run regression</code></td><td>Release → epics or tickets</td><td>Release cycle report</td></tr>
+            <tr><td>Regression</td><td><code>/playwright-test-executor</code> or <code>npm run regression</code></td><td>Release → epics or tickets</td><td>Release cycle report</td></tr>
             <tr><td>Closure</td><td><code>npm run report:cycle -- --closure</code></td><td>Close or not</td><td>The committed final report</td></tr>
             <tr><td>The harness falls short</td><td><code>/playwright-harness-improver</code></td><td>The problem, the change</td><td>The harness changed, recorded in <code>HARNESS-CHANGES.md</code></td></tr>
           </tbody>
@@ -1558,12 +1559,12 @@ Run it? [Y/n]: y</code></pre>
     <section id="agents">
       <p class="eyebrow">Reference</p>
       <h2>The agents</h2>
-      <p class="lede">Think of the seven testing agents as seven roles on a QA team: someone who learns the product, an analyst who plans, an
-      engineer who automates, a reviewer who checks work they did not do, an engineer who triages failures,
+      <p class="lede">Think of the eight testing agents as eight roles on a QA team: someone who learns the product, an analyst who plans, an
+      engineer who automates, a reviewer who checks work they did not do, a tester who runs the suite, an engineer who triages failures,
       an administrator who files the paperwork, and a test lead who writes the report. Each
       hands off to the next, but each also works alone and reads its input from disk — a plan reviewed on
-      Monday generates fine on Wednesday. An eighth, the improver, looks after the harness itself.</p>
-      <p>You are the ninth role, and not an optional one. The first three stop and ask for your approval at
+      Monday generates fine on Wednesday. A ninth, the improver, looks after the harness itself.</p>
+      <p>You are the tenth role, and not an optional one. The first three stop and ask for your approval at
       every decision that would be expensive to get wrong; the reviewer checks the generator's every spec, and
       the planner's plan when you agree; the healer asks before calling anything a defect, and before changing
       what a test expects.
@@ -1606,7 +1607,7 @@ Run it? [Y/n]: y</code></pre>
             <thead><tr><th>When</th><th>What runs</th></tr></thead>
             <tbody>
               <tr><td>Project setup — once</td><td><code>/playwright-context-builder</code></td></tr>
-              <tr><td>Every story or testing task</td><td>planner (plan review, if you agree) → generator (test review, always) → run the suite → healer, if something fails → defect-raiser → reporter</td></tr>
+              <tr><td>Every story or testing task</td><td>planner (plan review, if you agree) → generator (test review, always) → executor runs them → healer, if something fails → defect-raiser → reporter</td></tr>
               <tr><td>Occasionally, when knowledge goes stale</td><td><code>/playwright-context-builder</code> again — usually for one area</td></tr>
               <tr><td>When the harness does not do what you need</td><td><code>/playwright-harness-improver</code> — with one real case</td></tr>
             </tbody>
@@ -1874,6 +1875,39 @@ Run it? [Y/n]: y</code></pre>
         <p>Findings are <code>must fix</code> — fixed by the agent that started it — or <code>consider</code> —
         shown to you with a recommendation. Each names the TCID and the source it fails against. A finding it
         cannot tie to the ticket, the plan, a context rule or an invariant is taste, and it leaves it out.</p>
+      </article>
+
+      <!-- executor -->
+      <article class="agent">
+        <div class="agent-head">
+          <span class="agent-name">/playwright-test-executor</span>
+          <span class="agent-role">a story or a release → a finished run and its report</span>
+        </div>
+        <div class="pills">
+          <span class="pill on-accent">opus</span>
+          <span class="pill">runs through the CLI</span>
+          <span class="pill">confirms before running</span>
+          <span class="pill">numbers only from the scripts</span>
+        </div>
+
+        <p class="agent-plain"><b>The role it plays:</b> the tester who runs the suite and does not walk away when
+        it goes red. It runs a story's tests or a release's regression, then stays with you: failures to the healer,
+        real defects to the defect-raiser, manual results recorded, the report written. It never fixes a test itself
+        — each of those agents does its own part.</p>
+
+        <h4>What you are asked</h4>
+        <ul>
+          <li><b>What to run</b> — a <b>story run</b> (every test of the chosen stories) or a <b>regression run</b>
+          (a release, or chosen epics or tickets, <code>@Regression</code> by default), and the browsers. Then the
+          selection from a dry run — tickets, test count, build — and <b>run it?</b></li>
+          <li><b>The failures, once</b> — grouped by spec and error: heal all, heal these groups, skip, or stop.</li>
+          <li><b>Pending defects</b> — file them with the defect-raiser?</li>
+          <li><b>Manual cases not run</b> — enter results now, or leave them.</li>
+          <li><b>The report</b> — hand over to the reporter, with this run's scope suggested.</li>
+        </ul>
+        <p>Every figure it gives comes from <code>npm run regression -- --dry-run</code> and
+        <code>npm run results:last</code>. After each hand-over it reads them again, so a long session never
+        works from a stale memory of the run; a session that ends mid-way picks up from the last run.</p>
       </article>
 
       <!-- healer -->
@@ -2431,7 +2465,7 @@ Run it? [Y/n]: y</code></pre>
       <div class="comp">
         <div class="comp-head"><code class="comp-name">.mcp.json</code><span class="comp-tag you">you fill this in</span></div>
         <p class="comp-plain">How agents reach the browser and, optionally, the database and the tracker.</p>
-        <p>The Playwright entry is required — three of the eight agents cannot work without a browser. The
+        <p>The Playwright entry is required — three of the nine agents cannot work without a browser. The
         database entry is optional and is the single biggest reduction in friction available: with it,
         agents read your schema instead of asking you for every query. Use a read-only account against QA —
         the example server has no read-only mode of its own. The tracker entry connects Jira, so stories are
@@ -2966,6 +3000,7 @@ Run it? [Y/n]: y</code></pre>
             <tr><td><code>npm test</code></td><td>Full suite</td></tr>
             <tr><td><code>npm run regression</code></td><td>A client release's regression — choose the release (or <em>all</em>), then its tickets or epics; writes the cycle report</td></tr>
             <tr><td><code>npm run test:regression</code></td><td>Every test tagged <code>@Regression</code>, no selection</td></tr>
+            <tr><td><code>npm run results:last</code></td><td>The last run's results, failures grouped by spec and error; <code>--text</code> for a summary</td></tr>
             <tr><td><code>npm run test:headed</code></td><td>Watched</td></tr>
             <tr><td><code>npm run test:debug</code></td><td>Stepped through the inspector</td></tr>
             <tr><td><code>npm run test:ui</code></td><td>Interactive UI mode</td></tr>

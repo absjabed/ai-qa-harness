@@ -8,9 +8,9 @@ Playwright best practice with Page Objects and WCAG accessibility checks, and le
 throughout. People stay in control: agents stop at checkpoints, every defect is confirmed by a person, and
 every generated test is independently reviewed against its plan.
 
-An AI-driven test automation harness. Seven agents learn your application, plan, generate, review, heal,
-file defects and report against a Playwright + TypeScript suite built on the Page Object / Page Factory
-pattern. An eighth adapts the harness itself when it does not behave as your team needs.
+An AI-driven test automation harness. Eight agents learn your application, plan, generate, review, run,
+heal, file defects and report against a Playwright + TypeScript suite built on the Page Object / Page Factory
+pattern. A ninth adapts the harness itself when it does not behave as your team needs.
 
 The agents are defined in [`agents/`](agents/) as plain, vendor-neutral markdown. Claude Code wrappers ship
 in `.claude/`; adding another tool is a one-line wrapper each — see [`agents/README.md`](agents/README.md).
@@ -21,7 +21,7 @@ Nothing in `.claude/`, `config/`, or `lib/` names an application, a role, or a d
 ## Start here — the handbook
 
 **[`docs/index.html`](docs/index.html)** is the single page that explains the whole harness: how it learns
-your application, the ten setup steps, what each of the eight agents does and refuses to do, every component
+your application, the ten setup steps, what each of the nine agents does and refuses to do, every component
 in plain language, the workflows, and troubleshooting. Read it before the rest of this README.
 
 It is a self-contained page — no build step, no server, no network beyond its webfonts. From a clone:
@@ -79,7 +79,7 @@ application stays in your copy. That is the line that keeps this template reusab
 | **[docs/NEW-QA-REPO.md](docs/NEW-QA-REPO.md)** | **Starting a project's QA repo** — the files copied into it, the minimum to configure, and the checklist before the context-builder |
 | [SETUP.md](SETUP.md) | The ten setup steps, with the reasoning behind each |
 | [docs/COMPONENTS.md](docs/COMPONENTS.md) | Every file: purpose, usage, extension points, failure modes |
-| [docs/AGENTS.md](docs/AGENTS.md) | The eight agents: inputs, outputs, checkpoints, what to expect, what they refuse |
+| [docs/AGENTS.md](docs/AGENTS.md) | The nine agents: inputs, outputs, checkpoints, what to expect, what they refuse |
 | [docs/WORKFLOWS.md](docs/WORKFLOWS.md) | End-to-end recipes — first story, healing a regression, onboarding, porting |
 | [docs/MCP.md](docs/MCP.md) | Wiring the browser, database and Jira MCP servers, and the guard rails |
 | [docs/qa-harness-intro.html](docs/qa-harness-intro.html) | Three slides for introducing the harness to a QA team: how they test today, how they will with it |
@@ -111,7 +111,7 @@ and every defect carries it — so a failure leads back to the acceptance criter
 
 ## What the AI layer does
 
-Eight agents, defined in `agents/` and run as slash commands via the `.claude/` wrappers. Seven test — they hand off in sequence but each works alone — and one maintains the harness.
+Nine agents, defined in `agents/` and run as slash commands via the `.claude/` wrappers. Eight test — they hand off in sequence but each works alone — and one maintains the harness.
 
 | Agent | Input | Output |
 |---|---|---|
@@ -119,6 +119,7 @@ Eight agents, defined in `agents/` and run as slash commands via the `.claude/` 
 | `playwright-test-planner` | A story key — fetched from the tracker if wired, otherwise the story pasted in | `specs/<KEY>.plan.md` + `specs/<KEY>.plan.csv` |
 | `playwright-test-generator` | An approved plan | A spec file, plus any page objects and fixtures it needed — reviewed against the plan before it finishes |
 | `playwright-test-reviewer` | A plan and its ticket, or a spec and its plan — started by the planner (if you agree) and the generator (always) | Findings: `must fix` and `consider`, each tied to a TCID and its source. Edits nothing |
+| `playwright-test-executor` | A story to run, or a release's regression | The run confirmed and done; failures grouped and taken to the healer, defects to the defect-raiser, manual results recorded, the report offered |
 | `playwright-test-healer` | The failing tests of a story, spec or run | Fixed tests, or a confirmed defect in `specs/defects/defect-log.json` with its screenshots |
 | `playwright-defect-raiser` | The pending defects | Bugs created in the tracker, linked and with evidence, or rows in `specs/defects/defects.csv` + the tests marked `test.fixme()` |
 | `playwright-test-reporter` | The scope to report on — a story, several, an epic or a release — and the formats | A formal report in `specs/execution/reports/` — Markdown, HTML or PDF — every figure from the test records; on your yes, a summary comment on each Jira ticket |
@@ -157,7 +158,7 @@ authoring agents so a convention has a single place to change.
 ## Layout
 
 ```
-agents/                          the eight agent definitions - canonical, vendor-neutral
+agents/                          the nine agent definitions - canonical, vendor-neutral
   README.md                      porting them to another tool
 .claude/
   commands/                      thin Claude Code wrappers - one line each, no instructions

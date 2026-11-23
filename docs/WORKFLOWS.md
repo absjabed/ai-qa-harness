@@ -61,11 +61,22 @@ Out: the spec, plus new page object methods and fixtures, implemented, wired and
 
 ### Step 4 — Run
 
+When the generator finishes it asks *run these tests now?* — a yes starts `/playwright-test-executor` for a
+story run. Or start it yourself:
+
+```
+/playwright-test-executor ACME-1234
+```
+
+It shows what it will run — the tests, the browser, the build — and waits for a yes, then runs them. From
+there it takes any failures to the healer (step 5), confirmed defects to the defect-raiser (step 6), asks for
+the manual results (step 7), and offers the report. Running by hand still works:
+
 ```bash
 npx playwright test "tests/stories/<release>/<KEY>.spec.ts"
 ```
 
-When the run ends, each test case's result is recorded in `specs/execution/automated-results.csv` and the
+When any run ends, each test case's result is recorded in `specs/execution/automated-results.csv` and the
 cycle report for that story is written to `reports/` — no separate step.
 
 ### Step 5 — Heal what fails
@@ -292,7 +303,9 @@ The STLC's last phase depends on the TCIDs being intact end to end, which is why
 1. **Name the build and retest anything reported fixed.** Set `BUILD_UNDER_TEST` in `.env` to the build
    deployed for testing — it is recorded with every result and printed in the report. Then retest (workflow
    9): a defect fixed in the tracker but still `fixme`'d here counts as blocked coverage.
-2. **Run the regression:**
+2. **Run the regression** — with `/playwright-test-executor`: say *regression for 2.26*. It shows the
+   selection from a dry run and waits for a yes, then runs it and sees it through — steps 4 and 5 below,
+   then the report. Or run it yourself:
 
    ```bash
    npm run regression

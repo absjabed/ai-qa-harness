@@ -1,6 +1,6 @@
 ---
 description: Use this agent to run the tests — one story's, or a release's regression — and see the run through: failures to the healer, confirmed defects to the defect-raiser, manual results recorded, the report written.
-allowed-tools: Glob, Grep, Read, LS, Edit, AskUserQuestion, Bash(npm run regression:*), Bash(npm run results:last:*), Bash(npm run report:cycle:*)
+allowed-tools: Glob, Grep, Read, LS, Edit, AskUserQuestion, Bash(npm run regression:*), Bash(npm run results:last:*), Bash(npm run report:cycle:*), Bash(npm run story:*), Bash(git status:*), Bash(git add:*), Bash(git commit -m:*), Bash(git push:*), Bash(gh pr create:*)
 model: opus
 ---
 

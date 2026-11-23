@@ -19,7 +19,7 @@ story ──▶ planner ──▶ plan.md + plan.csv ──▶ generator ──�
                                                             failing? ──▶ healer ──▶ fixed test
                                                                                       │
                                                                           genuine bug ▼
-                                                                          defect-log.json
+                                                                         specs/defects/log/
                                                                                       │
                                                                                       ▼
                                                                             defect-raiser
@@ -382,7 +382,7 @@ Diagnoses and fixes failing tests. Stops short of filing defects.
 | **Model** | opus |
 | **Tools** | Read/Edit/Write + Playwright MCP snapshot, console, network, `test_run`, `test_debug`, `test_list`, and `AskUserQuestion`; the database's and tracker's read tools, if wired |
 | **Input** | What to heal: a story key, spec files, TCIDs, or the last run's failures — it asks if not told |
-| **Output** | Fixed tests, or an entry in `specs/defects/defect-log.json` with its evidence in `specs/defects/evidence/` |
+| **Output** | Fixed tests, or an entry in `specs/defects/log/` with its evidence in `specs/defects/evidence/` |
 
 ### What it heals
 
@@ -478,7 +478,7 @@ line, the observed behavior, the evidence ruling out a test-side cause, and a se
 against PROJECT-PROFILE.md section 7 — judged by observed impact, **never** by the test's own `@PriorityN`
 tag, which is test-coverage priority, not defect impact.
 
-On your confirmation it appends to `specs/defects/defect-log.json`, then runs `npm run defect:evidence`,
+On your confirmation it writes the entry as its own file in `specs/defects/log/`, then runs `npm run defect:evidence`,
 which copies the failure's screenshots and page snapshot into `specs/defects/evidence/<entry id>/` before the
 next run wipes `test-results/`. It does not file the bug and does not mark the test `fixme()`. The test stays
 red until the defect-raiser processes it.
@@ -508,7 +508,7 @@ The mechanical last step. Does not investigate or judge.
 |---|---|
 | **Model** | opus |
 | **Tools** | Glob, Grep, Read, Edit, Write — no browser, no test runner; the tracker's search, create and link tools, if wired |
-| **Input** | The pending entries in `specs/defects/defect-log.json` — all of them, or the stories or TCIDs you name |
+| **Input** | The pending entries in `specs/defects/log/` — all of them, or the stories or TCIDs you name |
 | **Output** | Bugs in the tracker, linked to the story, evidence attached — or rows in `specs/defects/defects.csv` — plus tests marked `test.fixme()` |
 | **Interactive** | Asks once: it shows the batch — each bug, its severity, TCID, story and evidence — and files only what you agree to |
 

@@ -10,6 +10,8 @@
 **Title:** `<Story title>`
 **Release:** `<client release>` — the project's release this story ships in (Jira's fix version), e.g. `2.26`. Never the harness's version. No release yet → leave this line out; the story is listed as *no release* until it gets one
 **Epic:** `<EPIC-KEY>` — the epic the story belongs to, if any. Optional; lets regression be selected by epic
+**Plan reviewed:** `<YYYY-MM-DD>` — written by the planner when the independent review comes back clean. Leave out if not reviewed
+**Tests reviewed:** `<YYYY-MM-DD>` — written by the generator when the spec's review comes back clean. A story merges only once this is set
 
 **Acceptance Criteria:**
 - **AC1** — `<...>`

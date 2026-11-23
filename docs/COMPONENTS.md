@@ -169,6 +169,9 @@ pairing, thin wrappers, section and invariant totals, links, and that `.gitignor
 | `check-docs.js` | `npm run check:docs` | Asserts the docs still match the repository |
 | `check-trace.ts` | `npm run check:trace` | Enforces I8 — TCIDs present, planned, unique, not retired |
 | `regression.ts` | `npm run regression` | Regression for a client release, on the tickets or epics you choose |
+| `story.ts` | `npm run story` | The git side of a story — status, the start protocol, release branches, the merge rule |
+| `env.js` | `npm run env -- get <KEY>` | Reads an allow-listed, non-secret setting from `.env` for agents that may not open it |
+| `lib/defects.ts` | — | Reads and writes the defect log, one file per defect |
 | `last-run.ts` | `npm run results:last` | The last run's results, failures grouped by spec and error — what the executor reads |
 | `cycle-report.ts` | `npm run report:cycle` | Rebuilds the test-cycle closure report by hand, for any scope |
 | `lib/cycle.ts` | — | Builds the cycle report — used by the two above and by `lib/cycleReporter.ts` |
@@ -215,6 +218,30 @@ with no spec — and runs nothing; the record is untouched. `--grep <text>` narr
 
 ---
 
+### `scripts/story.ts`
+
+**What** `npm run story` — the git side of working on a story, so every agent and tester does it the same
+way. `status` works out where each story is from the files — plan, reviews, spec, results, open defects,
+branches — and whether it may merge; nothing is stored. `start` is the story start protocol: a clean working
+tree, a fetch, an offer to resume an existing branch, the base the person chooses, a fast-forward pull of it,
+then `test/<KEY>-<desc>`. `switch` checks out and fast-forwards a branch, before a regression.
+`release-start` creates `release/<x>` from the pulled `develop`. `finish` checks the merge rule, brings the
+latest base into the story's branch and lists shared files that changed.
+
+**Never** pushes, merges into a shared branch, deletes a branch or rewrites history. Without `--yes`, each
+command shows what it would do and changes nothing. The workflow it serves is in `docs/GIT-WORKFLOW.md`.
+
+---
+
+### `scripts/env.js`
+
+**What** `npm run env -- get <KEY>…` — prints settings from `.env` by name, for agents, which are denied
+reading the file. Answers only for an allow-list of non-secret keys — `QA_TESTER_NAME`, `QA_REPORT_FORMAT`,
+`BUILD_UNDER_TEST`, `APP_NAME`, `BASE_URL`, `TRACKER_PROJECT_KEY` — and refuses every other key, and any
+password, email, token or database setting even if someone adds one to the list.
+
+---
+
 ### `scripts/last-run.ts`
 
 **What** `npm run results:last` — the last run, from Playwright's JSON results: when it started, its stories,
@@ -244,7 +271,7 @@ plan), `--notes <file>`, and for the agent `--list`, `--defaults` and `--preview
 written). The after-run summaries in `reports/` are timestamped and never overwrite one another.
 
 **Reads** Plans, `specs/execution/automated-results.csv` (each test case's latest result across runs),
-`specs/execution/manual-results.csv` and `specs/defects/defect-log.json` — all optional; it says plainly which
+`specs/execution/manual-results.csv` and `specs/defects/log/` — all optional; it says plainly which
 were missing. It names the build under test (`BUILD_UNDER_TEST`) and warns when results come from several.
 
 **Reports** Every active test case and how it ended (Passed · Flaky · Failed · Blocked by a `fixme` ·
@@ -695,8 +722,8 @@ Columns: `TCID, Status, Executed By, Executed On, Environment, Notes`; Status is
 
 ### `specs/defects/`
 
-**What** Committed, so the whole team shares one defect record. `defect-log.json` — every confirmed defect
-and its status (`pending` → `raised` → `verified`); `evidence/<entry id>/` — its screenshots;
+**What** Committed, so the whole team shares one defect record. `log/<entry id>.json` — every confirmed
+defect, one file each so two branches never conflict, and its status (`pending` → `raised` → `verified`); `evidence/<entry id>/` — its screenshots;
 `defects.csv` — bugs to import, only without a Jira connection. The cycle report counts open defects from
 the log, so a regression run on any machine sees them.
 
@@ -750,6 +777,8 @@ helpers from `tests/common/`, and keeping two implementations in sync is a bug w
 | `npm run regression` | Regression for a client release — choose its tickets or epics; writes the cycle report |
 | `npm run test:regression` | Every test tagged `@Regression`, no selection |
 | `npm run results:last` | The last run's results, failures grouped — `--text` for a summary |
+| `npm run story -- status` | Where each story is and whether it may merge; `start`, `switch`, `release-start`, `finish` — see `docs/GIT-WORKFLOW.md` |
+| `npm run env -- get <KEY>` | An allow-listed, non-secret setting from `.env` |
 | `npm run test:headed` / `test:debug` / `test:ui` | Watched, stepped, interactive |
 | `npm run test:api` | The `api` project only |
 | `npm run db:check` | Database connectivity |

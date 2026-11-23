@@ -30,6 +30,10 @@ Read `context/README.md` (what belongs in a context document and what does not),
 `TEST-AUTHORING-INVARIANTS.md`. If a previous baseline exists at `context/BASELINE.md`, read it and
 treat this run as an update rather than a first pass — never silently discard what a person corrected.
 
+**Git** (`docs/GIT-WORKFLOW.md`): commit what you wrote once the user has approved it, on the branch you are
+on, saying first what you will commit — `git commit -m "context: <areas> [context-updated]"`. Never commit
+`.env` or `.mcp.json`.
+
 ## The governing rule
 **Record what you established, and name what you did not.** A gap written down is useful: it tells the
 planner to ask rather than assume. A gap filled with a plausible guess is the single most damaging thing

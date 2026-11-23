@@ -1052,7 +1052,7 @@ npx playwright install</code></pre></div></li>
             <tr><td>Run output, HTML report</td><td>Playwright</td><td><code>test-results/</code>, <code>playwright-report/</code></td><td>no</td></tr>
             <tr><td>Cycle reports after each run</td><td>automatic</td><td><code>reports/</code></td><td>no</td></tr>
             <tr><td>The cycle's final report</td><td><code>report:cycle --closure</code></td><td><code>specs/execution/closure/</code></td><td>yes</td></tr>
-            <tr><td>Confirmed defects and their screenshots</td><td>healer, defect-raiser</td><td><code>specs/defects/defect-log.json</code>, <code>specs/defects/evidence/</code></td><td>yes</td></tr>
+            <tr><td>Confirmed defects and their screenshots</td><td>healer, defect-raiser</td><td><code>specs/defects/log/</code>, <code>specs/defects/evidence/</code></td><td>yes</td></tr>
             <tr><td>Bugs to import, without Jira</td><td>defect-raiser</td><td><code>specs/defects/defects.csv</code></td><td>yes</td></tr>
             <tr><td>Changes to the harness itself</td><td>harness-improver</td><td><code>HARNESS-CHANGES.md</code></td><td>yes</td></tr>
           </tbody>
@@ -1479,7 +1479,7 @@ npx playwright test tests/example.spec.ts</code></pre>
         on: "TC006 expects the total to return after the code is removed; it keeps the discount — the plan says
         the same, so I won't change the test. Severity
         <b>P2 Major</b>. Log it?" You confirm or correct the severity. <br><b>Out:</b> fixed tests; a
-        <code>pending</code> entry in <code>specs/defects/defect-log.json</code>, its screenshots kept in
+        <code>pending</code> entry in <code>specs/defects/log/</code>, its screenshots kept in
         <code>specs/defects/evidence/</code>; the healed spec re-run so the record holds the final results.</li>
         <li><b>Raise — <code>/playwright-defect-raiser</code>.</b> It takes the pending defects — all, or the
         story or TCIDs you name — checks Jira for a bug already labelled <code>ACME-1234-TC006</code>, and asks
@@ -1921,7 +1921,7 @@ Run it? [Y/n]: y</code></pre>
           <span class="pill on-warn">requires Playwright Test MCP</span>
           <span class="pill">database MCP optional</span>
           <span class="pill">3 attempts per test</span>
-          <span class="pill">writes specs/defects/defect-log.json</span>
+          <span class="pill">writes specs/defects/log/</span>
         </div>
 
         <p class="agent-plain"><b>The role it plays:</b> the engineer who triages a red build. It runs the
@@ -2026,7 +2026,7 @@ Run it? [Y/n]: y</code></pre>
         line, observed behavior, evidence ruling out a test-side cause, and a severity classified against
         profile section 7 — judged by observed impact, <b>never</b> by the test's <code>@PriorityN</code>
         tag, which is coverage priority, not defect impact.</p>
-        <p>On your confirmation it appends to <code>specs/defects/defect-log.json</code> and runs
+        <p>On your confirmation it writes the entry as its own file in <code>specs/defects/log/</code> and runs
         <code>npm run defect:evidence</code>, which keeps the failure's screenshots and page snapshot in
         <code>specs/defects/evidence/&lt;entry id&gt;/</code> before the next run wipes them. It does not file
         the bug and does not mark the test <code>fixme()</code>. The test stays red until the defect-raiser
@@ -2693,7 +2693,7 @@ Run it? [Y/n]: y</code></pre>
       <div class="comp">
         <div class="comp-head"><code class="comp-name">specs/defects/</code><span class="comp-tag">agents write this</span></div>
         <p class="comp-plain">The team's shared defect record.</p>
-        <p><code>defect-log.json</code> — every confirmed defect and its status; <code>evidence/&lt;entry id&gt;/</code>
+        <p><code>log/&lt;entry id&gt;.json</code> — every confirmed defect, one file each, and its status; <code>evidence/&lt;entry id&gt;/</code>
         — its screenshots, kept by <code>npm run defect:evidence</code>; <code>defects.csv</code> — bugs to
         import, only without Jira. Committed, so a regression on any machine counts the open defects and anyone
         can retest a fix.</p>
@@ -2860,7 +2860,7 @@ Run it? [Y/n]: y</code></pre>
 
       <h3>Retesting a fixed defect</h3>
       <p>Ask <code>/playwright-test-healer</code> to retest. With the tracker server wired it finds the
-      fixed bugs itself, from their status; without one, tell it which, and make sure each defect-log entry
+      fixed bugs itself, from their status; without one, tell it which, and make sure each defect entry
       has its <code>trackerKey</code>. It un-<code>fixme</code>s the test, runs it twice, and either marks
       the entry <code>verified</code> or restores the <code>fixme</code> and reports that the fix didn't
       hold. With a tracker it offers, asking first, to comment the result on the bug and to move it — listing
@@ -2914,9 +2914,9 @@ Run it? [Y/n]: y</code></pre>
               <td>Run that test once more — <code>npx playwright test &lt;spec&gt; -g &lt;TCID&gt;</code> — then <code>npm run defect:evidence</code> again. For a defect found by hand, put the screenshots in <code>specs/defects/evidence/&lt;entry id&gt;/</code> yourself.</td>
             </tr>
             <tr>
-              <td>A merge conflict in <code>specs/defects/defect-log.json</code></td>
-              <td>Two people recorded defects at the same time</td>
-              <td>Keep both entries. An entry is never removed or renumbered.</td>
+              <td>A merge conflict in <code>specs/execution/</code> or <code>specs/defects/</code></td>
+              <td>The repo was set up before 1.1, or <code>.gitattributes</code> lost its <code>merge=union</code> lines</td>
+              <td>Keep both sides' rows and entries — never drop one. The scripts read the newest row per test case. See <code>docs/GIT-WORKFLOW.md</code>.</td>
             </tr>
             <tr>
               <td>A seed in <code>tests/seeds/</code> fails</td>
@@ -3000,6 +3000,8 @@ Run it? [Y/n]: y</code></pre>
             <tr><td><code>npm test</code></td><td>Full suite</td></tr>
             <tr><td><code>npm run regression</code></td><td>A client release's regression — choose the release (or <em>all</em>), then its tickets or epics; writes the cycle report</td></tr>
             <tr><td><code>npm run test:regression</code></td><td>Every test tagged <code>@Regression</code>, no selection</td></tr>
+            <tr><td><code>npm run story -- status</code></td><td>Where each story is and whether it may merge; <code>start</code>, <code>switch</code>, <code>release-start</code>, <code>finish</code> — see <code>docs/GIT-WORKFLOW.md</code></td></tr>
+            <tr><td><code>npm run env -- get &lt;KEY&gt;</code></td><td>An allow-listed, non-secret setting from <code>.env</code></td></tr>
             <tr><td><code>npm run results:last</code></td><td>The last run's results, failures grouped by spec and error; <code>--text</code> for a summary</td></tr>
             <tr><td><code>npm run test:headed</code></td><td>Watched</td></tr>
             <tr><td><code>npm run test:debug</code></td><td>Stepped through the inspector</td></tr>
@@ -3055,6 +3057,7 @@ npx playwright test --project=api                                 # API only</co
         <a href="AGENTS.md">AGENTS.md</a> ·
         <a href="WORKFLOWS.md">WORKFLOWS.md</a> ·
         <a href="MCP.md">MCP.md</a> ·
+        <a href="GIT-WORKFLOW.md">GIT-WORKFLOW.md</a> ·
         <a href="qa-harness-intro.html">team intro slides</a> ·
         <a href="qa-harness-walkthrough.html">cycle walkthrough</a> ·
         <a href="harness-docs/ai-qa-harness.md">developer guide with diagrams</a> ·

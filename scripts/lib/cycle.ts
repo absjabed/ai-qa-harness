@@ -14,7 +14,7 @@
  *   specs/execution/automated-results.csv  every test case's latest automated result, across runs
  *   test-results/results.json              the latest run — folded into the file above as each run ends
  *   specs/execution/manual-results.csv     manual executions
- *   specs/defects/defect-log.json          defects and their lifecycle status
+ *   specs/defects/log/<entry id>.json      defects and their lifecycle status, one file each
  *
  * The automated record matters because a cycle is many runs, not one: the regression, then the healer's
  * re-runs of what failed, then a retest. The latest result of each test case is what the cycle reports.
@@ -27,6 +27,7 @@ import fs from 'fs';
 import path from 'path';
 import { execFileSync } from 'child_process';
 import { projectProfile } from '../../config/projectProfile';
+import { DEFECT_DIR, readDefects } from './defects';
 import { NO_RELEASE, parsePlan, Plan, PlannedCase, planFiles, releaseOfSpec, ROOT, storyKeyOf, storySpecFiles, TCID_PREFIX } from './trace';
 
 export type Outcome = 'Passed' | 'Failed' | 'Flaky' | 'Blocked' | 'Skipped' | 'Not Run';
@@ -104,9 +105,8 @@ export interface CycleMetrics {
     notInRelease: string[];
 }
 
-export const DEFECT_LOG = 'specs/defects/defect-log.json';
 export const AUTOMATED_RECORD = 'specs/execution/automated-results.csv';
-const MANUAL_RECORD = 'specs/execution/manual-results.csv';
+export const MANUAL_RECORD = 'specs/execution/manual-results.csv';
 const LATEST_RUN = 'test-results/results.json';
 
 export interface CycleResult {
@@ -224,9 +224,14 @@ export function readAutomatedResults(file = LATEST_RUN): {
 // ---------------------------------------------------------------- the automated record
 
 interface RecordRow { tcid: string; status: Outcome; executedOn: string; browser: string; build: string; spec: string }
-const RECORD_HEADER = ['TCID', 'Status', 'Executed On', 'Browser', 'Build', 'Spec'];
+export const RECORD_HEADER = ['TCID', 'Status', 'Executed On', 'Browser', 'Build', 'Spec'];
 
-function readRecord(file: string, header: string[]): Map<string, Record<string, string>> {
+/**
+ * One row per TCID. A record can hold two rows for one test case after two branches each updated it and git
+ * kept both lines (the results CSVs merge with `merge=union`, see .gitattributes): the newest `Executed On`
+ * wins, a later line breaking a tie. A seeded manual row has no date, so any executed row beats it.
+ */
+export function readRecord(file: string, header: string[]): Map<string, Record<string, string>> {
     const rows = new Map<string, Record<string, string>>();
     if (!has(file)) return rows;
     const [head, ...body] = parseCsv(read(file));
@@ -235,7 +240,9 @@ function readRecord(file: string, header: string[]): Map<string, Record<string, 
     for (const r of body) {
         const row: Record<string, string> = {};
         header.forEach((h) => { row[h] = (r[cols.indexOf(h)] ?? '').trim(); });
-        if (row.TCID) rows.set(row.TCID, row);
+        if (!row.TCID || row.TCID === 'TCID') continue;
+        const kept = rows.get(row.TCID);
+        if (!kept || (row['Executed On'] ?? '') >= (kept['Executed On'] ?? '')) rows.set(row.TCID, row);
     }
     return rows;
 }
@@ -287,8 +294,6 @@ function parseCsv(text: string): string[][] {
 }
 
 // ---------------------------------------------------------------- the report
-
-interface Defect { id: string; status: string; severity?: string; tcid?: string; storyKey?: string; summary?: string; trackerKey?: string | null }
 
 export function buildCycleReport(scope: CycleScope = {}): CycleResult {
     const inputs: string[] = [];
@@ -343,13 +348,9 @@ export function buildCycleReport(scope: CycleScope = {}): CycleResult {
     }
 
     // ---- defects, in scope
-    let defects: Defect[] = [];
-    if (has(DEFECT_LOG)) {
-        inputs.push(DEFECT_LOG);
-        defects = (JSON.parse(read(DEFECT_LOG)) as Defect[]).filter(
-            (d) => !d.storyKey || inScope.has(d.storyKey)
-        );
-    }
+    const defectLog = readDefects();
+    if (defectLog.files.length) inputs.push(DEFECT_DIR);
+    const defects = defectLog.entries.filter((d) => !d.storyKey || inScope.has(d.storyKey));
     const openDefects = defects.filter((d) => d.status === 'pending' || d.status === 'raised');
 
     // ---- per-case outcome
@@ -507,7 +508,7 @@ export function buildCycleReport(scope: CycleScope = {}): CycleResult {
     if (scope.notes?.trim()) md.push('## Notes', '', scope.notes.trim(), '');
 
     const automatedInput = inputs.includes(LATEST_RUN) ? LATEST_RUN : AUTOMATED_RECORD;
-    const missing = [automatedInput, MANUAL_RECORD, DEFECT_LOG].filter((i) => !inputs.includes(i));
+    const missing = [automatedInput, MANUAL_RECORD, DEFECT_DIR].filter((i) => !inputs.includes(i));
     if (missing.length) md.push(`> Inputs not found, treated as empty: ${missing.map((m) => `\`${m}\``).join(', ')}.`, '');
 
     md.push('## Tickets', '');

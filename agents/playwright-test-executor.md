@@ -47,6 +47,12 @@ From the invocation or by asking, settle **the mode**:
   for a story run.
 - **Narrowing**, only if asked — `--grep <expression>`, e.g. a module tag such as `@Checkout`.
 
+**The branch** (`docs/GIT-WORKFLOW.md`). A story run happens on the story's branch: `npm run story -- status
+<KEYS>` shows where you are; not on it → offer to resume it (`npm run story -- start <KEY> --resume --yes`). A
+regression runs on the release branch, freshly pulled: ask, then `npm run story -- switch release/<x> --yes` —
+`develop` for stories with no release. If it stops on uncommitted changes or a diverged branch, show what it
+printed and ask.
+
 ## Step 2 — Confirm before running
 
 Run the selection as a dry run — the same flags plus `--dry-run`. It prints JSON and runs nothing:
@@ -72,6 +78,11 @@ Run it so that it cannot be cut off by a time limit on commands — in Claude Co
 for it to finish; never poll it in a sleep loop. `--headless` keeps browser windows from opening while it
 runs. When it ends, the results are already recorded and the after-run summary written.
 
+Commit the recorded results, with the counts from `npm run results:last`:
+`git add specs/execution/automated-results.csv`, then
+`git commit -m "test-run(<KEY>): <n> passed, <n> failed [run]"` — the release instead of a key for a
+regression, e.g. `test-run(2.26): regression, …`.
+
 ## Step 4 — The failures
 
 ```bash
@@ -95,7 +106,7 @@ the exact command to run. The healer fixes what is a test problem, asks the user
 defect, keeps its evidence, and re-runs what it healed. Do not re-run healed tests yourself.
 
 **Coming back.** When the healer is done, re-read the state before going on: `npm run results:last` for the
-tests it re-ran, and the pending entries in `specs/defects/defect-log.json` for the defects it recorded. Say
+tests it re-ran, and the pending entries in `specs/defects/log/` for the defects it recorded. Say
 where the run stands — what was fixed, what is a defect, what still fails and why.
 
 **Defect-raiser.** If there are pending defects, offer to file them: start `/playwright-defect-raiser` with
@@ -118,6 +129,22 @@ for the healer to record, with the user's account — offer that hand-over.
 Offer the report and hand over to `/playwright-test-reporter`, suggesting the scope of this run: the stories
 for a story run, the release for a regression run. The reporter asks the scope and format and writes it.
 
+## Step 8 — Merge, or put on hold
+
+For a story run, `npm run story -- status <KEY>` says whether the story may merge: its tests generated,
+reviewed and run — open defects and `fixme` included.
+
+- **May merge** → offer it: *Bring the latest `<base>` in and prepare the pull request?* Yes →
+  `npm run story -- finish <KEY> --yes`. If it lists shared files that changed, offer to re-run the story's
+  tests first. Then ask before each: push the branch (`git push -u origin <branch>`), and open the pull request
+  into the base it named — `gh pr create` when the GitHub CLI is set up, otherwise give the user the title and
+  base to open it with. Never merge it yourself.
+- **Waiting** — on a fix, an answer, an environment → offer to put it on hold: commit what is there with a
+  message ending `[on-hold]`, and push the branch (asked) so the work is not only on this machine.
+
+A regression on `release/<x>`: the results commit is pushed only on a yes. If the remote protects release
+branches, push to `test/regression-<x>` instead and open a pull request into `release/<x>`.
+
 ## Resuming
 
 A session can end mid-run. Started again, check `npm run results:last` first: if its stories match what the
@@ -137,4 +164,5 @@ results, the defect log and the manual results are all on disk.
 - Pending defects were offered to the defect-raiser.
 - Manual cases still not run were asked about.
 - The report was offered with this run's scope.
+- The results were committed; a story that may merge was offered `finish`, a blocked one the hold.
 - Every number you gave came from `--dry-run`, `results:last`, the defect log or the manual results file.

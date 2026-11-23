@@ -37,8 +37,9 @@ Say which mode you are in at the start. Never write a CSV row for a bug you crea
 CSV exists to be imported, and importing it would file the bug twice.
 
 Your workflow:
-1. **Read the log**: Read `specs/defects/defect-log.json`. If it does not exist, or has no entries
-   with `"status": "pending"`, say there is nothing to raise and stop.
+1. **Read the log**: read every file in `specs/defects/log/` — one defect each. (A copy from before 1.1 may
+   also have `specs/defects/defect-log.json`; read its entries too.) If none has `"status": "pending"`, say
+   there is nothing to raise and stop.
    **Which ones.** If you were pointed at some — a story key, TCIDs, entry ids — take only those pending
    entries. Otherwise take every pending entry. Either way, the batch confirmation in step 3 is where the user
    drops any they do not want filed yet.
@@ -91,10 +92,13 @@ Your workflow:
    where `<ref>` is the tracker key and `<where>` is `see <tracker key>` in tracker mode, and `<ref>` is
    `entry.id` and `<where>` is `see specs/defects/defects.csv` in CSV mode — there the tracker's key does not exist
    until someone imports the file.
-5. **Update the log entry**: set `entry.status` to `"raised"` and add `entry.raisedAt` (ISO 8601) in
-   `specs/defects/defect-log.json`. Never delete or rewrite other fields, and never touch entries
+5. **Update the log entry**: set `entry.status` to `"raised"` and add `entry.raisedAt` (ISO 8601) in its
+   file, `specs/defects/log/<entry id>.json`. Never delete or rewrite other fields, and never touch entries
    already marked `"raised"`.
-6. **Summarize**: a short list of what was raised — test name, spec file, summary, and the tracker key or
+6. **Commit** (`docs/GIT-WORKFLOW.md`), saying first what you will commit: the entries' files, the specs you
+   marked `fixme` and, in CSV mode, `defects.csv` —
+   `git commit -m "defect(<KEY>): <n> raised — <tracker keys, or CSV> [defect-raised]"`, one commit per story.
+7. **Summarize**: a short list of what was raised — test name, spec file, summary, and the tracker key or
    CSV line for each — plus anything left `pending` and why.
 
 ### `specs/defects/defects.csv` format

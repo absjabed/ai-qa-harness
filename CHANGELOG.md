@@ -90,6 +90,15 @@ project-specific value lives in `PROJECT-PROFILE.md`, `.env`, `.mcp.json` and `c
   them for the full regression — then all of its tickets,
   some epics, or chosen tickets, runs them, and reports on exactly that selection. Each plan records its
   release and epic — from Jira's fix version and parent epic when the tracker is connected.
+- **A git workflow for a project's QA repo** — `main`, `develop`, `release/<x>`, `test/<KEY>-<desc>` and
+  `harness/<desc>` branches (`docs/GIT-WORKFLOW.md`). The agents run git and the tester answers:
+  `npm run story` works out each story's status from the files, runs the story start protocol (clean tree,
+  fetch, resume an existing branch, the base the person picks, a fast-forward pull), creates release branches,
+  and checks the merge rule — tests generated, reviewed and run, open defects included — before bringing the
+  latest base in. Commits are one line, `<type>(<KEY>): <what> [<stage>]`. The results CSVs merge with
+  `merge=union` and each defect is its own file in `specs/defects/log/`, so two stories never conflict.
+- **Settings read by key** — `npm run env -- get <KEY>` gives agents allow-listed, non-secret settings from
+  `.env` without opening it; `npm run check` fails when code reads a setting `.env.example` does not list.
 - **A prep folder for setup day** — `npm run prep -- <dir> --name "<Project>"` makes the folder a project's QA
   repo will become: `setup/` files to fill in before setup day (start-here, filling guide, checklist, accounts
   and roles, Jira, decisions, contacts, paths — never passwords) and `context/sources/` subfolders for the
@@ -109,7 +118,8 @@ project-specific value lives in `PROJECT-PROFILE.md`, `.env`, `.mcp.json` and `c
   test runner.
 - **Guard rails** — `.claude/settings.json` denies agents reading `.env` and `.mcp.json` and calling the
   database server's write tools, asks before any write to Jira — creating, editing, moving, commenting —
-  and denies Jira deletes and admin tools. A bug's status is only ever moved to a transition the team's own
+  and denies Jira deletes and admin tools; asks before a push, merge or checkout, and denies force-pushes,
+  hard resets, branch deletion and history rewrites. A bug's status is only ever moved to a transition the team's own
   Jira workflow offers, chosen by a person.
 - **MCP servers** — Playwright (required), a database server (optional, read-only account), and Jira through
   whichever connection the team already has: the Atlassian plugin in Claude Code, or the MCP server entry.

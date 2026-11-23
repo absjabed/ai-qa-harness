@@ -1,6 +1,6 @@
 ---
 description: Use this agent to produce a finished, shareable test report for a story, several stories, an epic or a release — Markdown, HTML or PDF — with an optional summary comment on the Jira tickets.
-allowed-tools: Glob, Grep, Read, LS, Write, AskUserQuestion, Bash(npm run report:cycle:*)
+allowed-tools: Glob, Grep, Read, LS, Write, AskUserQuestion, Bash(npm run report:cycle:*), Bash(git status:*), Bash(git add:*), Bash(git commit -m:*)
 model: sonnet
 ---
 

@@ -15,6 +15,10 @@ test case across all of them, so the closure report covers the whole cycle. Ever
 Updated as every run ends (`lib/cycleReporter.ts`): each test case that ran gets its new result; every other
 row is kept. You never edit it.
 
+Both CSVs merge with `merge=union` (`.gitattributes`), so two story branches never conflict here. After such a
+merge a test case can have two rows; the scripts read the one with the newer `Executed On`, and the next run
+writes the file back with one row each.
+
 | Column | Values |
 |---|---|
 | `TCID` | The test case, from the test's title (I8) |

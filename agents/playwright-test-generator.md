@@ -32,6 +32,15 @@ already been written down. Everything below refers to those by name and
 number rather than restating them. If `PROJECT-PROFILE.md` still contains `<...>` placeholders in the
 sections you need, stop and say which sections are unfilled — do not guess an application's vocabulary.
 
+## Git
+Work on the story's branch (`docs/GIT-WORKFLOW.md`). Check with `npm run story -- status <KEY>`. Not on it →
+offer to resume it (`npm run story -- start <KEY> --resume --yes`); no branch yet → follow the story start
+protocol in that file before writing anything.
+
+Commit as you finish, saying first what you will commit: the spec and the page objects, fixtures and data it
+needed — `git commit -m "test-gen(<KEY>): <n> tests for <area> [tests-generated]"` — then the review line
+below — `git commit -m "test-review(<KEY>): spec reviewed clean [tests-reviewed]"`.
+
 ## Test Authoring Invariants
 Read `TEST-AUTHORING-INVARIANTS.md` and reference I1–I8 by number. Never restate them inline.
 
@@ -141,9 +150,12 @@ it reviewed:
   new assertion or locator, as for any other step. Then start a fresh review of the changed tests, once.
   Whatever still fails it, show the user rather than looping.
 - **`consider` findings** — show them with your recommendation; change only what the user agrees to.
+- **Clean** — no `must fix` left → record it in the plan: add `**Tests reviewed:** <YYYY-MM-DD> — clean,
+  <spec path>` to the story's fields at the top. That line is what lets the story merge (the merge rule in
+  `docs/GIT-WORKFLOW.md`); add it only after a clean review.
 - Report the review in your summary: what it found, what you changed, what you left and why.
 - **Skip it only when the user asked to** in the invocation — "no review", say for a one-line fix — and say
-  in the summary that it was skipped.
+  in the summary that it was skipped, and that the story cannot merge until its tests are reviewed.
 
 ## Then — offer to run them
 Once the spec is written and its review is settled, ask: *Run these tests now?* A yes hands over to

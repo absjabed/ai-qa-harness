@@ -86,7 +86,7 @@ step 9, which says what to edit when you remove something.
 | `config/` (`projectProfile.ts`, `testConfig.ts`, `DbConnection.ts`, `testDbConnection.ts`, `db/` ×3) | Settings and the database connection | set the roles in `projectProfile.ts` |
 | `context/` (3 files) | Where the context-builder writes what it learns | review what it writes |
 | `data/` (`auth_data.ts`, `testData.ts`, `sql_queries.ts`, `seed.ts`) | Credentials lookup, test data, queries, data seeding | fill in as you go |
-| `docs/` (8 files, `harness-docs/`) | The handbook, references, this guide, the team deck, the cycle walkthrough, and the developer guide with diagrams | read |
+| `docs/` (9 files, `harness-docs/`) | The handbook, references, this guide, the git workflow, the team deck, the cycle walkthrough, and the developer guide with diagrams | read |
 | `lib/` (`BaseTest.ts`, `globalSetup.ts`, `cycleReporter.ts`, `api/ApiClient.ts`) | Fixtures, readiness check, the after-run report, the API client | add a fixture per page object |
 | `pages/` (`BasePage.ts`, `LoginPage.ts`, `DashboardPage.ts`, `common/` ×2) | Page objects | replace the `CHANGE_ME` selectors |
 | `scripts/` (`check-docs.js`, `check-trace.ts`, `cycle-report.ts`, `regression.ts`, `open-docs.js`, `lib/` ×2) | Checks, regression, the cycle report | leave |
@@ -389,7 +389,7 @@ recorded. Everything is files in the new QA repo, reviewed and committed like an
 | Run output and the HTML report | Playwright | `test-results/`, `playwright-report/` | no |
 | Cycle reports after each run | written automatically | `reports/` | no |
 | The cycle's final report | `npm run report:cycle -- --closure` | `specs/execution/closure/` | yes |
-| Confirmed defects, before and after filing, and their screenshots | healer, defect-raiser | `specs/defects/defect-log.json`, `specs/defects/evidence/` | yes |
+| Confirmed defects, before and after filing, and their screenshots | healer, defect-raiser | `specs/defects/log/`, `specs/defects/evidence/` | yes |
 | Bugs to import, when Jira is not connected | defect-raiser | `specs/defects/defects.csv` | yes |
 | Changes to the harness itself, and why | harness-improver | `HARNESS-CHANGES.md` | yes |
 

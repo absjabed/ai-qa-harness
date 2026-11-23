@@ -13,6 +13,8 @@
     "test:ui": "playwright test --ui",
     "test:regression": "playwright test --grep \"@Regression\"",
     "regression": "ts-node -r tsconfig-paths/register scripts/regression.ts",
+    "env": "node scripts/env.js",
+    "story": "ts-node -r tsconfig-paths/register scripts/story.ts",
     "results:last": "ts-node -r tsconfig-paths/register scripts/last-run.ts",
     "test:api": "playwright test --project=api",
     "report": "playwright show-report",

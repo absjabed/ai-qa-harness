@@ -97,6 +97,10 @@ same scope replaces the previous one; say so when one already exists, since git 
 
 Tell the user the file names and the one-line summary the script printed. Offer to open the HTML.
 
+Commit the report (`docs/GIT-WORKFLOW.md`), saying first what you will commit — the files in
+`specs/execution/reports/` for this scope, never `reports/.inputs/`:
+`git commit -m "test-report(<KEY, or the release>): <scope> report [reported]"`.
+
 ## Step 6 — Jira comments (always ask)
 
 With an issue-tracker server connected, offer — once, as a batch — to post a **test summary** comment on each

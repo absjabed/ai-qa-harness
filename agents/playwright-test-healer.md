@@ -10,7 +10,7 @@
 | **File tools needed** | read, search, write, edit |
 | **MCP servers** | `playwright-test` (required — browser inspection and test run/debug) · a read-only database server (optional — lets it adjudicate DB-backed failures instead of handing them back) · an issue-tracker server (optional — finds which raised defects are fixed, for retest) |
 | **Model guidance** | Strongest available |
-| **Writes** | Fixed tests, or entries in `specs/defects/defect-log.json` and their evidence in `specs/defects/evidence/` |
+| **Writes** | Fixed tests, or defect entries in `specs/defects/log/` and their evidence in `specs/defects/evidence/` |
 
 See [`agents/README.md`](README.md) to wire this into a tool other than Claude Code.
 
@@ -103,6 +103,16 @@ Your workflow:
    yourself — you only confirm it with the user and record it. The separate `playwright-defect-raiser`
    agent, run afterward, reads what you record and does the actual tracker logging and `test.fixme()`
    marking.
+
+## Git
+Work on the branch of the story you are healing (`docs/GIT-WORKFLOW.md`) — `npm run story -- status <KEY>`
+shows it; for a regression's failures, the release branch it ran on. Commit as each piece is done, saying
+first what you will commit:
+
+- a fixed test — `test-heal(<KEY>): <TCID> <what changed> [healed]`;
+- a confirmed defect — its file in `specs/defects/log/` and its `specs/defects/evidence/<id>/` folder —
+  `defect(<KEY>): <TCID> confirmed, evidence kept [defect-recorded]`;
+- a retest — `defect(<KEY>): <TCID> fixed, verified [defect-verified]`.
 
 ## When you finish
 Run the specs you healed once more with `npx playwright test <spec files>` — or ask the user to. A run
@@ -199,8 +209,7 @@ Before recording any defect you must get explicit user confirmation. This is the
    cause, and your classified severity (P1–P4) with a one-line justification tied to the rubric.
 2. Ask the user to confirm whether this should be logged as a defect, and to correct the severity if they
    disagree with your classification.
-3. If confirmed, append one entry to `specs/defects/defect-log.json` (create the file with `[]` if it doesn't
-   exist) per the schema below, using the user-confirmed severity. Do **not** write to
+3. If confirmed, write the entry as its own file, `specs/defects/log/<entry id>.json`, per the schema below, using the user-confirmed severity. Do **not** write to
    `specs/defects/defects.csv`, and do **not** mark the test `fixme()` yourself — that is the
    `playwright-defect-raiser` agent's job, run separately against this log. The test stays red until that
    agent processes it.
@@ -213,10 +222,10 @@ Before recording any defect you must get explicit user confirmation. This is the
 5. If the user says it is not a defect: do not write to the log. Ask how they want the test handled, or
    continue attempting a fix if they indicate one is possible.
 
-### `specs/defects/defect-log.json` format
+### Defect entry format — `specs/defects/log/<entry id>.json`
 
-A JSON array of entry objects. Append new entries; never rewrite or remove existing ones. Each field has
-one owner: you write an entry as `pending`; the defect-raiser moves it to `raised`; you move it to
+One JSON object per file, named by its `id` — so two story branches that each record a defect never conflict.
+Never rename or delete an entry's file, and never change another entry. Each field has one owner: you write an entry as `pending`; the defect-raiser moves it to `raised`; you move it to
 `verified` in the retest workflow below; a person fills `trackerKey` once the defect is in the tracker.
 
 ```json
@@ -322,8 +331,8 @@ Key principles:
 - Prefer robust, maintainable solutions over quick hacks
 - If multiple errors exist, fix them one at a time and retest
 - Explain clearly what was broken and how you fixed it
-- Continue until the test runs successfully, is confirmed as a defect and recorded to
-  `specs/defects/defect-log.json`, 3 fix attempts are exhausted without meeting the genuine-bug
+- Continue until the test runs successfully, is confirmed as a defect and recorded in
+  `specs/defects/log/`, 3 fix attempts are exhausted without meeting the genuine-bug
   criteria (then stop and ask), or the user tells you to stop
 - Do not ask questions except to settle what to heal when you were not told, before a change the
   expected-value guard holds back, for the confirmation step in the Defect Confirmation Workflow, when recording a defect found by hand, and before commenting on or

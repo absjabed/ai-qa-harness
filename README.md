@@ -82,6 +82,7 @@ application stays in your copy. That is the line that keeps this template reusab
 | [docs/AGENTS.md](docs/AGENTS.md) | The nine agents: inputs, outputs, checkpoints, what to expect, what they refuse |
 | [docs/WORKFLOWS.md](docs/WORKFLOWS.md) | End-to-end recipes — first story, healing a regression, onboarding, porting |
 | [docs/MCP.md](docs/MCP.md) | Wiring the browser, database and Jira MCP servers, and the guard rails |
+| [docs/GIT-WORKFLOW.md](docs/GIT-WORKFLOW.md) | Branches, the story start protocol, commits, when a story merges — the agents run git, you answer |
 | [docs/qa-harness-intro.html](docs/qa-harness-intro.html) | Three slides for introducing the harness to a QA team: how they test today, how they will with it |
 | [docs/qa-harness-walkthrough.html](docs/qa-harness-walkthrough.html) | One example cycle, step by step: setup, one ticket, regression and closure — what you run, what each agent asks, what comes out |
 | [docs/harness-docs/ai-qa-harness.md](docs/harness-docs/ai-qa-harness.md) | Developer guide: how the agent system works — architecture, agent pattern, each workflow, guardrails, harness improvement — with editable draw.io diagrams |
@@ -120,7 +121,7 @@ Nine agents, defined in `agents/` and run as slash commands via the `.claude/` w
 | `playwright-test-generator` | An approved plan | A spec file, plus any page objects and fixtures it needed — reviewed against the plan before it finishes |
 | `playwright-test-reviewer` | A plan and its ticket, or a spec and its plan — started by the planner (if you agree) and the generator (always) | Findings: `must fix` and `consider`, each tied to a TCID and its source. Edits nothing |
 | `playwright-test-executor` | A story to run, or a release's regression | The run confirmed and done; failures grouped and taken to the healer, defects to the defect-raiser, manual results recorded, the report offered |
-| `playwright-test-healer` | The failing tests of a story, spec or run | Fixed tests, or a confirmed defect in `specs/defects/defect-log.json` with its screenshots |
+| `playwright-test-healer` | The failing tests of a story, spec or run | Fixed tests, or a confirmed defect in `specs/defects/log/` with its screenshots |
 | `playwright-defect-raiser` | The pending defects | Bugs created in the tracker, linked and with evidence, or rows in `specs/defects/defects.csv` + the tests marked `test.fixme()` |
 | `playwright-test-reporter` | The scope to report on — a story, several, an epic or a release — and the formats | A formal report in `specs/execution/reports/` — Markdown, HTML or PDF — every figure from the test records; on your yes, a summary comment on each Jira ticket |
 | `playwright-harness-improver` | A case where the harness did not behave as the team needs, or a convention it should follow | The smallest change in the right file, applied on your yes, with the docs that restate it — and an entry in `HARNESS-CHANGES.md` |
@@ -208,6 +209,7 @@ docs/
   qa-harness-intro.html          three-slide introduction for a QA team
   qa-harness-walkthrough.html    one example cycle, step by step - what you run, what it asks, what comes out
   NEW-QA-REPO.md                 starting a project's QA repo - files, minimum config, checklist
+  GIT-WORKFLOW.md                branches, the story start protocol, commits, the merge rule
   harness-docs/                  developer guide to the agent system, with draw.io diagrams and their PNGs
 plans/                           template maintainers' plans for the next harness version - never exported
 examples/
@@ -221,9 +223,13 @@ scripts/
   check-docs.js                  asserts the docs still match the repo
   check-trace.ts                 enforces I8 - TCIDs present, planned, unique
   regression.ts                  regression for a client release - pick its tickets or epics
+  last-run.ts                    the last run's results, failures grouped - what the executor reads
+  story.ts                       a story's git side - status, start protocol, release branches, merge rule
+  env.js                         reads allow-listed, non-secret settings from .env for agents
   cycle-report.ts                rebuild the cycle report by hand
   lib/cycle.ts                   builds the cycle report
   lib/trace.ts                   the parser all of them share
+  lib/defects.ts                 the defect log - one file per defect
 PROJECT-PROFILE.md               the one file you fill in per project
 .env.example                     copy to .env
 .mcp.json.example                copy to .mcp.json - browser + optional database access
@@ -238,6 +244,7 @@ npm run export -- <dir>       # copy the harness into a project's QA repo
 npm test                      # everything
 npm run regression            # a client release: pick its tickets or epics, run, report
 npm run test:regression       # every test tagged @Regression
+npm run story -- status       # where each story is, and whether it may merge
 npm run test:headed
 npm run test:ui
 npm run test:api              # the api project only

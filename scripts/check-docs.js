@@ -323,6 +323,31 @@ for (const doc of contextDocs) {
     }
 }
 
+// ---------------------------------------------------------------- every setting the code reads is in .env.example
+
+// .env.example is how a team learns what to fill in; a setting the code reads but the example never lists is
+// found only when a run misbehaves. Read through process.env, or config/testConfig.ts's required()/optional().
+// Exempt: CI, set by CI systems; CYCLE_REPORT_SCOPE, passed between the harness's own scripts; and the per-role
+// login keys (<ROLE>_EMAIL / <ROLE>_PASSWORD), which data/auth_data.ts builds from the role names.
+const ENV_EXEMPT = new Set(['CI', 'CYCLE_REPORT_SCOPE']);
+if (exists('.env.example')) {
+    const listed = new Set([...read('.env.example').matchAll(/^\s*([A-Z][A-Z0-9_]*)\s*=/gm)].map((m) => m[1]));
+    const code = trackedFiles().filter((f) => /\.(ts|js)$/.test(f) && !f.startsWith('examples/') && exists(f));
+    const PATTERNS = [/process\.env\.([A-Z][A-Z0-9_]*)/g, /process\.env\[['"]([A-Z][A-Z0-9_]*)['"]\]/g, /\b(?:required|optional)\(\s*['"]([A-Z][A-Z0-9_]*)['"]/g];
+    const unlisted = new Map();
+    for (const file of code) {
+        const text = read(file);
+        for (const re of PATTERNS) {
+            for (const [, key] of text.matchAll(re)) {
+                if (!listed.has(key) && !ENV_EXEMPT.has(key) && !unlisted.has(key)) unlisted.set(key, file);
+            }
+        }
+    }
+    for (const [key, file] of unlisted) {
+        check(`.env.example does not list ${key}`, false, `${file} reads it — add it to .env.example with a comment saying what it is`);
+    }
+}
+
 // ---------------------------------------------------------------- examples still apply
 
 // Template only. An example layer carries changes to harness files, not copies of them, so a template

@@ -365,7 +365,7 @@ for the stories it ran, without being asked. `AUTO_CYCLE_REPORT=false` in `.env`
 
 A `test.fixme` is only correct while its bug is open. Once it is fixed, the skipped test is lost coverage.
 
-1. Make sure each raised entry in `specs/defects/defect-log.json` has its `trackerKey` — filled in for
+1. Make sure each raised entry in `specs/defects/log/` has its `trackerKey` — filled in for
    you in tracker mode, by hand after a CSV import.
 2. Run the healer and ask it to retest raised defects — all of them, or one by TCID. With the tracker server
    wired it finds the fixed ones itself, from the bugs' status:

@@ -216,6 +216,25 @@ Pause at each boundary, wait for explicit approval, fold in corrections before c
 | Before saving markdown plan | Complete draft in chat — and the offer of an independent review (below) | Approval; yes or no to the review |
 | Before writing CSV | CSV rows (or sample), matching approved plan | Approval |
 
+## Git — before any work on the story
+Follow the story start protocol in `docs/GIT-WORKFLOW.md`. Once you have the story's key and release, run
+`npm run story -- status <KEY>`:
+
+- **On the story's branch already** → carry on.
+- **It has a branch and you are not on it** → offer to resume it: `npm run story -- start <KEY> --resume --yes`.
+- **No branch yet** → run `npm run story -- start <KEY> --release <fix version, or none>`. It prints a suggested
+  base — `release/<x>` for the story's release, else `develop`. **Ask the user which base**, then run it again
+  with `"<short description>" --base <their choice> --yes`. A story with no release yet: say first that it
+  branches from and merges into `develop` and is in no release's regression until scheduled, and ask to go on.
+
+If it stops — uncommitted changes, a diverged base, a missing release branch — show what it printed and ask.
+Never work around it. In a tool with no terminal, ask the user to do the same steps by hand.
+
+**Commit when the plan is saved**, saying first what you will commit: the plan, its CSV and the manual rows
+you seeded — `git add specs/<KEY>.plan.md specs/<KEY>.plan.csv specs/execution/manual-results.csv`, then
+`git commit -m "test-plan(<KEY>): plan with <n> test cases [planned]"` — `[plan-reviewed]` when its review came
+back clean.
+
 ## Independent review — offered, at the user's choice
 At the "before saving" checkpoint, offer it in one line: *"Before I save, an independent reviewer can check
 this plan against the ticket — every AC covered by a case that would fail if it broke, every Expected Result
@@ -228,10 +247,13 @@ than one role, or rules from `context/` the plan relies on.
   `specs/<STORY-KEY>.plan.md` first if the reviewer needs to read it from disk, and say so.
 - **Its findings:** fold every `must fix` into the plan, show each `consider` with your recommendation, and
   present the revised plan for approval. A finding you disagree with — say so and why; the user decides.
-- **No** → save as approved. The user can still run `/playwright-test-reviewer` on the plan later.
+- **Clean** — no `must fix` left after your revision → add `**Plan reviewed:** <YYYY-MM-DD>` to the story's
+  fields at the top of the plan, under `**Epic:**` (or `**Release:**`). `npm run story -- status` reads it.
+- **No** → save as approved, with no `**Plan reviewed:**` line. The user can still run
+  `/playwright-test-reviewer` on the plan later.
 
 # Workflow
-1. **Gather context** — parse story/screenshots (Input); read `PROJECT-PROFILE.md`; inspect `pages/`,
+1. **Gather context** — first the story's branch (Git, above); then parse story/screenshots (Input); read `PROJECT-PROFILE.md`; inspect `pages/`,
    `lib/BaseTest.ts`, `data/*.ts`, existing specs (Setup). No live browser.
 2. **Analyze flows** — scope to AC-implicated journeys if a story was given; otherwise cover the primary
    journeys of every role in PROJECT-PROFILE.md section 2 broadly.

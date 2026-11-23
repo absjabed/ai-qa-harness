@@ -5,6 +5,7 @@
     "specs/FK-1304.plan.md",
     "tests/stories/2.26/FK-1304.spec.ts",
     "specs/defects/defects.csv",
+    "specs/defects/log/FK-1304-TC002-1791999759.json",
     "specs/defects/evidence/FK-1304-TC002-1791999759/error-context.md",
     "specs/defects/evidence/FK-1304-TC002-1791999759/test-failed-1.png",
     "specs/execution/closure/cycle-summary-release-2.26-2026-10-14-17-45.md"
@@ -12,7 +13,6 @@
   "replaces": [
     "specs/execution/automated-results.csv",
     "specs/execution/manual-results.csv",
-    "specs/defects/defect-log.json",
     "HARNESS-CHANGES.md"
   ],
   "edit": [

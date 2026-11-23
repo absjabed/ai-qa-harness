@@ -36,6 +36,10 @@ export interface Plan {
     release: string | null;
     /** The epic the story belongs to, from `**Epic:**`. Optional. */
     epic: string | null;
+    /** When the plan passed its independent review, from `**Plan reviewed:**` — written by the planner. */
+    planReviewed: string | null;
+    /** When the spec passed its independent review, from `**Tests reviewed:**` — written by the generator. */
+    testsReviewed: string | null;
     cases: PlannedCase[];
     /** AC label (e.g. `AC1`) → TCIDs linked to it in the plan's traceability table. */
     acceptanceCriteria: Map<string, string[]>;
@@ -134,6 +138,8 @@ export function parsePlan(file: string): Plan {
         title: storyField(lines, 'Title'),
         release: storyField(lines, 'Release'),
         epic: storyField(lines, 'Epic'),
+        planReviewed: storyField(lines, 'Plan reviewed'),
+        testsReviewed: storyField(lines, 'Tests reviewed'),
         cases: [],
         acceptanceCriteria: new Map(),
         problems: [],

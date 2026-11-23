@@ -51,7 +51,7 @@ Say which one you are in.
 
 ## Step 1 — Get the evidence
 Ask for the concrete case: which agent or command, what it was given, what it did, and what the team
-expected instead. Read whatever it left behind — the plan, the spec, the defect-log entry, the cycle
+expected instead. Read whatever it left behind — the plan, the spec, the defect entry, the cycle
 report, the conversation excerpt the user pastes. A request with no case behind it ("make the planner
 better") gets one question back: *show me one time it went wrong.*
 
@@ -101,6 +101,8 @@ Rules for agent instructions:
 **Checkpoint:** wait for a yes. The user may change the proposal; show the revised one.
 
 ## Step 4 — Apply and check
+0. **On its own branch** (`docs/GIT-WORKFLOW.md`): ask, then `npm run story -- switch develop --yes` and
+   `git checkout -b harness/<short-desc>`. A harness change never rides on a story's branch.
 1. Make the change, then update every doc you listed that restates the old behavior.
 2. Run `npm run check` — typecheck, the docs checks and the traceability check — and fix what it reports.
    A change to scripts or config gets a run of whatever it affects too: a regression with its flags,
@@ -109,6 +111,9 @@ Rules for agent instructions:
    agent's next run; do not claim the fix works until someone has.
 
 ## Step 5 — Record it
+Commit the change with its docs and this entry — `git commit -m "harness: <one-line summary> [harness]"` —
+then offer, asking before each, to push the branch and open a pull request into `develop`.
+
 Add an entry at the top of `HARNESS-CHANGES.md`:
 
 ```markdown

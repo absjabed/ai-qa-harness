@@ -108,6 +108,11 @@ same folder without touching it — see `docs/NEW-QA-REPO.md` section 0.
 **Keep in step** When a setup step, a profile section or a `.env` key changes, check the templates that
 mention it — `2-CHECKLIST.md` and `3-FILLING-GUIDE.md` above all.
 
+### `plans/`
+
+**What** Template maintainers' plans for the next harness version — what is being added and why, the design,
+and the phases. Never copied into a project's QA repo.
+
 ### `examples/`
 
 **What** Practice material, never copied into a project's QA repo. `examples/fleetkeep/` holds a small
@@ -232,7 +237,7 @@ unmet, for use as a gate — by default it only reports, because closing a cycle
 is not copied, since a copy has nothing to export.
 
 **Copies** Every tracked file except `README.md`, `CHANGELOG.md`, itself, `scripts/lib/overlay.js`,
-`scripts/prep-folder.js`, `examples/` and `prep/` — dotfiles included. A hand-made copy most often misses `.gitignore`, and without it `.env` is
+`scripts/prep-folder.js`, `examples/`, `prep/` and `plans/` — dotfiles included. A hand-made copy most often misses `.gitignore`, and without it `.env` is
 committed on the first push.
 
 **Also** Names the package after the target folder, writes a starter README if the target has none,

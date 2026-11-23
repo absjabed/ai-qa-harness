@@ -103,6 +103,7 @@ step 9, which says what to edit when you remove something.
 | `scripts/export-harness.js`, `scripts/lib/overlay.js` | A copy has nothing to export, and no example layers to apply |
 | `examples/` | The FleetKeep practice app and worked cycle — for learning on, never part of a project's repo |
 | `prep/`, `scripts/prep-folder.js` | The prep-folder templates and the command that writes them — `npm run prep` runs from the template |
+| `plans/` | The template maintainers' plans for the next harness version |
 | `.env`, `.mcp.json` | They hold passwords — each project creates its own from the `.example` files |
 | `node_modules/`, `test-results/`, `playwright-report/`, `reports/` | Installed or generated |
 

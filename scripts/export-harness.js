@@ -33,7 +33,7 @@ const root = path.join(__dirname, '..');
  * README.md is replaced by one written for the project; the template's history stays with the template.
  */
 const TEMPLATE_ONLY = ['README.md', 'CHANGELOG.md', 'scripts/export-harness.js', 'scripts/lib/overlay.js', 'scripts/prep-folder.js'];
-const TEMPLATE_ONLY_DIRS = ['examples/', 'prep/'];
+const TEMPLATE_ONLY_DIRS = ['examples/', 'prep/', 'plans/'];
 
 function fail(message) {
     console.error(`\nexport: ${message}\n`);

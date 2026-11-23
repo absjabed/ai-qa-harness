@@ -207,6 +207,7 @@ docs/
   qa-harness-walkthrough.html    one example cycle, step by step - what you run, what it asks, what comes out
   NEW-QA-REPO.md                 starting a project's QA repo - files, minimum config, checklist
   harness-docs/                  developer guide to the agent system, with draw.io diagrams and their PNGs
+plans/                           template maintainers' plans for the next harness version - never exported
 examples/
   fleetkeep/                     a practice app and one ticket's worked cycle - never exported to a project
 prep/

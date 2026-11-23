@@ -155,12 +155,12 @@ function dashboard(m: CycleMetrics, summary: string): string {
     <p class="verdict-text">${inline(summaryText)}</p>
   </div>
 </section>
+<section class="tiles">
+  ${tiles.map((t) => `<div class="tile ${t.cls}"><span class="tile-label">${t.label}</span><span class="tile-value">${t.value}</span><span class="tile-note">${escapeHtml(t.note)}</span></div>`).join('\n  ')}
+</section>
 <section class="progress" aria-label="How the ${m.total} test cases ended">
   <div class="bar">${bar}</div>
   <div class="legend"><span class="legend-total">${m.total} test case${m.total === 1 ? '' : 's'}</span>${legend}</div>
-</section>
-<section class="tiles">
-  ${tiles.map((t) => `<div class="tile ${t.cls}"><span class="tile-label">${t.label}</span><span class="tile-value">${t.value}</span><span class="tile-note">${escapeHtml(t.note)}</span></div>`).join('\n  ')}
 </section>`;
 }
 

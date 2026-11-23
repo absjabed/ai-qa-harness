@@ -148,16 +148,16 @@ function dashboard(m: CycleMetrics, summary: string): string {
     const legend = OUTCOMES.filter((o) => n(o.key) > 0).map((o) => `<span><i class="${o.cls}"></i>${o.label} <b>${n(o.key)}</b> · ${pct(o.key)}%</span>`).join('');
     const summaryText = summary.replace(/^\*\*[^*]+\*\*\s*—\s*/, '');
     return `
-<section class="progress" aria-label="How the ${m.total} test cases ended">
-  <div class="bar">${bar}</div>
-  <div class="legend"><span class="legend-total">${m.total} test case${m.total === 1 ? '' : 's'}</span>${legend}</div>
-</section>
 <section class="verdict ${m.allMet ? 'met' : 'notmet'}">
   <div class="verdict-mark">${m.allMet ? '✓' : '!'}</div>
   <div>
     <p class="verdict-title">${m.allMet ? 'Exit criteria met' : 'Exit criteria not met'}</p>
     <p class="verdict-text">${inline(summaryText)}</p>
   </div>
+</section>
+<section class="progress" aria-label="How the ${m.total} test cases ended">
+  <div class="bar">${bar}</div>
+  <div class="legend"><span class="legend-total">${m.total} test case${m.total === 1 ? '' : 's'}</span>${legend}</div>
 </section>
 <section class="tiles">
   ${tiles.map((t) => `<div class="tile ${t.cls}"><span class="tile-label">${t.label}</span><span class="tile-value">${t.value}</span><span class="tile-note">${escapeHtml(t.note)}</span></div>`).join('\n  ')}
@@ -212,7 +212,7 @@ export function reportToHtml(md: string, title: string, metrics?: CycleMetrics):
   .tile.pass .tile-value { color: var(--pass); } .tile.fail .tile-value { color: var(--fail); } .tile.warn .tile-value { color: var(--warn); }
   .tile-note { font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
 
-  .progress { margin: 0 0 16px; }
+  .progress { margin: 0 0 14px; }
   .bar { display: flex; height: 6px; border-radius: 3px; overflow: hidden; background: var(--skip-bg); gap: 2px; }
   .seg { display: block; min-width: 4px; }
   .seg.pass, .legend i.pass { background: var(--pass); } .seg.fail, .legend i.fail { background: var(--fail); }

@@ -91,8 +91,9 @@ npm run report:cycle -- <scope flags> --formal --format <chosen> --jira reports/
 
 Scope flags: `--stories FK-1304` · `--stories FK-1304,FK-1305` · `--epics FK-1301` · `--release 2.26`
 (`--release none` for stories with no release yet). Add `--since <YYYY-MM-DD>` when the user names when the
-cycle began. It writes `specs/execution/reports/QA-Report_<app>_<scope>_<version>_<date-time>.md` and the
-formats asked for beside it.
+cycle began. It writes `specs/execution/reports/QA-Report_<app>_<scope>.md` — `release-2.26`, `FK-1304`,
+`epic-FK-1301`, or several story keys joined with `+` — and the formats asked for beside it. A report for the
+same scope replaces the previous one; say so when one already exists, since git keeps the earlier version.
 
 Tell the user the file names and the one-line summary the script printed. Offer to open the HTML.
 

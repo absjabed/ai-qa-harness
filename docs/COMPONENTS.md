@@ -218,12 +218,13 @@ or nothing for every story; `--since <date>` ignores results from before the cyc
 `reports/cycle-summary-<scope>-<time>.md`, which is not committed — or, with `--closure`, to
 `specs/execution/closure/`, which is: the cycle's final report, kept for the record.
 
-**Formal reports** `--formal` writes `QA-Report_<app>_<scope>_<version>_<date-time>.md` to the committed
+**Formal reports** `--formal` writes `QA-Report_<app>_<scope>.md` — one per release, story, epic or set of
+stories, replaced by the next report for that scope; git keeps the earlier versions — to the committed
 `specs/execution/reports/`, with a sign-off block — the report `/playwright-test-reporter` produces. Also:
 `--epics`, `--format md,html,pdf` (Markdown always; HTML and PDF from `scripts/lib/report-render.ts`, PDF printed
 by Playwright's Chromium), `--by`, `--jira <file>` (ticket titles and status, and the scope's tickets with no
 plan), `--notes <file>`, and for the agent `--list`, `--defaults` and `--preview` (the numbers as JSON, nothing
-written). A report never overwrites another: one of the same scope in the same minute gets `-2`.
+written). The after-run summaries in `reports/` are timestamped and never overwrite one another.
 
 **Reads** Plans, `specs/execution/automated-results.csv` (each test case's latest result across runs),
 `specs/execution/manual-results.csv` and `specs/defects/defect-log.json` — all optional; it says plainly which

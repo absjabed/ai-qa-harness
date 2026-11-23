@@ -526,7 +526,7 @@ Writes the formal test report: for one story, several, an epic or a release.
 | **Model** | sonnet — the numbers come from the script; it asks, enriches and words |
 | **Tools** | Read, Write (its own input files under `reports/.inputs/`), `npm run report:cycle`; the tracker's read tools and, on your yes, its comment tool |
 | **Input** | The scope and the formats, both asked every time |
-| **Output** | `specs/execution/reports/QA-Report_<app>_<scope>_<version>_<date-time>.md`, and `.html` / `.pdf` beside it on request |
+| **Output** | `specs/execution/reports/QA-Report_<app>_<scope>.md` — one per release, story, epic or set of stories, replaced by the next report for that scope — and `.html` / `.pdf` beside it on request |
 
 ### How it works
 

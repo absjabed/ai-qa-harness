@@ -14,8 +14,8 @@
  * Kind of report:
  *   (default)                         a cycle summary in reports/, not committed
  *   --closure                         the cycle's final summary, in specs/execution/closure/ — committed
- *   --formal                          a formal QA report: QA-Report_<app>_<scope>_<release>_<date-time>, a sign-off
- *                                     block, in specs/execution/reports/ — committed
+ *   --formal                          a formal QA report: QA-Report_<app>_<scope>, a sign-off block, in
+ *                                     specs/execution/reports/ — committed; replaces the last one for that scope
  *   --format md,html,pdf              formats to write; Markdown is always written. Default: QA_REPORT_FORMAT, else md
  *   --by "<name>"                     who generated it, when QA_TESTER_NAME and the git user name are both missing
  *   --jira <file.json>                ticket titles and statuses fetched from Jira (see scripts/lib/cycle.ts JiraData)

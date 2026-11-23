@@ -223,7 +223,7 @@ export function reportToHtml(md: string, title: string, metrics?: CycleMetrics):
   .legend-total { font-weight: 600; color: var(--ink); }
   .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
 
-  dl.details { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0; background: var(--paper);
+  dl.details { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0; background: var(--paper);
                border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin: 0 0 6px; }
   dl.details div { padding: 8px 12px; min-width: 0; box-shadow: inset -1px -1px 0 var(--line); }
   dt { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }

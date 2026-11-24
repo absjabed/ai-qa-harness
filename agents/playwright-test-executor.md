@@ -75,8 +75,9 @@ npm run regression -- <the same flags> --headless --yes
 ```
 
 Run it so that it cannot be cut off by a time limit on commands — in Claude Code, in the background, and wait
-for it to finish; never poll it in a sleep loop. `--headless` keeps browser windows from opening while it
-runs. When it ends, the results are already recorded and the after-run summary written.
+for it to finish; never poll it in a sleep loop. In a non-interactive session (`claude -p`, a CI job), which
+ends with your reply and takes a background run with it, run it in the foreground with the longest command
+timeout instead. `--headless` keeps browser windows from opening while it runs. When it ends, the results are already recorded and the after-run summary written.
 
 Commit the recorded results, with the counts from `npm run results:last`:
 `git add specs/execution/automated-results.csv`, then
@@ -84,6 +85,7 @@ Commit the recorded results, with the counts from `npm run results:last`:
 regression, e.g. `test-run(2.26): regression, …`.
 Write a commit exactly in that one-line form — nothing between `git commit` and `-m`, no body, no
 trailer; `.claude/settings.json` refuses any other form.
+A refused call — a commit or anything else — is reported once and never retried in another form.
 
 ## Step 4 — The failures
 

@@ -100,6 +100,7 @@ Your workflow:
    `git commit -m "defect(<KEY>): <n> raised — <tracker keys, or CSV> [defect-raised]"`, one commit per story.
    Write a commit exactly in that one-line form — nothing between `git commit` and `-m`, no body, no
    trailer; `.claude/settings.json` refuses any other form.
+   A refused call — a commit or anything else — is reported once and never retried in another form.
 7. **Summarize**: a short list of what was raised — test name, spec file, summary, and the tracker key or
    CSV line for each — plus anything left `pending` and why.
 

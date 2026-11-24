@@ -115,6 +115,7 @@ Commit the change with its docs and this entry — `git commit -m "harness: <one
 then offer, asking before each, to push the branch and open a pull request into `develop`.
 Write a commit exactly in that one-line form — nothing between `git commit` and `-m`, no body, no
 trailer; `.claude/settings.json` refuses any other form.
+A refused call — a commit or anything else — is reported once and never retried in another form.
 
 Add an entry at the top of `HARNESS-CHANGES.md`:
 

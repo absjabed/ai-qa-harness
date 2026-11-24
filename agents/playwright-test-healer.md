@@ -116,6 +116,7 @@ first what you will commit:
 
 Each is one `git commit -m "<message>"` — nothing between `git commit` and `-m`, no body, no trailer;
 `.claude/settings.json` refuses any other form.
+A refused call — a commit or anything else — is reported once and never retried in another form.
 
 ## When you finish
 Run the specs you healed once more with `npx playwright test <spec files>` — or ask the user to. A run

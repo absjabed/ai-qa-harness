@@ -374,7 +374,7 @@ Every story's work happens on its own branch. **The agents run git; you answer.*
 ![Guardrails — agent tool calls, the matching rule in .claude/settings.json, and its effect: BLOCK, ASK or ALLOW](diagrams/ai-qa-harness/12-guardrails.png)
 
 The harness has no hook scripts. Its guardrails are permission rules in
-[.claude/settings.json](../../.claude/settings.json), which Claude Code applies to every agent tool call: 90
+[.claude/settings.json](../../.claude/settings.json), which Claude Code applies to every agent tool call: 94
 `allow`, 25 `ask` and 96 `deny` rules. Every Jira and Figma rule is written for both connections — Jira's
 `mcp__tracker__` and `mcp__plugin_atlassian_atlassian__`, Figma's `mcp__figma__` and
 `mcp__plugin_figma_figma__`.
@@ -391,6 +391,7 @@ The harness has no hook scripts. Its guardrails are permission rules in
 | Git that reaches the remote or switches branch | **Asks** before `push`, `merge`, `pull`, `checkout`, `switch`, `mv`, `cherry-pick`, `gh pr create`, `gh pr merge` |
 | Jira, database and Figma reads | Allowed without a prompt |
 | The Playwright test server's tools the agents use | Allowed, so the context-builder, generator and healer keep their browser after the first checkpoint — the same tools their commands already grant |
+| Starting the healer, defect-raiser, reporter and context-builder | Allowed, so the executor can hand a run over to each without a prompt |
 | Local git and the harness scripts | Allowed: `git status` / `log` / `diff` / `show` / `fetch` / `add` / `commit -m`; `npm run story`, `env`, `check` (and `check:trace`, `check:docs`), `regression`, `results:last`, `report:cycle`, `context:sync`, `defect:evidence` |
 
 The `allow` rules apply only after you accept Claude Code's trust dialog for the folder; `deny` and `ask` rules

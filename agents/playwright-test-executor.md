@@ -74,11 +74,10 @@ A large selection (well over a hundred test runs) — offer to split it by epic 
 npm run regression -- <the same flags> --headless --yes
 ```
 
-Run it so that it cannot be cut off by a time limit on commands — in Claude Code, in the background, and wait
-for it to finish; never poll it in a sleep loop. In a non-interactive session (`claude -p`, a CI job), which
-ends with your reply and takes a background run with it — or when you cannot tell — run it in the foreground
-with the longest command timeout instead, and if the dry run's test count could outlast that limit, run it
-story by story. `--headless` keeps browser windows from opening while it runs. When it ends, the results are
+Run it in the foreground, with the longest timeout your tool allows for a command (ten minutes in Claude
+Code). Never in the background: you cannot tell whether this session ends with your reply — a `claude -p`
+run or a CI job does — and a background run ends with it, cut off part-way. If the dry run's count could
+outlast that limit, run it in parts — story by story, each in the foreground. `--headless` keeps browser windows from opening while it runs. When it ends, the results are
 already recorded and the after-run summary written.
 
 Commit the recorded results, with the counts from `npm run results:last`:

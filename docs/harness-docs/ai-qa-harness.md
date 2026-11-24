@@ -256,7 +256,7 @@ when you run it:
 - **Two modes.** A *story run* — every test of the chosen stories — or a *regression run*: a release, or chosen
   epics or tickets, `@Regression` tests by default.
 - **Dry run, then STOP.** `npm run regression -- … --dry-run` shows the tickets, test count, browsers and
-  build without recording anything; it runs only on your yes, headless and in the background.
+  build without recording anything; it runs only on your yes, headless and in the foreground — a long run goes story by story.
 - **Failures, once.** `npm run results:last` groups them by spec and error; you choose heal all, these groups,
   skip or stop, and it hands over to the healer with that scope.
 - **Then, each offered:** the defect-raiser for pending defects · manual cases still Not Run · the reporter,

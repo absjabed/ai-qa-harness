@@ -60,7 +60,7 @@ the agents you want. Each entry lists the files to port.
   Port: `.gitattributes`, `scripts/lib/defects.ts`, `scripts/lib/cycle.ts`, `scripts/defect-evidence.ts`, the
   healer's and defect-raiser's defect-log wording, `specs/defects/log/.gitkeep`.
 - **`/playwright-test-executor`** — **Adopt.** Runs one story's tests or a release's regression, confirmed from a
-  dry run first, headless in the background. Groups the failures and asks once — heal all, these, skip or stop
+  dry run first, headless in the foreground. Groups the failures and asks once — heal all, these, skip or stop
   — hands over to the healer, then offers the defect-raiser, the manual cases still Not Run, the report, the
   context sync and, for a story, the merge. Every figure comes from the scripts. The generator now asks *run
   these tests now?* after a clean review.
@@ -96,8 +96,8 @@ the agents you want. Each entry lists the files to port.
   test-server tools the commands already grant are now allowed in `.claude/settings.json`; nothing new is granted.
   `npm run check` and its parts (`check:trace`, `check:docs`) are allowed too, so the context-builder and planner
   can validate what they wrote before committing. Starting the healer, defect-raiser, reporter and
-  context-builder is allowed, so the executor's hand-overs don't stop on a prompt; in a non-interactive session
-  the executor runs the tests in the foreground, since a background run ends with the session.
+  context-builder is allowed, so the executor's hand-overs don't stop on a prompt; the executor always runs
+  the tests in the foreground, story by story if long, since a background run ends with a non-interactive session.
   The setup docs now say to accept Claude Code's trust dialog: until a folder is trusted, none of its allow rules
   apply (deny and ask rules always do).
   The context-builder also stops at every checkpoint, reads nothing outside the repository unless named in its

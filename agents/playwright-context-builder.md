@@ -337,14 +337,17 @@ Started by the executor at the end of a run, with the stories it ran — or by a
 3. Apply exactly what was agreed, and nothing else:
    - **Verified** — add ` · verified: <TCID>, <YYYY-MM-DD>` after the rule's source. The same TCID already
      recorded: replace its date, don't add a second. A *Caveats* bullet naming a defect against that TCID goes
-     too — the case passes again, so the defect is fixed.
+     too — the case passes again, so the defect is fixed. While the rule has an open contradiction (below),
+     add no new `verified:` marks to it: say so and record them once the defect is fixed.
    - **Contradicted** — leave the rule's text exactly as it is: the application is wrong, not the rule. Add a
      *Caveats* bullet naming the open defect, the TCID and the date, and remove that TCID's `verified:` mark
      from the rule.
    - **A known unknown answered** — only the ones the user says the case answered. Replace the bullet with
      what the case showed, marked `observed by <TCID>, <date>` — in the *Quick reference* or *States* if it
      belongs there, or left under *Caveats* as observed, not confirmed at source. Never under *Invariants*: a
-     rule needs a source a person can check, and a passing test shows behavior, not intent.
+     rule needs a source a person can check, and a passing test shows behavior, not intent. An answered
+     item in `BASELINE.md`'s known unknowns leaves that section: point to the area document's caveat instead,
+     keeping its "observed, not confirmed at source" wording.
 4. Show the changes before writing them, then commit them: `context: <areas>, verified by <KEYS>
    [context-updated]`.
 

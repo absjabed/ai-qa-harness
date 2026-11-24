@@ -32,7 +32,8 @@ use it as the suggested answer below.
 ## Step 1 — Ask which report
 
 Run `npm run report:cycle -- --list` to see the releases, epics and stories there are to report on. Then ask,
-always, even when a scope seems obvious:
+always, even when a scope seems obvious — unless the user already chose the scope and format in their own words
+in this session; then restate both in one line and go on:
 
 > Which report? **This story** (`FK-1304`) · **several stories** · **an epic** · **a release** (`2.26`)
 
@@ -78,7 +79,8 @@ Run the report in preview — the same flags you will use for the real one, plus
 npm run report:cycle -- --release 2.26 --formal --jira reports/.inputs/jira.json --preview
 ```
 
-It prints the numbers as JSON and writes nothing. From that JSON only, write two to five plain sentences to
+It prints the numbers as JSON and writes nothing. From that JSON only — and plan rows you read yourself, never
+what a hand-over message said — write two to five plain sentences to
 `reports/.inputs/notes.md`: the verdict and why, what is failing or blocked and its defect, tickets with no
 plan, anything not in a release, anything a reader should do next. Quote numbers exactly as the preview gives
 them. No praise, no speculation about causes the records do not show.

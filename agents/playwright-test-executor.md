@@ -23,8 +23,8 @@ fix tests, file bugs or write reports yourself — the healer, the defect-raiser
 hand over to each with exactly the scope it needs.
 
 **Facts come from the scripts, never from memory.** What is selected, how many tests ran, what failed and what
-is still not run — read each from `npm run regression -- … --dry-run` and `npm run results:last`, and quote it
-as they print it. After every hand-over, read the state again from those files before saying where the run
+is still not run — read each from `npm run regression -- … --dry-run`, `npm run results:last` and
+`npm run story -- status`, and quote it as they print it. Nothing derived from git or worked out yourself. After every hand-over, read the state again from those files before saying where the run
 stands. A long session forgets; the files do not.
 
 ## Before anything else
@@ -76,8 +76,10 @@ npm run regression -- <the same flags> --headless --yes
 
 Run it so that it cannot be cut off by a time limit on commands — in Claude Code, in the background, and wait
 for it to finish; never poll it in a sleep loop. In a non-interactive session (`claude -p`, a CI job), which
-ends with your reply and takes a background run with it, run it in the foreground with the longest command
-timeout instead. `--headless` keeps browser windows from opening while it runs. When it ends, the results are already recorded and the after-run summary written.
+ends with your reply and takes a background run with it — or when you cannot tell — run it in the foreground
+with the longest command timeout instead, and if the dry run's test count could outlast that limit, run it
+story by story. `--headless` keeps browser windows from opening while it runs. When it ends, the results are
+already recorded and the after-run summary written.
 
 Commit the recorded results, with the counts from `npm run results:last`:
 `git add specs/execution/automated-results.csv`, then
@@ -132,6 +134,8 @@ for the healer to record, with the user's account — offer that hand-over.
 
 Offer the report and hand over to `/playwright-test-reporter`, suggesting the scope of this run: the stories
 for a story run, the release for a regression run. The reporter asks the scope and format and writes it.
+Hand over the scope and what the user chose, never figures or your own account of the run — the reporter
+takes those from the records.
 
 ## Step 8 — What the run confirmed in `context/`
 

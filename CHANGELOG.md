@@ -114,6 +114,14 @@ the agents you want. Each entry lists the files to port.
   every plan line it cannot implement as written at its first checkpoint. Re-reviews get no author
   reasoning; step titles are the plan line verbatim. Every committing agent uses the one-line
   `git commit -m` form and never retries a refused call. Port: `agents/playwright-*.md`.
+- **The run chain stays inside what you agreed** — **Adopt.** The healer never reroutes a refused test run
+  through another runner, re-runs only tests it changed, commits a defect without the results file, and names
+  any test case it cites as evidence with its plan title. The executor hands the reporter only the scope and
+  your choices, and quotes `npm run story -- status` rather than git. The reporter writes its summary from the
+  preview and the plan, and restates a scope you already chose instead of asking again. Context sync adds no
+  `verified:` mark to a rule with an open defect, and moves answered unknowns out of `BASELINE.md`. The
+  defect CSV's Reporter is the tester, as a tracker import needs a real user. Port: those five agents and the
+  worked cycle's `defects.csv`.
 - **Designs from Figma** — **Optional.** An optional `figma` MCP entry — Figma's remote server, signed in through
   the browser; the desktop app's server or the Figma plugin as alternatives. The planner and the
   context-builder read the frames a story links, sparingly, as cited design intent, never as rules; the

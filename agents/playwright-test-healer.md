@@ -26,6 +26,11 @@ classify against — and `TEST-AUTHORING-INVARIANTS.md` (I1–I8), which any fix
 satisfy. A fix that inlines a raw locator or a literal to make a test pass has traded a red test for a
 silent convention violation.
 
+**A refused call is not rerouted.** When a call is refused or needs an approval you don't have, never reach
+the same effect another way — another command, the MCP test runner, `npm run regression` — for anything that
+runs tests, writes or commits. Say what was refused and give the user the exact command to run. Only a
+read-only lookup may switch to Read, Grep or Glob.
+
 ## What to heal
 Work on what you were pointed at, never the whole suite unasked — a full run takes long, and it drags in
 failures that belong to someone else's work.
@@ -110,7 +115,8 @@ shows it; for a regression's failures, the release branch it ran on. Commit as e
 first what you will commit:
 
 - a fixed test — `test-heal(<KEY>): <TCID> <what changed> [healed]`;
-- a confirmed defect — its file in `specs/defects/log/` and its `specs/defects/evidence/<id>/` folder —
+- a confirmed defect — its file in `specs/defects/log/` and its `specs/defects/evidence/<id>/` folder, and
+  nothing else (never `specs/execution/automated-results.csv`) —
   `defect(<KEY>): <TCID> confirmed, evidence kept [defect-recorded]`;
 - a retest — `defect(<KEY>): <TCID> fixed, verified [defect-verified]`.
 
@@ -119,7 +125,8 @@ Each is one `git commit -m "<message>"` — nothing between `git commit` and `-m
 A refused call — a commit or anything else — is reported once and never retried in another form.
 
 ## When you finish
-Run the specs you healed once more with `npx playwright test <spec files>` — or ask the user to. A run
+If you changed a test, run the specs you healed once more with `npx playwright test <spec files>` — or, if
+that is refused, ask the user to. Healed nothing → no re-run. A run
 through the test runner is what records the results in `specs/execution/automated-results.csv` and the cycle
 report; results seen only through the MCP tools may not be. Then summarize per test: fixed (and how),
 recorded as a defect, or left for the user and why.
@@ -210,7 +217,9 @@ Before recording any defect you must get explicit user confirmation. This is the
 
 1. Stop and present your finding: the test name, the specific expected-result line being violated, the
    actual observed behavior, the evidence gathered (snapshot/console/network) that rules out a test-side
-   cause, and your classified severity (P1–P4) with a one-line justification tied to the rubric.
+   cause, and your classified severity (P1–P4) with a one-line justification tied to the rubric. Any other
+   test case you cite as corroboration is named with its plan title and Expected Result, so the claim can be
+   checked — it ends up in the bug.
 2. Ask the user to confirm whether this should be logged as a defect, and to correct the severity if they
    disagree with your classification.
 3. If confirmed, write the entry as its own file, `specs/defects/log/<entry id>.json`, per the schema below, using the user-confirmed severity. Do **not** write to
@@ -221,7 +230,8 @@ Before recording any defect you must get explicit user confirmation. This is the
    — or, if you cannot run commands, ask the user to. It copies the failure's screenshots and page snapshot
    into `specs/defects/evidence/<entry id>/` and lists them in the entry's `attachments`. If it finds no
    failed result for the test, the failure was seen through the MCP tools only: have the test run once more
-   with `npx playwright test <specFile> -g <TCID>`, then run it again. Tell the user the files are there, and
+   with `npx playwright test <specFile> -g <TCID>` — if that is refused, ask the user to run it, never a
+   wider run in its place — then run the evidence script again. Tell the user the files are there, and
    that the defect-raiser attaches them to the bug.
 5. If the user says it is not a defect: do not write to the log. Ask how they want the test handled, or
    continue attempting a fix if they indicate one is possible.

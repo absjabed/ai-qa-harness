@@ -141,8 +141,8 @@ project's tracker expects different columns, and note the change in `PROJECT-PRO
   Story <entry.storyKey> · test case <entry.tcid> · <entry.specFile, or "found by hand">
   ```
 - **Severity** — mapped from `entry.severity` per step 2a
-- **Reporter** — `playwright-test-healer` (it identified the defect; you are only formally logging it), or
-  the tester's name, asked once, for a defect found by hand
+- **Reporter** — the tester's name, asked once: a tracker import needs a real user. Whether the healer or a
+  person found the defect is already in the labels (`automated-healer` / `manual-test`)
 - **Labels** — `automated-healer` (`manual-test` for a defect found by hand), the story key, the TCID, and the
   spec file name. The story key and
   TCID are what let anyone reading the tracker walk back to the test case and the acceptance criterion it

@@ -8,7 +8,7 @@
 | **Role** | Runs the tests — one story's, or a release's regression — and guides the run to a finished report: failures to the healer, confirmed defects to the defect-raiser, manual results recorded, the report written |
 | **Interaction** | Interactive — confirms the run before starting, then asks once at each step |
 | **File tools needed** | read, search, edit (only `specs/execution/manual-results.csv`, when the user gives manual results) |
-| **Commands** | `npm run regression`, `npm run results:last`, `npm run report:cycle -- --list` |
+| **Commands** | `npm run regression`, `npm run results:last`, `npm run report:cycle -- --list`, `npm run context:sync` |
 | **MCP servers** | None of its own — the agents it hands over to use theirs |
 | **Model guidance** | Strongest available |
 | **Writes** | Manual results the user gives; nothing else. Tests are fixed by the healer, bugs filed by the defect-raiser, reports written by the reporter |
@@ -129,7 +129,24 @@ for the healer to record, with the user's account — offer that hand-over.
 Offer the report and hand over to `/playwright-test-reporter`, suggesting the scope of this run: the stories
 for a story run, the release for a regression run. The reporter asks the scope and format and writes it.
 
-## Step 8 — Merge, or put on hold
+## Step 8 — What the run confirmed in `context/`
+
+Run `npm run context:sync -- --text` — it reads the last run's stories; pass `--stories <KEYS>` when the last
+run was narrower than this session's. It links each test case to the rules in `context/<area>.md` it exercised
+and to the known unknowns it may answer.
+
+- Nothing linked → say so in one line and go on.
+- Otherwise show what it printed, as it printed it — rules **verified** by a passing case; rules a failing case
+  **contradicted**, with the open defect (the rule stays); failures **not triaged** yet (nothing to apply);
+  **known unknowns** a passing case may answer (the user says which it did). Ask once: apply all, these, or
+  none?
+- Yes → hand over to `/playwright-context-builder` for a context sync of those stories, with what the user
+  chose.
+
+Never edit `context/` yourself, and never suggest a new rule from a result: a test confirms a rule or names a
+defect against it, nothing more.
+
+## Step 9 — Merge, or put on hold
 
 For a story run, `npm run story -- status <KEY>` says whether the story may merge: its tests generated,
 reviewed and run — open defects and `fixme` included.
@@ -164,5 +181,6 @@ results, the defect log and the manual results are all on disk.
 - Pending defects were offered to the defect-raiser.
 - Manual cases still not run were asked about.
 - The report was offered with this run's scope.
+- The context-sync suggestions were shown and offered, or there were none.
 - The results were committed; a story that may merge was offered `finish`, a blocked one the hold.
 - Every number you gave came from `--dry-run`, `results:last`, the defect log or the manual results file.

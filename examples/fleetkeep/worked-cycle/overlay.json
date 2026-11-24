@@ -1,6 +1,7 @@
 {
-  "description": "What one ticket's full cycle left behind: FK-1304's plan and spec, the page objects and fixtures it needed, the results, the planted defect logged with its evidence, raised as a CSV bug and verified after the fix, the release 2.26 closure report, and HARNESS-CHANGES.md entries. Applied on top of qa-setup.",
+  "description": "What one ticket's full cycle left behind: FK-1304's plan and spec, the Vehicles context document its run verified, the page objects and fixtures it needed, the results, the planted defect logged with its evidence, raised as a CSV bug and verified after the fix, the release 2.26 closure report, and HARNESS-CHANGES.md entries. Applied on top of qa-setup.",
   "files": [
+    "context/vehicles.md",
     "pages/FleetPages.ts",
     "specs/FK-1304.plan.md",
     "tests/stories/2.26/FK-1304.spec.ts",
@@ -39,6 +40,15 @@
         [
           "| `<Module A>` | `tests/<moduleA>.spec.ts` | `@<ModuleA>` |\n| `<Module B>` | `tests/<moduleB>.spec.ts` | `@<ModuleB>` |",
           "| Vehicles — return to service | `tests/stories/2.26/FK-1304.spec.ts` | `@ReturnToService` |"
+        ]
+      ]
+    },
+    {
+      "file": "context/BASELINE.md",
+      "replace": [
+        [
+          "| `<file.md>` | `<area>` | `<source>` | `<date>` |",
+          "| `vehicles.md` | Vehicles — status, return to service | BR-003, BR-018, BR-019, observed in the demo app | 2026-10-14 |"
         ]
       ]
     }

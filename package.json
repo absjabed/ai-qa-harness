@@ -16,6 +16,7 @@
     "env": "node scripts/env.js",
     "story": "ts-node -r tsconfig-paths/register scripts/story.ts",
     "results:last": "ts-node -r tsconfig-paths/register scripts/last-run.ts",
+    "context:sync": "ts-node -r tsconfig-paths/register scripts/context-sync.ts",
     "test:api": "playwright test --project=api",
     "report": "playwright show-report",
     "report:cycle": "ts-node -r tsconfig-paths/register scripts/cycle-report.ts",

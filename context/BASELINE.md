@@ -22,7 +22,7 @@ run — not that it exists somewhere in the organization.
 | Application source | `<yes>` | `<yes — local path / no>` | `<repo or path>` |
 | API documentation | `<yes — OpenAPI / Swagger / none>` | `<yes / no>` | `<url or path>` |
 | API contracts / integration specs | `<...>` | `<...>` | `<...>` |
-| Design mockups | `<...>` | `<pasted per story>` | `<tool>` |
+| Designs (Figma or other) | `<yes>` | `<yes — figma MCP / pasted per story>` | `<which files or pages cover which modules>` |
 | Functional specs / business-rule docs | `<yes — Confluence / Word / PDF>` | `<yes — in context/sources/ / no>` | `<which documents, which version>` |
 | Existing test cases | `<yes — spreadsheet / test tool / old suite>` | `<yes — CSV in context/sources/ / no>` | `<where, how many>` |
 | Known defects / bug history | `<...>` | `<...>` | `<where>` |

@@ -70,7 +70,9 @@ story run. Or start it yourself:
 
 It shows what it will run — the tests, the browser, the build — and waits for a yes, then runs them. From
 there it takes any failures to the healer (step 5), confirmed defects to the defect-raiser (step 6), asks for
-the manual results (step 7), and offers the report. Running by hand still works:
+the manual results (step 7), offers the report, and lists what the run confirmed in `context/` — rules
+verified or contradicted, known unknowns a case may answer — for the context-builder to apply on your yes.
+Running by hand still works:
 
 ```bash
 npx playwright test "tests/stories/<release>/<KEY>.spec.ts"
@@ -440,6 +442,10 @@ Steps:
 
 Small drift does not need the agent. When one test fails because a `context/` document no longer matches
 the application, fix the document in the same change as the test.
+
+**After a run**, the executor offers a narrow *context sync*: `npm run context:sync` links the run's test cases
+to the rules they verified or contradicted, and the context-builder records only what you agree to — a
+`verified:` mark, a caveat naming an open defect, a known unknown answered. A result never becomes a new rule.
 
 ---
 

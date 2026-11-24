@@ -67,7 +67,7 @@ cover. Name an area, module or role to run it for that alone. Usually the QA lea
 | | |
 |---|---|
 | **Model** | opus, `effort: xhigh` |
-| **Tools** | Read, search and write over the repo; the Playwright browser tools; the database's read tools, if wired |
+| **Tools** | Read, search and write over the repo; the Playwright browser tools; the database's and Figma's read tools, if wired; `npm run context:sync` |
 | **Browser** | Required. It walks the application as each role, read-only, starting from each role's seed in `tests/seeds/`. |
 | **Input** | Answers to its inventory questions; documents in `context/sources/`; the Jira epics or releases to digest, if connected |
 | **Output** | `context/BASELINE.md`, `context/<area>.md`, drafts of PROJECT-PROFILE §2–4, navigation plans, module tags |
@@ -118,7 +118,7 @@ Turns a story into a reviewed test plan.
 | **Model** | opus, `effort: xhigh` |
 | **Tools** | Glob, Grep, Read, LS, Write — read-only over the codebase, plus writing the plan; the tracker's read tools, if wired |
 | **Browser** | None. Grounds everything in the codebase. |
-| **Input** | A story key. With the tracker server wired it fetches the story itself; otherwise paste key, title, description and AC. Optionally screenshots. |
+| **Input** | A story key. With the tracker server wired it fetches the story itself; otherwise paste key, title, description and AC. Optionally screenshots, or the Figma frames the story links, read through the `figma` server if wired. |
 | **Output** | `specs/<KEY>.plan.md` and `specs/<KEY>.plan.csv` |
 
 ### How to invoke
@@ -143,6 +143,11 @@ test title and defect downstream is built on that key (I8).
 
 Pasted screenshots are supplementary: used for field names, layout, labels, and states the text omitted.
 It will not invent behavior a screenshot only implies without text or codebase confirmation.
+
+**Designs from Figma**, when the `figma` server is wired: it reads the frames the ticket links, sparingly —
+Figma rations reads per seat — and uses them the same way, as design intent. The AC and `context/` decide;
+a design that disagrees with them is raised at the first checkpoint. Each frame is cited in the plan's
+`**Design:**` line, and a detail taken only from a design is marked `(design: <node>)`.
 
 ### What it reads first
 
@@ -314,7 +319,8 @@ An independent second reader. Did not write what it reviews, never edits, never 
 
 Each authoring agent already audits its own work, but against its own checklist and its own reading of the
 source. The reviewer starts fresh, from the ticket or the plan, with none of the author's reasoning — so it
-finds what the author never thought to look for.
+finds what the author never thought to look for. It never opens Figma either: a plan detail marked
+`(design: …)` is checked against the ticket, not taken on trust.
 
 ### What it looks for
 
@@ -340,7 +346,7 @@ Runs the tests and sees the run through to a report.
 | | |
 |---|---|
 | **Model** | opus |
-| **Tools** | Read, Edit (manual results only), `npm run regression`, `npm run results:last`, `npm run report:cycle -- --list` |
+| **Tools** | Read, Edit (manual results only), `npm run regression`, `npm run results:last`, `npm run report:cycle -- --list`, `npm run context:sync` |
 | **Input** | A story to run, or a release's regression |
 | **Output** | A finished run: results recorded, failures taken to the healer, defects to the defect-raiser, manual results recorded, the report offered |
 
@@ -363,6 +369,9 @@ touches a shared environment, so it never starts without one.
 3. It offers the defect-raiser for pending defects.
 4. It asks about manual cases still not run: enter results now, or leave them.
 5. It offers the report, suggesting this run's scope.
+6. `npm run context:sync` links the run's test cases to the rules in `context/` they verified or contradicted,
+   and to known unknowns a case may answer. It shows them and asks once; the context-builder applies what you
+   agree to. A result never becomes a new rule.
 
 A session that ends mid-way picks up from the last run: everything it needs is on disk.
 

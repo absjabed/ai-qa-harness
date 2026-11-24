@@ -69,14 +69,21 @@ modes:
 - **Taken from a document or a ticket** — accurate about intent at the time it was written, silently stale
   once the application or a later ticket changes it. Cite the document and section, or the issue key.
 
+- **Read from a design** (Figma) — accurate about what was intended when it was designed, silent about what
+  the application enforces. Cite the link, the node and the date read; it goes under *Design intent*, never
+  *Invariants*.
+
 Date each document. A context document with no date and no provenance is a rumor.
 
 ## Keeping it honest
 
-Context that has drifted is worse than no context, because an agent will act on it confidently. Two habits:
+Context that has drifted is worse than no context, because an agent will act on it confidently. Three habits:
 
 - When a test fails because reality no longer matches a document here, fix the document in the same change
   as the test.
+- After a run, `npm run context:sync` lists the rules its test cases verified or contradicted and the known
+  unknowns a case may answer. The executor offers it at the end of a run; the context-builder applies what you
+  agree to. A result confirms a rule or names a defect against it — it never becomes a new rule.
 - `BASELINE.md` carries a "known unknowns" section. Keep it — an agent that knows the boundary of its
   knowledge asks instead of guessing.
 

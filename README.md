@@ -81,7 +81,7 @@ application stays in your copy. That is the line that keeps this template reusab
 | [docs/COMPONENTS.md](docs/COMPONENTS.md) | Every file: purpose, usage, extension points, failure modes |
 | [docs/AGENTS.md](docs/AGENTS.md) | The nine agents: inputs, outputs, checkpoints, what to expect, what they refuse |
 | [docs/WORKFLOWS.md](docs/WORKFLOWS.md) | End-to-end recipes — first story, healing a regression, onboarding, porting |
-| [docs/MCP.md](docs/MCP.md) | Wiring the browser, database and Jira MCP servers, and the guard rails |
+| [docs/MCP.md](docs/MCP.md) | Wiring the browser, database, Jira and Figma MCP servers, and the guard rails |
 | [docs/GIT-WORKFLOW.md](docs/GIT-WORKFLOW.md) | Branches, the story start protocol, commits, when a story merges — the agents run git, you answer |
 | [docs/qa-harness-intro.html](docs/qa-harness-intro.html) | Three slides for introducing the harness to a QA team: how they test today, how they will with it |
 | [docs/qa-harness-walkthrough.html](docs/qa-harness-walkthrough.html) | One example cycle, step by step: setup, one ticket, regression and closure — what you run, what each agent asks, what comes out |
@@ -224,6 +224,7 @@ scripts/
   check-trace.ts                 enforces I8 - TCIDs present, planned, unique
   regression.ts                  regression for a client release - pick its tickets or epics
   last-run.ts                    the last run's results, failures grouped - what the executor reads
+  context-sync.ts                which context/ rules a run verified - suggestions for the context-builder
   story.ts                       a story's git side - status, start protocol, release branches, merge rule
   env.js                         reads allow-listed, non-secret settings from .env for agents
   cycle-report.ts                rebuild the cycle report by hand

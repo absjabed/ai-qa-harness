@@ -39,6 +39,10 @@ tracker server is connected — then the draft `specs/<STORY-KEY>.plan.md`, the 
 depends on, `context/BASELINE.md` section 8 (known unknowns), and the navigation plans for the roles the
 story involves.
 
+You never open designs, even when a Figma server is connected: you review the plan against the ticket, so you
+stay independent of the design the planner read. A detail marked `(design: <node>)` came from a design — check
+that it does not contradict the ticket or `context/`; do not take it as proof the ticket asks for it.
+
 **Ask, for the plan as a whole:**
 - Is every acceptance criterion covered by at least one test case that would actually fail if that
   criterion were broken? A test case that only touches the screen does not cover it.

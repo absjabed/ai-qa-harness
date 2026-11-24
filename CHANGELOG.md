@@ -99,6 +99,14 @@ project-specific value lives in `PROJECT-PROFILE.md`, `.env`, `.mcp.json` and `c
   `merge=union` and each defect is its own file in `specs/defects/log/`, so two stories never conflict.
 - **Settings read by key** — `npm run env -- get <KEY>` gives agents allow-listed, non-secret settings from
   `.env` without opening it; `npm run check` fails when code reads a setting `.env.example` does not list.
+- **Designs from Figma** — an optional `figma` MCP entry: Figma's remote server, signed in through the
+  browser, with the desktop app's server or the Figma plugin as alternatives. The planner and the
+  context-builder read the frames a story links, sparingly, as cited design intent — never as rules — and the
+  reviewer never opens them. Read tools allowed, every Figma write denied.
+- **Context sync** — `npm run context:sync` links a run's test cases to the `context/` rules they verified or
+  contradicted and to the known unknowns they may answer. The executor offers the suggestions at the end of a
+  run; the context-builder applies the ones agreed. A result confirms a rule or names a defect against it; it
+  never becomes a rule.
 - **A prep folder for setup day** — `npm run prep -- <dir> --name "<Project>"` makes the folder a project's QA
   repo will become: `setup/` files to fill in before setup day (start-here, filling guide, checklist, accounts
   and roles, Jira, decisions, contacts, paths — never passwords) and `context/sources/` subfolders for the
@@ -118,11 +126,12 @@ project-specific value lives in `PROJECT-PROFILE.md`, `.env`, `.mcp.json` and `c
   test runner.
 - **Guard rails** — `.claude/settings.json` denies agents reading `.env` and `.mcp.json` and calling the
   database server's write tools, asks before any write to Jira — creating, editing, moving, commenting —
-  and denies Jira deletes and admin tools; asks before a push, merge or checkout, and denies force-pushes,
+  and denies Jira deletes and admin tools and every Figma write; asks before a push, merge or checkout, and denies force-pushes,
   hard resets, branch deletion and history rewrites. A bug's status is only ever moved to a transition the team's own
   Jira workflow offers, chosen by a person.
-- **MCP servers** — Playwright (required), a database server (optional, read-only account), and Jira through
-  whichever connection the team already has: the Atlassian plugin in Claude Code, or the MCP server entry.
+- **MCP servers** — Playwright (required), a database server (optional, read-only account), Jira through
+  whichever connection the team already has: the Atlassian plugin in Claude Code, or the MCP server entry —
+  and Figma (optional, read-only).
 - **Copying** — `npm run export -- <dir>` copies exactly the files a project needs, dotfiles included, and
   records where the copy came from.
 - **Documentation** — a self-contained handbook at `docs/index.html` (`npm run docs`), component, agent,

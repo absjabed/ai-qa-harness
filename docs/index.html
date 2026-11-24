@@ -927,7 +927,8 @@ npx playwright install</code></pre></div></li>
       <h4>2e · <code>.mcp.json</code> and Claude Code</h4>
       <p>Copy <code>.mcp.json.example</code>. Keep <code>playwright-test</code>; fill <code>database</code>
       with a read-only account or delete it; for Jira, the Atlassian plugin in Claude Code (delete
-      <code>tracker</code>), or keep <code>tracker</code> with another tool. Open Claude Code <b>in the new
+      <code>tracker</code>), or keep <code>tracker</code> with another tool; keep <code>figma</code> to read
+      designs, or delete it. Open Claude Code <b>in the new
       repo's folder</b>, approve its MCP servers when asked, and check <code>/mcp</code> shows
       <code>playwright-test</code> connected.</p>
 
@@ -1122,7 +1123,7 @@ cp .mcp.json.example .mcp.json</code></pre>
             readiness check and seeding, so its account may need to write. The <em>AI agents</em> connect
             through the <code>database</code> MCP server, configured in <code>.mcp.json</code> — to read the
             schema, with a read-only account always. Each is optional on its own.</p>
-            <p><code>.mcp.json</code> has three entries; delete the ones you will not use.</p>
+            <p><code>.mcp.json</code> has four entries; delete the ones you will not use.</p>
             <ul>
               <li><b><code>playwright-test</code> — required.</b> The context-builder, generator and healer
               cannot work without a browser.</li>
@@ -1134,6 +1135,11 @@ cp .mcp.json.example .mcp.json</code></pre>
               the simple route — install it and delete this entry; with another tool, keep this entry, with
               <code>?tools=all</code> and the key <code>tracker</code>. Sign in with <code>/mcp</code>. The
               context-builder confirms it works at setup by fetching one known story.</li>
+              <li><b><code>figma</code> — optional.</b> The planner and the context-builder read the frames a
+              story links, as design intent — never as rules; the reviewer never opens them. Sign in with
+              <code>/mcp</code>; the Figma desktop app's server or the Figma plugin also work. Read tools are
+              allowed and every write is denied. Figma rations reads per seat, so agents read only the frames
+              the acceptance criteria concern and write down what they learned.</li>
             </ul>
             <div class="note warn">
               <p><strong>Use a read-only database account, against QA.</strong> An agent with write access
@@ -1904,6 +1910,8 @@ Run it? [Y/n]: y</code></pre>
           <li><b>Pending defects</b> — file them with the defect-raiser?</li>
           <li><b>Manual cases not run</b> — enter results now, or leave them.</li>
           <li><b>The report</b> — hand over to the reporter, with this run's scope suggested.</li>
+          <li><b>What it confirmed</b> — the <code>context/</code> rules the run verified or contradicted, and
+          known unknowns a case may answer: apply them, through the context-builder?</li>
         </ul>
         <p>Every figure it gives comes from <code>npm run regression -- --dry-run</code> and
         <code>npm run results:last</code>. After each hand-over it reads them again, so a long session never
@@ -3003,6 +3011,7 @@ Run it? [Y/n]: y</code></pre>
             <tr><td><code>npm run story -- status</code></td><td>Where each story is and whether it may merge; <code>start</code>, <code>switch</code>, <code>release-start</code>, <code>finish</code> — see <code>docs/GIT-WORKFLOW.md</code></td></tr>
             <tr><td><code>npm run env -- get &lt;KEY&gt;</code></td><td>An allow-listed, non-secret setting from <code>.env</code></td></tr>
             <tr><td><code>npm run results:last</code></td><td>The last run's results, failures grouped by spec and error; <code>--text</code> for a summary</td></tr>
+            <tr><td><code>npm run context:sync</code></td><td>Which <code>context/</code> rules the last run verified or contradicted, and known unknowns it may answer — suggestions only</td></tr>
             <tr><td><code>npm run test:headed</code></td><td>Watched</td></tr>
             <tr><td><code>npm run test:debug</code></td><td>Stepped through the inspector</td></tr>
             <tr><td><code>npm run test:ui</code></td><td>Interactive UI mode</td></tr>

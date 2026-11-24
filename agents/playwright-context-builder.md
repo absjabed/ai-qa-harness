@@ -8,9 +8,9 @@
 | **Role** | Establishes what the harness knows about the application under test |
 | **Interaction** | Interactive — works in checkpoints and must be able to ask and wait |
 | **File tools needed** | read, search, write, edit |
-| **MCP servers** | `playwright-test` (required) · a read-only database server (optional) · an issue-tracker server (optional — to digest existing tickets) |
+| **MCP servers** | `playwright-test` (required) · a read-only database server (optional) · an issue-tracker server (optional — to digest existing tickets) · `figma` (optional — an area's design intent) |
 | **Model guidance** | Strongest available, high reasoning effort |
-| **Writes** | `context/BASELINE.md`, `context/<area>.md`, drafts of PROJECT-PROFILE sections 2–4, navigation plans, module tags — and, with the user's agreement, the role setup (`config/projectProfile.ts`, PROJECT-PROFILE section 2, `tests/seeds/`) and the login selectors in `pages/LoginPage.ts` and `pages/DashboardPage.ts` |
+| **Writes** | `context/BASELINE.md`, `context/<area>.md`, drafts of PROJECT-PROFILE sections 2–4, navigation plans, module tags; on a context sync, `verified:` marks and caveats — and, with the user's agreement, the role setup (`config/projectProfile.ts`, PROJECT-PROFILE section 2, `tests/seeds/`) and the login selectors in `pages/LoginPage.ts` and `pages/DashboardPage.ts` |
 
 See [`agents/README.md`](README.md) to wire this into a tool other than Claude Code.
 
@@ -92,6 +92,10 @@ run them and read the output.
    `tracker` MCP server's. If one is, ask for one story key the user knows exists and fetch it, to confirm
    the connection really works; record the result in the inventory. If both are connected, say so: every
    Jira tool then appears twice, and the team should keep one.
+4. **Figma.** If a `figma` server is connected — the entry, or the Figma plugin — check it with one read:
+   `whoami` on the remote server; on the desktop server, which has no `whoami`, `get_metadata` on a frame link
+   the user gives. Record which connection works. None connected → designs are pasted as screenshots; say so
+   and move on.
 
 **Checkpoint:** show the preflight results. Continue only once the user has seen them.
 
@@ -110,6 +114,7 @@ exists and whether you can reach it. Ask about every one by name — teams forge
 - **Jira** — the epics and stories of recent releases to digest: read live if the tracker is connected, or
   from a CSV export in `context/sources/` if it is not
 - user guides, release notes, training material, and any glossary of business terms
+- **designs** — the Figma files or pages that cover each module, as links, if Figma is connected
 - who to ask about what
 
 Exported documents go in `context/sources/` — the user drops them there, and you read them from there.
@@ -184,6 +189,12 @@ For each source the inventory confirmed:
   with both keys.
 - **User guides, release notes, glossaries** — the vocabulary the business uses, into `context/BASELINE.md`
   section 4, and behavior worth confirming in the application.
+- **Designs (Figma)** — for the areas you are writing up, read the frames the user linked, sparingly: Figma
+  rations reads per seat, so `get_metadata` first, then `get_design_context` or `get_screenshot` for the
+  screens that matter. Record what they show in the area's *Design intent* section — screen or state, what the
+  design shows, link and node, date read. Never under *Invariants*: a design is what was intended, not a rule
+  the application enforces. Where the running application differs from a design, record it under *Caveats*
+  and ask. Never call a tool that writes to Figma.
 
 A digest is distilled, never a dump: no copied ticket text, no whole documents. Ten rules that hold beat a
 hundred lines nobody can check.
@@ -286,3 +297,28 @@ bear on it; Steps 2–5 walk, read, introspect and write for it alone. Update on
 `context/BASELINE.md`, its `context/<area>.md`, and the navigation plans and matrix cells it touches — leave
 every other area exactly as it was, including its known unknowns. Say at the final checkpoint what the run
 covered and what it deliberately did not.
+
+# Context sync — what a test run confirmed
+
+Started by the executor at the end of a run, with the stories it ran — or by a person: *context sync for
+`<KEYS>`*. A scoped run with a fixed input; no walking, reading or introspecting.
+
+1. Run `npm run context:sync -- --stories <KEYS> --text` yourself. The suggestions come from the files, not
+   from the hand-over message.
+2. Show them and confirm which to apply — the user may have chosen already, at the executor; ask only about
+   the rest.
+3. Apply exactly what was agreed, and nothing else:
+   - **Verified** — add ` · verified: <TCID>, <YYYY-MM-DD>` after the rule's source. The same TCID already
+     recorded: replace its date, don't add a second. A *Caveats* bullet naming a defect against that TCID goes
+     too — the case passes again, so the defect is fixed.
+   - **Contradicted** — leave the rule's text exactly as it is: the application is wrong, not the rule. Add a
+     *Caveats* bullet naming the open defect, the TCID and the date, and remove that TCID's `verified:` mark
+     from the rule.
+   - **A known unknown answered** — only the ones the user says the case answered. Replace the bullet with
+     what the case showed, marked `observed by <TCID>, <date>` — in the *Quick reference* or *States* if it
+     belongs there, or left under *Caveats* as observed, not confirmed at source. Never under *Invariants*: a
+     rule needs a source a person can check, and a passing test shows behavior, not intent.
+4. Show the changes before writing them, then commit them: `context: <areas>, verified by <KEYS>
+   [context-updated]`.
+
+A result never becomes a new rule, never changes a rule's text, and never removes one.

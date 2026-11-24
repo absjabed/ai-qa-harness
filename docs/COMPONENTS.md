@@ -28,13 +28,14 @@ agent uses (`allowed-tools`) so they run without a prompt — it restricts nothi
 
 | Rule | Covers |
 |---|---|
-| Deny | Reading `.env` and `.mcp.json`; the database server's write tools; Jira deletes, worklogs, sprints, boards, versions, project admin |
+| Deny | Reading `.env` and `.mcp.json`; the database server's write tools; Jira deletes, worklogs, sprints, boards, versions, project admin; every Figma tool that writes |
 | Ask | Creating, editing, moving, linking, commenting on or attaching to a Jira issue |
-| Allow | The read-only database and Jira tools |
+| Allow | The read-only database, Jira and Figma tools |
 
 **How to use** The rules name tools as `mcp__database__<tool>`, and Jira's for both routes —
-`mcp__tracker__<tool>` and the Atlassian plugin's `mcp__plugin_atlassian_atlassian__<tool>` — so they follow
-the server keys in `.mcp.json`. Database writes are denied rather than asked because nothing in the harness
+`mcp__tracker__<tool>` and the Atlassian plugin's `mcp__plugin_atlassian_atlassian__<tool>` — and Figma's the
+same way, `mcp__figma__<tool>` and `mcp__plugin_figma_figma__<tool>`, so they follow the server keys in
+`.mcp.json`. Database writes are denied rather than asked because nothing in the harness
 needs them; move them to `ask` deliberately if that changes. Change a key, or choose a different server, and update the names. Personal
 overrides go in `.claude/settings.local.json`, which is gitignored.
 
@@ -86,6 +87,9 @@ agent will act on it confidently. Fix the document in the same change as the tes
   by key, the defect-raiser creates bugs, the healer reads bug status and records retest results. Keep
   `?tools=all` and the key `tracker`; `.claude/settings.json` depends on both. The Atlassian plugin is the
   alternative — use one, not both.
+- `figma` — Figma's remote MCP server, signed in with `/mcp`; the desktop app's server or the Figma plugin are
+  the alternatives. The planner and context-builder read the frames a story links, as design intent. Read
+  tools allowed, every write denied; reads are rationed per Figma seat. Keep the key `figma`.
 
 **What to expect** Introspection reports structure, and not always correctly — confirm anything surprising
 with a direct query before writing it into a context document. Full reasoning in
@@ -173,6 +177,7 @@ pairing, thin wrappers, section and invariant totals, links, and that `.gitignor
 | `env.js` | `npm run env -- get <KEY>` | Reads an allow-listed, non-secret setting from `.env` for agents that may not open it |
 | `lib/defects.ts` | — | Reads and writes the defect log, one file per defect |
 | `last-run.ts` | `npm run results:last` | The last run's results, failures grouped by spec and error — what the executor reads |
+| `context-sync.ts` | `npm run context:sync` | Which `context/` rules a run's test cases verified or contradicted, and the known unknowns they may answer — suggestions only |
 | `cycle-report.ts` | `npm run report:cycle` | Rebuilds the test-cycle closure report by hand, for any scope |
 | `lib/cycle.ts` | — | Builds the cycle report — used by the two above and by `lib/cycleReporter.ts` |
 | `lib/trace.ts` | — | The one parser all of them share, so they cannot disagree about what a TCID is |
@@ -239,6 +244,21 @@ command shows what it would do and changes nothing. The workflow it serves is in
 reading the file. Answers only for an allow-list of non-secret keys — `QA_TESTER_NAME`, `QA_REPORT_FORMAT`,
 `BUILD_UNDER_TEST`, `APP_NAME`, `BASE_URL`, `TRACKER_PROJECT_KEY` — and refuses every other key, and any
 password, email, token or database setting even if someone adds one to the list.
+
+---
+
+### `scripts/context-sync.ts`
+
+**What** `npm run context:sync` — what a test run can tell `context/`, as suggestions. For the last run's stories
+(or `--stories`), it links each test case to the rules under *Invariants* in `context/<area>.md` and to the
+known unknowns — `BASELINE.md` section 8, each area's *Caveats* — by the references they share: the rule and
+document IDs its acceptance criteria and scenario cite (`BR-019`), and its story key for rules. Each link is
+**verified** (a passing case; record `verified: <TCID>, <date>` on the rule), **contradicted** (a failing case
+with a defect recorded; the rule stays), **not triaged** (a failure with no defect yet), or a **known unknown**
+a passing case may answer. JSON, or `--text`.
+
+**Never** writes anything. The executor shows the suggestions at the end of a run; the context-builder applies
+the ones agreed. A result never becomes a new rule.
 
 ---
 
@@ -777,6 +797,7 @@ helpers from `tests/common/`, and keeping two implementations in sync is a bug w
 | `npm run regression` | Regression for a client release — choose its tickets or epics; writes the cycle report |
 | `npm run test:regression` | Every test tagged `@Regression`, no selection |
 | `npm run results:last` | The last run's results, failures grouped — `--text` for a summary |
+| `npm run context:sync` | Which `context/` rules the last run verified or contradicted — suggestions; `--stories`, `--text` |
 | `npm run story -- status` | Where each story is and whether it may merge; `start`, `switch`, `release-start`, `finish` — see `docs/GIT-WORKFLOW.md` |
 | `npm run env -- get <KEY>` | An allow-listed, non-secret setting from `.env` |
 | `npm run test:headed` / `test:debug` / `test:ui` | Watched, stepped, interactive |

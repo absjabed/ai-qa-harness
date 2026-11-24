@@ -8,7 +8,7 @@
 | **Role** | Turns a story into a reviewed test plan |
 | **Interaction** | Interactive — seven blocking checkpoints, must be able to ask and wait; offers an independent review by `playwright-test-reviewer` before saving |
 | **File tools needed** | read, search, write |
-| **MCP servers** | An issue-tracker server (optional — fetch the story by its key) |
+| **MCP servers** | An issue-tracker server (optional — fetch the story by its key) · `figma` (optional — read the designs the story links) |
 | **Model guidance** | Strongest available, high reasoning effort |
 | **Writes** | `specs/<KEY>.plan.md`, `specs/<KEY>.plan.csv` |
 
@@ -147,6 +147,21 @@ narrowed to some of its tickets or epics, so a plan without a release cannot be 
   text or codebase confirmation. An element with no matching page object → flag as new (I1), don't guess
   its selector.
 
+### Designs — Figma, when connected
+When a `figma` MCP server is connected (`docs/MCP.md`) and the ticket links a Figma frame — or the user gives
+one — read it as you would a screenshot, and as sparingly: Figma rations reads per seat. `get_metadata` for the
+frame's outline first, then `get_design_context` or `get_screenshot` for only the frames the acceptance criteria
+concern. Never call a tool that writes to Figma.
+
+- A design is **intent, not a requirement**. Use it for what the AC leave open — labels, fields, states,
+  validation messages, which control does what. The AC and the rules in `context/` decide.
+- Where the design and the AC or a `context/` rule disagree, raise it at the first checkpoint. Don't pick one.
+- Cite every frame you used in the plan's `**Design:**` line — link, node ID, date read — and end an Expected
+  Result detail taken only from a design with `(design: <node ID>)`. The reviewer never opens Figma; the mark
+  tells it where a detail came from.
+- No Figma server, or no link → carry on from the text and any screenshots, and say at the first checkpoint
+  that no design was read.
+
 ## Test Design Techniques — apply in Workflow Step 3, tag each scenario with the technique used
 Standard ISTQB techniques, applied to this application's own fields and flows. They don't replace I1–I8 —
 every scenario still passes the self-audit.
@@ -208,7 +223,7 @@ Pause at each boundary, wait for explicit approval, fold in corrections before c
 
 | Boundary | Show the user | Wait for |
 |---|---|---|
-| After parsing story (+ screenshots) | Story key, title, AC, what screenshots added; flag gaps | Approval/correction |
+| After parsing story (+ screenshots, designs) | Story key, title, AC, what screenshots and designs added, any design that disagrees with an AC; flag gaps | Approval/correction |
 | After reading invariants | Conventions to follow (cite I1–I8) | Approval |
 | After codebase inspection | Relevant existing page objects, fixtures, data keys | Approval/scope cut |
 | After flow analysis | Proposed scenario titles only | Approval/trim |

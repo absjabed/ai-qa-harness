@@ -16,7 +16,7 @@ look them up by name.
 | Application name | `<AppName>` |
 | One-line description | `<what the app does, in one sentence — agents use this to judge risk>` |
 | Domain | `<e.g. billing / logistics / CRM / field service>` |
-| Primary environment under test | `<QA / UAT>` |
+| Primary environment under test | `<QA / UAT>` — also `TEST_ENVIRONMENT` in `.env`, the name reports print instead of the URL |
 | Base URL | Read from `BASE_URL` in `.env` — never written literally anywhere |
 | Issue tracker project key | `<e.g. PROJ>` |
 | Issue key format | `<e.g. PROJ-1234>` — **required on every story.** Agents validate story keys against it and ask when one is missing (I8) |
@@ -177,7 +177,7 @@ release decision stays with a person.
 |---|---|
 | Priority 1 test cases passing | `100` % |
 | Priority 2 test cases passing | `95` % |
-| Acceptance criteria covered by at least one passing test case | `100` % |
+| Acceptance criteria with every test case passing | `100` % |
 | Open defects at P1 — Critical | `0` |
 | Open defects at P2 — Major | `0` |
 | Test cases not executed | `0` |

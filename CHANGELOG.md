@@ -122,6 +122,13 @@ the agents you want. Each entry lists the files to port.
   `verified:` mark to a rule with an open defect, and moves answered unknowns out of `BASELINE.md`. The
   defect CSV's Reporter is the tester, as a tracker import needs a real user. Port: those five agents and the
   worked cycle's `defects.csv`.
+- **An acceptance criterion passes only when all its test cases pass** — **Adopt.** The cycle report used to
+  count an AC as met when any one of its test cases passed, so an AC the app breaks could still read Passing.
+  One failing or defect-blocked case now fails it; the exit criterion is renamed "Acceptance criteria with every
+  test case passing". Port: `scripts/lib/cycle.ts`, `config/projectProfile.ts`, `PROJECT-PROFILE.md` section 10.
+- **Reports name the environment, never its address** — **Adopt.** The cycle report's Environment row printed
+  the host from `BASE_URL`, which section 1 says is never written literally. It now prints `TEST_ENVIRONMENT`
+  from `.env` (e.g. QA, UAT). Port: `scripts/lib/cycle.ts`, `.env.example`, `PROJECT-PROFILE.md` section 1.
 - **Designs from Figma** — **Optional.** An optional `figma` MCP entry — Figma's remote server, signed in through
   the browser; the desktop app's server or the Figma plugin as alternatives. The planner and the
   context-builder read the frames a story links, sparingly, as cited design intent, never as rules; the

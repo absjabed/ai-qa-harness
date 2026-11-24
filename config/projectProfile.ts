@@ -20,7 +20,7 @@ export interface ExitCriteria {
     priority1PassRate: number;
     /** Share of Priority 2 test cases that must be passing. */
     priority2PassRate: number;
-    /** Share of acceptance criteria that must have at least one passing test case. */
+    /** Share of acceptance criteria whose test cases all pass (one failing or blocked case fails the AC). */
     acceptanceCriteriaCoverage: number;
     /** Most open defects allowed, by severity. Omit a severity to leave it unbounded. */
     maxOpenDefects: Partial<Record<'P1' | 'P2' | 'P3' | 'P4', number>>;

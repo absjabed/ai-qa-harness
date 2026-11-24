@@ -53,7 +53,7 @@ When may a test cycle close? Defaults shown — change any. They go into `exitCr
 |---|---|---|
 | Priority 1 test cases passing | 100% | |
 | Priority 2 test cases passing | 95% | |
-| Acceptance criteria covered by a passing test case | 100% | |
+| Acceptance criteria with every test case passing | 100% | |
 | Open P1 defects | 0 | |
 | Open P2 defects | 0 | |
 | Test cases not executed | 0 | |

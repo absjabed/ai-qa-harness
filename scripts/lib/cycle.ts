@@ -374,12 +374,13 @@ export function buildCycleReport(scope: CycleScope = {}): CycleResult {
             const live = ids.filter((id) => outcomes.has(id));
             const results = live.map((id) => outcomes.get(id)!);
             const state: AcState =
+                // An AC passes only when every test case that verifies it passes: one failing or
+                // defect-blocked case means the app does not yet meet that criterion.
                 live.length === 0 ? 'Not covered'
-                : results.some(isPass) ? 'Passing'
-                : results.every((o) => o === 'Not Run' || o === 'Skipped') ? 'Not executed'
                 : results.includes('Failed') ? 'Failing'
                 : results.includes('Blocked') ? 'Blocked by defect'
-                : 'Failing';
+                : results.every(isPass) ? 'Passing'
+                : 'Not executed';
             acRows.push({ story: plan.storyKey, ac, ids, state });
         }
     }
@@ -396,7 +397,7 @@ export function buildCycleReport(scope: CycleScope = {}): CycleResult {
     criteria.push({ name: 'Priority 1 test cases passing', threshold: `${ec.priority1PassRate}%`, actual: p1.total ? `${p1.rate}% (${p1.passed}/${p1.total})` : 'no P1 cases', met: p1.rate >= ec.priority1PassRate });
     criteria.push({ name: 'Priority 2 test cases passing', threshold: `${ec.priority2PassRate}%`, actual: p2.total ? `${p2.rate}% (${p2.passed}/${p2.total})` : 'no P2 cases', met: p2.rate >= ec.priority2PassRate });
     const acRate = pct(acPassing, acRows.length);
-    criteria.push({ name: 'Acceptance criteria with a passing test case', threshold: `${ec.acceptanceCriteriaCoverage}%`, actual: `${acRate}% (${acPassing}/${acRows.length})`, met: acRate >= ec.acceptanceCriteriaCoverage });
+    criteria.push({ name: 'Acceptance criteria with every test case passing', threshold: `${ec.acceptanceCriteriaCoverage}%`, actual: `${acRate}% (${acPassing}/${acRows.length})`, met: acRate >= ec.acceptanceCriteriaCoverage });
     for (const [sev, max] of Object.entries(ec.maxOpenDefects)) {
         const n = openDefects.filter((d) => d.severity === sev).length;
         criteria.push({ name: `Open defects at ${sev}`, threshold: `≤ ${max}`, actual: String(n), met: n <= (max ?? Infinity) });
@@ -473,8 +474,8 @@ export function buildCycleReport(scope: CycleScope = {}): CycleResult {
     const table = (head: string[], rows: (string | number)[][]) =>
         [`| ${head.join(' | ')} |`, `|${head.map(() => '---').join('|')}|`, ...rows.map((r) => `| ${r.map(cell).join(' | ')} |`)].join('\n');
 
-    let environment = '—';
-    try { if (process.env.BASE_URL) environment = new URL(process.env.BASE_URL).host; } catch { /* not a URL */ }
+    // Named, never the host: BASE_URL is never written literally anywhere (PROJECT-PROFILE.md section 1).
+    const environment = process.env.TEST_ENVIRONMENT?.trim() || 'not recorded — set `TEST_ENVIRONMENT` in `.env`';
 
     const md: string[] = [];
     md.push(`# ${title}`, '');
@@ -540,7 +541,7 @@ export function buildCycleReport(scope: CycleScope = {}): CycleResult {
     md.push(table(['Priority', 'Test cases', 'Passing', 'Rate'], byPriority.map((r) => [`P${r.p}`, r.total, r.passed, r.total ? `${r.rate}%` : '—'])), '');
 
     md.push('## Acceptance-criteria coverage', '');
-    md.push('_Each acceptance criterion of each story, and whether a passing test case proves it._', '');
+    md.push('_Each acceptance criterion of each story. It passes only when every test case that verifies it passes._', '');
     md.push(acRows.length ? table(['Story', 'AC', 'Test cases', 'State'], acRows.map((r) => [r.story, r.ac, r.ids.join(', ') || '—', r.state === 'Passing' ? r.state : `**${r.state}**`])) : '_No traceability tables found in the plans._');
     md.push('');
 

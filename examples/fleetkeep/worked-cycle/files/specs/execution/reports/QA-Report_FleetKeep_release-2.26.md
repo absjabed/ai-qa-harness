@@ -4,7 +4,7 @@
 |---|---|
 | Release | 2.26 |
 | Build under test | demo-1 |
-| Environment | localhost:4300 |
+| Environment | Demo |
 | Browsers | chromium, edge |
 | Generated | Practice run · 2026-10-14 17:46 UTC |
 
@@ -28,7 +28,7 @@ _The conditions this project set for closing a test cycle (PROJECT-PROFILE.md se
 |---|---|---|---|
 | Priority 1 test cases passing | 100% | 100% (2/2) | Met |
 | Priority 2 test cases passing | 95% | 100% (2/2) | Met |
-| Acceptance criteria with a passing test case | 100% | 100% (3/3) | Met |
+| Acceptance criteria with every test case passing | 100% | 100% (3/3) | Met |
 | Open defects at P1 | ≤ 0 | 0 | Met |
 | Open defects at P2 | ≤ 0 | 0 | Met |
 | Test cases not executed | ≤ 0 | 0 | Met |
@@ -59,7 +59,7 @@ _Priority 1 is what must work; priority 3 is lower-risk detail._
 
 ## Acceptance-criteria coverage
 
-_Each acceptance criterion of each story, and whether a passing test case proves it._
+_Each acceptance criterion of each story. It passes only when every test case that verifies it passes._
 
 | Story | AC | Test cases | State |
 |---|---|---|---|

@@ -143,8 +143,8 @@
           "| Domain | `Fleet maintenance` |"
         ],
         [
-          "| Primary environment under test | `<QA / UAT>` |",
-          "| Primary environment under test | `Local FleetKeep demo app at BASE_URL — practice only. Its source is not available to the agents: finding the planted defect is the exercise` |"
+          "| Primary environment under test | `<QA / UAT>` — also `TEST_ENVIRONMENT` in `.env`, the name reports print instead of the URL |",
+          "| Primary environment under test | `Local FleetKeep demo app at BASE_URL — practice only. Its source is not available to the agents: finding the planted defect is the exercise` — `TEST_ENVIRONMENT` is `Demo` |"
         ],
         [
           "| Issue tracker project key | `<e.g. PROJ>` |",
@@ -163,7 +163,8 @@
       "TRACKER_PROJECT_KEY": "FK",
       "BASE_URL": "http://localhost:4300",
       "DB_VALIDATION_ENABLED": "false",
-      "BUILD_UNDER_TEST": "demo-1"
+      "BUILD_UNDER_TEST": "demo-1",
+      "TEST_ENVIRONMENT": "Demo"
     },
     "remove": [
       "ADMIN_EMAIL",

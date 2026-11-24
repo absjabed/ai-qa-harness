@@ -18,7 +18,7 @@ const fs = require('fs');
 const path = require('path');
 const dotenv = require('dotenv');
 
-const ALLOWED = ['QA_TESTER_NAME', 'QA_REPORT_FORMAT', 'BUILD_UNDER_TEST', 'APP_NAME', 'BASE_URL', 'TRACKER_PROJECT_KEY'];
+const ALLOWED = ['QA_TESTER_NAME', 'QA_REPORT_FORMAT', 'BUILD_UNDER_TEST', 'APP_NAME', 'BASE_URL', 'TRACKER_PROJECT_KEY', 'DB_VALIDATION_ENABLED'];
 /** Refused even if someone adds one to the list above by mistake. */
 const NEVER = /PASSWORD|SECRET|TOKEN|EMAIL|API_KEY|_USER(NAME)?$|^DB_|^API_/;
 const isAllowed = (k) => ALLOWED.includes(k) && !NEVER.test(k);

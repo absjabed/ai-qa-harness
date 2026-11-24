@@ -40,7 +40,20 @@ planner to ask rather than assume. A gap filled with a plausible guess is the si
 you can produce, because everything downstream will trust it.
 
 Never infer a business rule from a screen label. Never state a database constraint you have not confirmed.
-Never describe a role's permissions from one session as though you had tested all of them.
+Never describe a role's permissions from one session as though you had tested all of them. Never widen a rule
+someone supplied: record its words — "a category-A defect forces VOR" says nothing about categories B and C.
+Never read `.env` or `.mcp.json`, and never try: both are denied, and both hold credentials.
+
+**Stay inside this repository.** Read a file outside it — the application's source, a sibling repository, a
+document stored elsewhere — only once the user has named that path in the Step 1 inventory. Never go looking
+for one on disk, and never read what the user has marked off limits. `node_modules/` is never a source.
+
+**Stop at every checkpoint.** Each **Checkpoint** below ends your turn: show it, then wait for the user's
+reply before starting the next step — never run ahead and report several steps at once. If you cannot ask
+and wait, stop at the first checkpoint you reach and present it. Read only what the current step needs, and
+batch independent reads together. A tool call that is refused stays refused: say so once and ask, never retry
+it. Being told to "write it all" does not skip a checkpoint's content: before writing, list every file and
+section you will change, with what you observed kept apart from what you were told.
 
 # Workflow
 
@@ -49,7 +62,8 @@ Run these checks yourself, before anything else, and report what you found. The 
 run them and read the output.
 
 1. **Roles.** Read the `roles` array in `config/projectProfile.ts` and the role keys in `PROJECT-PROFILE.md`
-   section 2. Show them, and ask whether they are this application's roles — the template ships the example
+   section 2. The tests run with `config/projectProfile.ts`; if section 2 disagrees with it — or still holds
+   the template's placeholders — say so here rather than picking one quietly. Show them, and ask whether they are this application's roles — the template ships the example
    roles `admin`, `standardUser` and `readOnlyUser`, which are rarely right as they stand. If they are not,
    ask which kinds of user log in — one per distinct set of permissions the tests need, not one per person —
    and which one has full access. Propose a camelCase key for each (`caseWorker`, `branchManager`), and once
@@ -100,7 +114,8 @@ run them and read the output.
 **Checkpoint:** show the preflight results. Continue only once the user has seen them.
 
 ## Step 1 — Inventory what is available
-You cannot detect most of this. Ask.
+You cannot detect most of this. Ask — even for a row you think you can answer, the user confirms it before
+you read from that source.
 
 Present the source table from `context/BASELINE.md` section 1 and ask the user, for each row, whether it
 exists and whether you can reach it. Ask about every one by name — teams forget what they have until asked:
@@ -152,10 +167,13 @@ Then, as each role:
 
 Roam read-only. Open, navigate, read. Do not submit forms, create records, or change settings — you are
 mapping an environment other people are testing in, and a stray write is someone else's failing test
-tomorrow. If understanding an area genuinely requires performing an action, stop and ask.
+tomorrow. If understanding an area genuinely requires performing an action, stop and ask. If the user
+authorises one, look at every read-only place it could show — lists, the dashboard, an audit trail — before you
+undo it; that is the only time you will see them populated.
 
-**Checkpoint:** show the module map and the per-role differences you observed. Say plainly which areas you
-could not reach and why.
+**Checkpoint:** show the module map and the per-role differences you observed. Mark every fact *observed*,
+*read from source* or *assumed* — nothing you did not see in the running application goes under an "observed"
+heading. Say plainly which areas you could not reach and why.
 
 ## Step 3 — Read the supplied sources
 For each source the inventory confirmed:
@@ -237,9 +255,9 @@ For each role, draft `specs/UserFlowsUserRolePermissions/<role>NavigationFlow.pl
 `_roleNavigationFlow.template.md`, using the click-paths from Step 2. Then draft the matrix in
 `crossRoleAccessControl.plan.md`, and list the files in `userFlows.plan.md`.
 
-In the matrix, distinguish honestly:
-- **Verified** — you logged in as that role and saw it.
-- **Not tested here** — plausible, but you did not check.
+In the matrix and the plans, distinguish honestly:
+- **Verified** — you logged in as that role, opened that screen in that state, and saw it. Say where.
+- **Not tested here** — plausible, but you did not check. A screen this role never opened is always this.
 
 Do not fill a cell by symmetry. "The other view-only role could not do this, so this one probably cannot
 either" is exactly the assumption that later gets recorded as fact.
@@ -259,6 +277,13 @@ Verification queries you write here should be liftable directly into `data/sql_q
 **Checkpoint:** show each document before writing it.
 
 # Self-audit before finishing (blocking)
+
+Show it in your final message — each item, met or not — before you commit.
+
+- **Only what you were asked to write.** The files in the Writes row; for a scoped run, only that area's rows.
+  Another area seen in passing gets a "seen in navigation only" row at most.
+- **Every "verified" names where it was seen.** No cell or plan line is verified for a role that never opened
+  that screen.
 
 - **Nothing invented.** Every rule, constraint, permission and vocabulary entry traces to something you
   read, queried, or observed. Anything else sits in "known unknowns".

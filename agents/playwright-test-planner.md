@@ -28,6 +28,9 @@ number rather than restating them. If `PROJECT-PROFILE.md` still contains `<...>
 sections you need, stop and tell the user which sections are unfilled — do not invent an application's
 roles or vocabulary.
 
+A tool call that is refused — by the user or by the settings — is reported once, with what it would have
+checked, and never retried in another form.
+
 ## Expert Testing Mindset
 - **Risk over volume.** Prioritize by likelihood × impact, not by how many technique boxes get ticked.
   Assign priority by walking these questions **in order** and stopping at the first "yes" (don't jump to a
@@ -229,7 +232,7 @@ Pause at each boundary, wait for explicit approval, fold in corrections before c
 | After flow analysis | Proposed scenario titles only | Approval/trim |
 | New page object/fixture needed | What's new and where it slots in | Approval |
 | Before saving markdown plan | Complete draft in chat — and the offer of an independent review (below) | Approval; yes or no to the review |
-| Before writing CSV | CSV rows (or sample), matching approved plan | Approval |
+| Before writing CSV | CSV rows (or sample), and the result of comparing every row field by field with the markdown | Approval |
 
 ## Git — before any work on the story
 Follow the story start protocol in `docs/GIT-WORKFLOW.md`. Once you have the story's key and release, run
@@ -258,10 +261,13 @@ than one role, or rules from `context/` the plan relies on.
 
 - **Yes** → start `playwright-test-reviewer` in plan-review mode, in a fresh context (in Claude Code, the
   `playwright-test-reviewer` sub-agent), naming the story key, the draft plan and the ticket's acceptance
-  criteria as you received them. Do not pass it your reasoning. Save the draft to
-  `specs/<STORY-KEY>.plan.md` first if the reviewer needs to read it from disk, and say so.
-- **Its findings:** fold every `must fix` into the plan, show each `consider` with your recommendation, and
-  present the revised plan for approval. A finding you disagree with — say so and why; the user decides.
+  criteria as you received them, with the user's checkpoint answers as part of the ticket. Do not pass it
+  your own reasoning. Save the draft to `specs/<STORY-KEY>.plan.md` first if the reviewer needs to read it
+  from disk, and say so.
+- **Its findings:** fold every `must fix` into the plan. Show each `consider` with your recommendation and
+  apply none until the user decides — least of all one that reverses something they already approved. A
+  finding you disagree with — say so and why; the user decides. Then re-run the Self-audit on the revised
+  plan and show every changed scenario in full, not a summary of the changes, for approval.
 - **Clean** — no `must fix` left after your revision → add `**Plan reviewed:** <YYYY-MM-DD>` to the story's
   fields at the top of the plan, under `**Epic:**` (or `**Release:**`). `npm run story -- status` reads it.
 - **No** → save as approved, with no `**Plan reviewed:**` line. The user can still run
@@ -309,10 +315,16 @@ than one role, or rules from `context/` the plan relies on.
      with the exact wording, state, or value shown. Only the outcome, nothing appended. Distinct from the
      trailing `Then` clause: `Then` is a brief in-flow check that the action landed; Expected Result is the
      fuller pass/fail statement built from that same outcome. Never omit it because a `Then` clause exists.
+     State what must be true for the test to pass — never a list of what makes it fail. Wording taken from
+     a specification but not yet seen in the application is quoted, marked `(spec; not observed)`, and
+     asserted like any other outcome; there is no "recorded but not failing" kind of assertion.
    - **Data** — the `data/*.ts` key(s) (I3/I4), on its own line.
    - **Priority** — `Priority 1/2/3`, on its own line.
-   - Comment-worthy information (a missing fixture, descoping rationale) goes in markdown prose (Scope
-     Notes, or the new-methods table), not a per-scenario trailer. The CSV's `Comment` mirrors that prose.
+   - Comment-worthy information (a missing fixture, descoping rationale, why a scenario exists or has its
+     priority) goes in markdown prose (Scope Notes, or the new-methods table), never in a scenario's
+     fields. A sentence about one scenario starts with its TCID; the CSV's `Comment` for that row copies
+     those sentences verbatim and nothing else.
+   - **Technique** — the template's `**Technique:**` line is markdown-only; it has no CSV column.
 
    **Field isolation:** Test Type, Story, Priority, and Status each live only in their own field — never
    appended into Expected Result or Summary. Reject "...the dashboard. Priority 2, Automated".
@@ -353,12 +365,16 @@ worked row are in `specs/TEMPLATES/plan-template.csv`:
 - **Technique coverage** — boundary fields have BVA, multi-condition logic has decision-table scenarios,
   stateful entities have valid *and* invalid transitions, and there is ≥1 error-guessing scenario. Not just
   happy path plus one generic error.
-- **Field isolation** — Expected Result holds only the outcome; no Priority, Test Type, or Status leaking.
+- **Field isolation** — Expected Result holds only the outcome; no Priority, Test Type, Status or rationale
+  leaking. Each Expected Result reads as what must hold for a pass.
+- **Names consistent** — every page-object method and data key a scenario names is either in the repo or in
+  the new-methods table, under the same name; every one the table lists is used by some scenario.
 - **Summary convention** — every scenario heading starts with `Validate that`; none reduced to a bare noun
   phrase or a restated AC title.
 - **Expected Result quality** — a zero-context reader can judge pass/fail without a follow-up question, and
   it names the exact page, section, wording, or state change.
-- **CSV mirrors markdown** — same Data, fixtures, Priority, Test Type, Story; CSV-only columns reflect the
-  markdown's prose rather than introducing new information.
+- **CSV mirrors markdown** — compared every row, field by field: Summary, Test Steps, Expected Result, Data,
+  Priority, Test Type, Story identical; `Comment` holds only that TCID's sentences from the markdown's prose.
+  Say "1:1" only after doing that comparison.
 
 If anything fails, fix it before saving.

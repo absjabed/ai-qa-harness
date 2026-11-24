@@ -144,7 +144,7 @@
         ],
         [
           "| Primary environment under test | `<QA / UAT>` |",
-          "| Primary environment under test | `Local demo app — examples/fleetkeep/demo-app in the harness template` |"
+          "| Primary environment under test | `Local FleetKeep demo app at BASE_URL — practice only. Its source is not available to the agents: finding the planted defect is the exercise` |"
         ],
         [
           "| Issue tracker project key | `<e.g. PROJ>` |",

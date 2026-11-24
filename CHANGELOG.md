@@ -91,6 +91,21 @@ the agents you want. Each entry lists the files to port.
 - **Settings read by key** — **Adopt.** `npm run env -- get <KEY>` gives agents allow-listed, non-secret
   settings without opening `.env`; `npm run check` fails when the code reads a setting `.env.example` does not
   list. Port: `scripts/env.js`, `scripts/check-docs.js`.
+- **Agents keep their browser after the first checkpoint** — **Adopt.** A command's `allowed-tools` cover only
+  the turn it starts, so once a tester answered a checkpoint every browser call asked again. The 25 Playwright
+  test-server tools the commands already grant are now allowed in `.claude/settings.json`; nothing new is granted.
+  `npm run check` and its parts (`check:trace`, `check:docs`) are allowed too, so the context-builder and planner
+  can validate what they wrote before committing.
+  The setup docs now say to accept Claude Code's trust dialog: until a folder is trusted, none of its allow rules
+  apply (deny and ask rules always do).
+  The context-builder also stops at every checkpoint, reads nothing outside the repository unless named in its
+  inventory, and marks each fact observed, read from source or assumed. Port: `.claude/settings.json`,
+  `agents/playwright-context-builder.md`.
+- **Planner keeps the plan honest after review** — **Adopt.** It applies a reviewer's `consider` only once you
+  decide, re-runs its self-audit and shows every changed scenario in full. An Expected Result states what must
+  hold for a pass, with no rationale in it; wording from a spec not yet seen in the app is asserted like any
+  other. The CSV checkpoint shows a field-by-field comparison with the markdown. I4 now covers a test that
+  switches role part-way. Port: `agents/playwright-test-planner.md`, `TEST-AUTHORING-INVARIANTS.md` (I4).
 - **Designs from Figma** — **Optional.** An optional `figma` MCP entry — Figma's remote server, signed in through
   the browser; the desktop app's server or the Figma plugin as alternatives. The planner and the
   context-builder read the frames a story links, sparingly, as cited design intent, never as rules; the

@@ -245,7 +245,10 @@ Three ways to fill them — pick one:
    entry; with another tool, keep `tracker`. No Jira connection → delete it. Figma: keep `figma` to read
    designs (or install the Figma plugin and delete the entry); no Figma → delete it.
 2. **Open Claude Code in the new repo's folder** — that is where it picks up the agents, the guard rails and
-   the MCP servers. The first time, it asks you to approve the project's servers — approve them. Then run
+   the MCP servers. The first time, it asks you to **trust the folder** — accept: the dialog lists the allow rules
+   in `.claude/settings.json`, and until you accept, Claude Code applies none of them (the deny and ask rules
+   apply either way), so the agents would ask about every tool. Then it asks you to approve the project's
+   servers — approve them. Then run
    `/mcp`: `playwright-test` must show connected; sign in to Jira and Figma there if you use them.
 
 ---

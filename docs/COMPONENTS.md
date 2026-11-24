@@ -30,7 +30,7 @@ agent uses (`allowed-tools`) so they run without a prompt — it restricts nothi
 |---|---|
 | Deny | Reading `.env` and `.mcp.json`; the database server's write tools; Jira deletes, worklogs, sprints, boards, versions, project admin; every Figma tool that writes |
 | Ask | Creating, editing, moving, linking, commenting on or attaching to a Jira issue |
-| Allow | The read-only database, Jira and Figma tools |
+| Allow | The read-only database, Jira and Figma tools; the Playwright test server's tools the agents use, so a browser is still there after the first checkpoint |
 
 **How to use** The rules name tools as `mcp__database__<tool>`, and Jira's for both routes —
 `mcp__tracker__<tool>` and the Atlassian plugin's `mcp__plugin_atlassian_atlassian__<tool>` — and Figma's the
@@ -242,7 +242,7 @@ command shows what it would do and changes nothing. The workflow it serves is in
 
 **What** `npm run env -- get <KEY>…` — prints settings from `.env` by name, for agents, which are denied
 reading the file. Answers only for an allow-list of non-secret keys — `QA_TESTER_NAME`, `QA_REPORT_FORMAT`,
-`BUILD_UNDER_TEST`, `APP_NAME`, `BASE_URL`, `TRACKER_PROJECT_KEY` — and refuses every other key, and any
+`BUILD_UNDER_TEST`, `APP_NAME`, `BASE_URL`, `TRACKER_PROJECT_KEY`, `DB_VALIDATION_ENABLED` — and refuses every other key, and any
 password, email, token or database setting even if someone adds one to the list.
 
 ---

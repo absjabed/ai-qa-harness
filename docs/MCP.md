@@ -190,6 +190,12 @@ Shipped with the harness and committed, so they apply to everyone who runs it in
 database, tracker and Figma rules above, it denies agents reading `.env` and `.mcp.json`: no agent needs a
 password, because each role's seed in `tests/seeds/` logs in inside the test runner.
 
+**The allow rules apply only once you trust the folder.** Claude Code asks the first time you open the repo,
+listing the allow rules first; until you accept, it ignores every `allow` in this file, and the agents ask
+about each tool instead. The `deny` and `ask` rules apply from the start, trusted or not, so no protection
+depends on it. A headless run (`claude -p`) shows no dialog: open the repo interactively once and accept it
+first.
+
 These are a second line behind the agents' own instructions, not a sandbox — a shell command can still read
 a file the `Read` rule denies. Personal overrides belong in `.claude/settings.local.json`, which is
 gitignored.

@@ -146,6 +146,10 @@ the agents you want. Each entry lists the files to port.
   CSV-filed defect is *not yet in a tracker*, never *not filed*. The reporter calls a failing case the plan marks
   as an assumption an open question for the BA, never untriaged, and never offers a test run. Port: the
   executor, healer, reporter and context-builder.
+- **Listing tests records nothing** — **Adopt.** `npx playwright test --list` used to overwrite every recorded
+  result with Skipped: the cycle reporter recorded a run in which no test ran. It now records only when a test
+  ended, and the results reader ignores a listed test with no results. Port: `lib/cycleReporter.ts`,
+  `scripts/lib/cycle.ts`.
 - **Designs from Figma** — **Optional.** An optional `figma` MCP entry — Figma's remote server, signed in through
   the browser; the desktop app's server or the Figma plugin as alternatives. The planner and the
   context-builder read the frames a story links, sparingly, as cited design intent, never as rules; the

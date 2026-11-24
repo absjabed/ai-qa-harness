@@ -213,6 +213,8 @@ export function readAutomatedResults(file = LATEST_RUN): {
     for (const spec of eachSpec(report)) {
         const tcid = spec.title.match(TCID_PREFIX)?.[1];
         if (!tcid) { untraced++; continue; }
+        // A listed test (`--list`) has no results: it did not run, so it says nothing about the outcome.
+        if (spec.tests.every((t) => t.results !== undefined && t.results.length === 0)) continue;
         const o = specOutcome(spec);
         outcomes.set(tcid, outcomes.has(tcid) ? worse(outcomes.get(tcid)!, o) : o);
         const browsers = [...new Set([...(specs.get(tcid)?.browsers ?? []), ...spec.tests.map((t) => t.projectName ?? '').filter(Boolean)])];

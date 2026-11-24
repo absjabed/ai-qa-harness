@@ -19,17 +19,22 @@ import { TCID_PREFIX } from '../scripts/lib/trace';
  */
 export default class CycleReporter implements Reporter {
     private stories = new Set<string>();
+    private ran = 0;
 
     printsToStdio(): boolean {
         return false;
     }
 
     onTestEnd(test: TestCase): void {
+        this.ran++;
         const tcid = test.title.match(TCID_PREFIX)?.[1];
         if (tcid) this.stories.add(tcid.replace(/-TC\d{3}$/, ''));
     }
 
     onEnd(_result: FullResult): void {
+        // `--list` (and a run that matched nothing) ends no test: there are no results to record, and recording
+        // would overwrite every real result with "Skipped".
+        if (!this.ran) return;
         try {
             const { recorded, file } = recordAutomatedResults();
             if (recorded) console.log(`\nResults of ${recorded} test case(s) recorded in ${file}.`);

@@ -252,6 +252,8 @@ Never work around it. In a tool with no terminal, ask the user to do the same st
 you seeded — `git add specs/<KEY>.plan.md specs/<KEY>.plan.csv specs/execution/manual-results.csv`, then
 `git commit -m "test-plan(<KEY>): plan with <n> test cases [planned]"` — `[plan-reviewed]` when its review came
 back clean.
+Write a commit exactly in that one-line form — nothing between `git commit` and `-m`, no body, no
+trailer; `.claude/settings.json` refuses any other form.
 
 ## Independent review — offered, at the user's choice
 At the "before saving" checkpoint, offer it in one line: *"Before I save, an independent reviewer can check

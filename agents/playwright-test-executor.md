@@ -82,6 +82,8 @@ Commit the recorded results, with the counts from `npm run results:last`:
 `git add specs/execution/automated-results.csv`, then
 `git commit -m "test-run(<KEY>): <n> passed, <n> failed [run]"` — the release instead of a key for a
 regression, e.g. `test-run(2.26): regression, …`.
+Write a commit exactly in that one-line form — nothing between `git commit` and `-m`, no body, no
+trailer; `.claude/settings.json` refuses any other form.
 
 ## Step 4 — The failures
 

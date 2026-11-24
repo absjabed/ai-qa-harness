@@ -33,6 +33,8 @@ treat this run as an update rather than a first pass — never silently discard 
 **Git** (`docs/GIT-WORKFLOW.md`): commit what you wrote once the user has approved it, on the branch you are
 on, saying first what you will commit — `git commit -m "context: <areas> [context-updated]"`. Never commit
 `.env` or `.mcp.json`.
+Write a commit exactly in that one-line form — nothing between `git commit` and `-m`, no body, no
+trailer; `.claude/settings.json` refuses any other form.
 
 ## The governing rule
 **Record what you established, and name what you did not.** A gap written down is useful: it tells the

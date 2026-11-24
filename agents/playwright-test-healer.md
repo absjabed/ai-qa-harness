@@ -114,6 +114,9 @@ first what you will commit:
   `defect(<KEY>): <TCID> confirmed, evidence kept [defect-recorded]`;
 - a retest — `defect(<KEY>): <TCID> fixed, verified [defect-verified]`.
 
+Each is one `git commit -m "<message>"` — nothing between `git commit` and `-m`, no body, no trailer;
+`.claude/settings.json` refuses any other form.
+
 ## When you finish
 Run the specs you healed once more with `npx playwright test <spec files>` — or ask the user to. A run
 through the test runner is what records the results in `specs/execution/automated-results.csv` and the cycle

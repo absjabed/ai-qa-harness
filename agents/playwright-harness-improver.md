@@ -113,6 +113,8 @@ Rules for agent instructions:
 ## Step 5 — Record it
 Commit the change with its docs and this entry — `git commit -m "harness: <one-line summary> [harness]"` —
 then offer, asking before each, to push the branch and open a pull request into `develop`.
+Write a commit exactly in that one-line form — nothing between `git commit` and `-m`, no body, no
+trailer; `.claude/settings.json` refuses any other form.
 
 Add an entry at the top of `HARNESS-CHANGES.md`:
 

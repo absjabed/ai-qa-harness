@@ -106,6 +106,12 @@ the agents you want. Each entry lists the files to port.
   hold for a pass, with no rationale in it; wording from a spec not yet seen in the app is asserted like any
   other. The CSV checkpoint shows a field-by-field comparison with the markdown. I4 now covers a test that
   switches role part-way. Port: `agents/playwright-test-planner.md`, `TEST-AUTHORING-INVARIANTS.md` (I4).
+- **Generator: no credentials, no unreported gaps** — **Adopt.** It never fills a login form or reaches for
+  credentials from any source, environment variables included; a role switch is a new seed session. It reads
+  the log before each new session, reports a step it could not drive rather than calling it driven, and lists
+  every plan line it cannot implement as written at its first checkpoint. Re-reviews get no author
+  reasoning; step titles are the plan line verbatim. Every committing agent uses the one-line
+  `git commit -m` form and never retries a refused call. Port: `agents/playwright-*.md`.
 - **Designs from Figma** — **Optional.** An optional `figma` MCP entry — Figma's remote server, signed in through
   the browser; the desktop app's server or the Figma plugin as alternatives. The planner and the
   context-builder read the frames a story links, sparingly, as cited design intent, never as rules; the

@@ -289,7 +289,8 @@ this feature yet, I'm going to create `RecordListPage.ts`" — and waits.
 ### What it will not do
 
 Mint a TCID — if a scenario has no plan row, it asks you to add one (or run the planner) instead. Write a
-test for a step it never drove. Assume a file path. Invent a module tag — it asks, then writes the
+test for a step it never drove. Quietly work around a plan line it cannot implement as written — it lists
+them at its first checkpoint. Assume a file path. Invent a module tag — it asks, then writes the
 row into `regression-tags.md` itself. Invent SQL. Write a role name into a `test.describe` title as a
 substitute for a tag (`--grep` matches full title strings, which produces false positives).
 

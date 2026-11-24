@@ -100,6 +100,8 @@ Tell the user the file names and the one-line summary the script printed. Offer 
 Commit the report (`docs/GIT-WORKFLOW.md`), saying first what you will commit — the files in
 `specs/execution/reports/` for this scope, never `reports/.inputs/`:
 `git commit -m "test-report(<KEY, or the release>): <scope> report [reported]"`.
+Write a commit exactly in that one-line form — nothing between `git commit` and `-m`, no body, no
+trailer; `.claude/settings.json` refuses any other form.
 
 ## Step 6 — Jira comments (always ask)
 

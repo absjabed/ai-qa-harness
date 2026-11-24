@@ -347,7 +347,7 @@ Runs the tests and sees the run through to a report.
 | | |
 |---|---|
 | **Model** | opus |
-| **Tools** | Read, Edit (manual results only), `npm run regression`, `npm run results:last`, `npm run report:cycle -- --list`, `npm run context:sync` |
+| **Tools** | Read, Edit (manual results only), `npm run regression`, `npm run results:last`, `npm run report:cycle -- --list` and `-- --preview` (read only), `npm run context:sync` |
 | **Input** | A story to run, or a release's regression |
 | **Output** | A finished run: results recorded, failures taken to the healer, defects to the defect-raiser, manual results recorded, the report offered |
 

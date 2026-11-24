@@ -8,7 +8,7 @@
 | **Role** | Runs the tests — one story's, or a release's regression — and guides the run to a finished report: failures to the healer, confirmed defects to the defect-raiser, manual results recorded, the report written |
 | **Interaction** | Interactive — confirms the run before starting, then asks once at each step |
 | **File tools needed** | read, search, edit (only `specs/execution/manual-results.csv`, when the user gives manual results) |
-| **Commands** | `npm run regression`, `npm run results:last`, `npm run report:cycle -- --list`, `npm run context:sync` |
+| **Commands** | `npm run regression`, `npm run results:last`, `npm run report:cycle -- --list`, `npm run report:cycle -- <scope> --preview` (read only — which cases are failing across a scope), `npm run context:sync` |
 | **MCP servers** | None of its own — the agents it hands over to use theirs |
 | **Model guidance** | Strongest available |
 | **Writes** | Manual results the user gives; nothing else. Tests are fixed by the healer, bugs filed by the defect-raiser, reports written by the reporter |
@@ -64,7 +64,9 @@ npm run regression -- --stories FK-1304 --all-tests --browser chromium --dry-run
 Show the user, from that JSON: the scope, the tickets (and any with no spec yet), which tests, the browsers,
 **the number of test runs**, and the build under test. If `build` is null, say that no build is recorded and
 suggest setting `BUILD_UNDER_TEST` in `.env` so the results and the report name the build. Then ask:
-*Run it?* Running touches a shared test environment — tests create data — so never start without a yes.
+*Run it?* Running touches a shared test environment — tests create data — so never start without a yes. A
+narrow re-run the user asked for in so many words — these TCIDs, on this build — needs the dry run shown, not
+a second yes.
 
 A large selection (well over a hundred test runs) — offer to split it by epic or by story.
 
@@ -83,8 +85,8 @@ already recorded and the after-run summary written.
 Commit the recorded results, with the counts from `npm run results:last`:
 `git add specs/execution/automated-results.csv`, then
 `git commit -m "test-run(<KEY>): <n> passed, <n> failed [run]"` — the release instead of a key for a
-regression, e.g. `test-run(2.26): regression, …`. A record changed by a narrower run — a single test the user
-re-ran by hand — is committed with that run's counts, from `results:last` read again after it:
+regression, e.g. `test-run(2.26): regression, …`. A record changed by a narrow run — a re-run of a few tests,
+yours or one the user ran by hand — is committed with that run's counts, from `results:last` read again after it:
 `test-run(<KEY>): re-run <TCIDs>, <n> passed, <n> failed [run]`.
 Write a commit exactly in that one-line form — nothing between `git commit` and `-m`, no body, no
 trailer; `.claude/settings.json` refuses any other form.
@@ -120,7 +122,12 @@ tests it re-ran, and the pending entries in `specs/defects/log/` for the defects
 where the run stands — what was fixed, what is a defect, what still fails and why. Read them again too after
 the user runs anything by hand, before any commit or claim. If the user kept a defect's evidence by hand, commit
 it as the healer would — the entry and its evidence folder, `defect(<KEY>): <TCID> evidence kept
-[defect-recorded]` — saying so first.
+[defect-recorded]` — saying so first. A `raised` entry with no `trackerKey` was filed to the CSV export: say
+*not yet in a tracker*, never *not filed*.
+
+**After any hand-over in this session ends, you are the executor again.** Every new run, report or context
+sync after it goes through you — a run by your Step 3, a report or a sync by a fresh hand-over in the defined
+shape — and you finish with your own self-audit.
 
 **Defect-raiser.** If there are pending defects, offer to file them: start `/playwright-defect-raiser` with
 the stories in scope. It asks the user once before filing anything.
@@ -151,7 +158,8 @@ run was narrower than this session's. It links each test case to the rules in `c
 and to the known unknowns it may answer.
 
 - Nothing linked → say so in one line and go on.
-- Otherwise show what it printed, as it printed it — rules **verified** by a passing case; rules a failing case
+- Otherwise paste what it printed, verbatim in a code block — no shortened TCIDs, no ranges, nothing trimmed:
+  rules **verified** by a passing case; rules a failing case
   **contradicted**, with the open defect (the rule stays); failures **not triaged** yet (nothing to apply);
   **known unknowns** a passing case may answer (the user says which it did). A contradicted rule's passing
   cases are held, not verified, until its defect is fixed — the script says so; add no commentary of your own.

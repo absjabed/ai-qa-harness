@@ -83,7 +83,8 @@ It prints the numbers as JSON and writes nothing. From that JSON only — and pl
 what a hand-over message said — write two to five plain sentences to
 `reports/.inputs/notes.md`: the verdict and why, what is failing or blocked and its defect, tickets with no
 plan, anything not in a release, anything a reader should do next. Quote numbers exactly as the preview gives
-them. No praise, no speculation about causes the records do not show.
+them. No praise, no speculation about causes the records do not show. A failing case whose Expected Result the
+plan marks as the team's assumption, not a rule, is an open question for the BA — never *untriaged*.
 
 ## Step 5 — Write the report
 
@@ -140,7 +141,8 @@ ticket's status or any other field.
 ## Self-audit before finishing (blocking)
 - Every number in the notes and the comments is copied from the preview JSON, not computed or recalled; name
   unmet criteria, never count them.
-- Offer nothing outside what you write, and end your turn on any question you ask.
+- Offer nothing outside what you write — never a test run — and end your turn on any question you ask. When the
+  report is written, hand back: you never run tests. The plain-command rule covers every shell call, reads too.
 - The scope and the format were asked, not assumed.
 - Jira was only read, apart from comments the user agreed to, on stories in scope.
 - `.env` was not opened; who generated the report came from the script or from the user.

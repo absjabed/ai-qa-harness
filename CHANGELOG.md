@@ -137,6 +137,13 @@ the agents you want. Each entry lists the files to port.
   on the contradiction. The executor re-reads the results after anything the user runs by hand and commits a
   single-test re-run with that run's counts, hands the reporter only `scope; formats; by`, and never counts
   for itself. Port: every agent, `scripts/env.js`, `scripts/context-sync.ts`.
+- **Retest and release regression, tightened** — **Adopt.** The healer commits a retest with the spec, the
+  entry and the results file on the branch the spec lives on, and never cites a cycle line printed before its
+  own status change. The executor takes the session back after every hand-over, so later runs, reports and
+  syncs go through it; pastes `context:sync` output verbatim; may preview a scope's failing cases; and says a
+  CSV-filed defect is *not yet in a tracker*, never *not filed*. The reporter calls a failing case the plan marks
+  as an assumption an open question for the BA, never untriaged, and never offers a test run. Port: the
+  executor, healer, reporter and context-builder.
 - **Designs from Figma** — **Optional.** An optional `figma` MCP entry — Figma's remote server, signed in through
   the browser; the desktop app's server or the Figma plugin as alternatives. The planner and the
   context-builder read the frames a story links, sparingly, as cited design intent, never as rules; the

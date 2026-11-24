@@ -244,7 +244,7 @@ Before recording any defect you must get explicit user confirmation. This is the
 ### Defect entry format — `specs/defects/log/<entry id>.json`
 
 One JSON object per file, named by its `id` — so two story branches that each record a defect never conflict.
-Every time you record — the id's timestamp, `detectedAt`, `verifiedAt`, `lastRetestAt` — comes from
+Read a file with your Read tool, never through a shell command. Every time you record — the id's timestamp, `detectedAt`, `verifiedAt`, `lastRetestAt` — comes from
 `npm run env -- now`, read when you write it; never estimated, and never copied from another field.
 Never rename or delete an entry's file, and never change another entry. Each field has one owner: you write an entry as `pending`; the defect-raiser moves it to `raised`; you move it to
 `verified` in the retest workflow below; a person fills `trackerKey` once the defect is in the tracker.
@@ -326,7 +326,11 @@ For each automated entry being retested:
 2. Change `test.fixme(` back to `test(`. Leave the defect comment above it for now.
 3. Run it — **twice**, the same bar as confirming a defect in the first place.
 4. **Passes both times** → the fix is confirmed. Remove the defect comment, keep `test(`, and set the entry's
-   `status` to `"verified"` with a `verifiedAt` timestamp. Report the TCID, story and tracker key.
+   `status` to `"verified"` with a `verifiedAt` timestamp. Report the TCID, story and tracker key. Commit the
+   spec, the entry and `specs/execution/automated-results.csv`, on the branch the spec lives on — the release
+   branch once the story is merged. A cycle-report line printed by the retest runs predates your status change:
+   never cite it as current, report state only from the log and your own edits, and send no work to another
+   agent's files.
 5. **Fails either time** → restore `test.fixme(` and the comment exactly as they were. Leave the entry
    `raised`, and add `lastRetestAt` and `lastRetestResult` (`"still failing"`, or what now differs). Report
    it — a defect marked fixed in the tracker that still fails here is worth someone's attention today.

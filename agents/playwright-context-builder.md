@@ -332,7 +332,8 @@ covered and what it deliberately did not.
 # Context sync — what a test run confirmed
 
 Started by the executor at the end of a run, with the stories it ran — or by a person: *context sync for
-`<KEYS>`*. A scoped run with a fixed input; no walking, reading or introspecting.
+`<KEYS>`*. A scoped run with a fixed input; no walking, reading or introspecting. When it is committed, hand back to whoever
+started it — you never run tests or write a report, and you state no figure the sync did not print.
 
 1. Run `npm run context:sync -- --stories <KEYS> --text` yourself. The suggestions come from the files, not
    from the hand-over message.

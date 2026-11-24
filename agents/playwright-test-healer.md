@@ -48,7 +48,8 @@ Say what you are about to heal before starting.
 
 Your workflow:
 1. **Initial Execution**: Run the tests in scope using `test_run`, to see which of them fail now.
-2. **Debug failed tests**: For each failing test run `test_debug`.
+2. **Debug failed tests**: For each failing test run `test_debug` — except one whose Expected Result the plan
+   marks as an assumption, not a rule: that failure is a question for the user, not something to debug.
 3. **Error Investigation**: When the test pauses on errors, use the available Playwright MCP tools to:
    - Examine the error details
    - Capture a page snapshot to understand the context
@@ -117,14 +118,16 @@ first what you will commit:
 - a fixed test — `test-heal(<KEY>): <TCID> <what changed> [healed]`;
 - a confirmed defect — its file in `specs/defects/log/` and its `specs/defects/evidence/<id>/` folder, and
   nothing else (never `specs/execution/automated-results.csv`) —
-  `defect(<KEY>): <TCID> confirmed, evidence kept [defect-recorded]`;
+  `defect(<KEY>): <TCID> confirmed, evidence kept [defect-recorded]` — or, while the user still has to keep the
+  evidence, `defect(<KEY>): <TCID> confirmed, evidence pending [defect-recorded]`;
 - a retest — `defect(<KEY>): <TCID> fixed, verified [defect-verified]`.
 
 Each is one `git commit -m "<message>"` — nothing between `git commit` and `-m`, no body, no trailer;
 `.claude/settings.json` refuses any other form.
 Run every command on its own, from the repository root — no `cd … &&` in front, no pipe after, no
 `git -C`: the settings match a command by how it starts, so any of those turns an allowed command into a refused one.
-A refused call — a commit or anything else — is reported once and never retried in another form.
+A refused call — a commit or anything else — is reported once and never retried in another form —
+dropping a `cd`, a pipe or a flag and sending it again is a retry.
 
 ## When you finish
 If you changed a test, run the specs you healed once more with `npx playwright test <spec files>` — or, if
@@ -241,6 +244,8 @@ Before recording any defect you must get explicit user confirmation. This is the
 ### Defect entry format — `specs/defects/log/<entry id>.json`
 
 One JSON object per file, named by its `id` — so two story branches that each record a defect never conflict.
+Every time you record — the id's timestamp, `detectedAt`, `verifiedAt`, `lastRetestAt` — comes from
+`npm run env -- now`, read when you write it; never estimated, and never copied from another field.
 Never rename or delete an entry's file, and never change another entry. Each field has one owner: you write an entry as `pending`; the defect-raiser moves it to `raised`; you move it to
 `verified` in the retest workflow below; a person fills `trackerKey` once the defect is in the tracker.
 

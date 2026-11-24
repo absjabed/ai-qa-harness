@@ -242,8 +242,9 @@ command shows what it would do and changes nothing. The workflow it serves is in
 
 **What** `npm run env -- get <KEY>…` — prints settings from `.env` by name, for agents, which are denied
 reading the file. Answers only for an allow-list of non-secret keys — `QA_TESTER_NAME`, `QA_REPORT_FORMAT`,
-`BUILD_UNDER_TEST`, `APP_NAME`, `BASE_URL`, `TRACKER_PROJECT_KEY`, `DB_VALIDATION_ENABLED` — and refuses every other key, and any
-password, email, token or database setting even if someone adds one to the list.
+`BUILD_UNDER_TEST`, `TEST_ENVIRONMENT`, `APP_NAME`, `BASE_URL`, `TRACKER_PROJECT_KEY`, `DB_VALIDATION_ENABLED` — and refuses every other key, and any
+password, email, token or database setting even if someone adds one to the list. `npm run env -- now` prints the
+current time, the one clock agents use for a timestamp they record.
 
 ---
 

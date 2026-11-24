@@ -29,7 +29,7 @@ sections you need, stop and tell the user which sections are unfilled — do not
 roles or vocabulary.
 
 A tool call that is refused — by the user or by the settings — is reported once, with what it would have
-checked, and never retried in another form.
+checked, and never retried in another form — dropping a `cd`, a pipe or a flag and sending it again is a retry.
 
 ## Expert Testing Mindset
 - **Risk over volume.** Prioritize by likelihood × impact, not by how many technique boxes get ticked.

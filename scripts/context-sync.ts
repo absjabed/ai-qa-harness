@@ -7,7 +7,8 @@
  *
  *   - verified    — a case that passed exercises a rule: suggest recording `verified: <TCID>, <date>` on it.
  *   - contradicted — a case that failed exercises a rule and a defect is recorded: the rule stays a rule, and a
- *                    caveat can name the open defect. A result never rewrites or adds a rule.
+ *                    caveat can name the open defect. A result never rewrites or adds a rule. The rule's passing
+ *                    cases are held here, not listed as verified, until the defect is fixed.
  *   - untriaged   — a case that failed, with no defect recorded yet: nothing to suggest until it is triaged.
  *   - unknowns    — a known unknown (`context/BASELINE.md` section 8, or an area's Caveats) shares a reference
  *                    with a case that passed: a person decides whether the case answered it.
@@ -173,7 +174,7 @@ function main(): void {
      */
     interface Suggestion {
         doc: string; rule?: number; ruleText?: string; section?: string; unknown?: string;
-        tcids: string[]; via: string[]; lastRun: string; defects?: string[]; suggest: string;
+        tcids: string[]; via: string[]; lastRun: string; defects?: string[]; held?: string[]; suggest: string;
     }
     const groups = { verified: new Map<string, Suggestion>(), contradicted: new Map<string, Suggestion>(), untriaged: new Map<string, Suggestion>(), unknowns: new Map<string, Suggestion>() };
     const add = (kind: keyof typeof groups, key: string, c: Case, via: string[], base: Omit<Suggestion, 'tcids' | 'via' | 'lastRun'>) => {
@@ -215,6 +216,16 @@ function main(): void {
             const via = c.refs.filter((r) => r !== c.storyKey && u.refs.includes(r));
             if (via.length) add('unknowns', `${u.doc}|${u.text}`, c, via, { doc: u.doc, section: u.section, unknown: oneLine(u.text), suggest: 'a person decides whether these cases answered it' });
         }
+    }
+
+    // A rule with an open contradiction takes no new `verified:` marks: its passing cases are held on the
+    // contradiction, to be recorded once the defect is fixed and retested — never listed as "record it".
+    for (const [key, held] of groups.verified) {
+        const c = groups.contradicted.get(key);
+        if (!c) continue;
+        c.held = held.tcids;
+        c.suggest += `; hold ${held.tcids.join(', ')} — no new "verified:" marks while the defect is open; record them once it is verified`;
+        groups.verified.delete(key);
     }
 
     const list = (m: Map<string, Suggestion>) => [...m.values()];

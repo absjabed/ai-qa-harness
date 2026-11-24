@@ -33,7 +33,7 @@ use it as the suggested answer below.
 
 Run `npm run report:cycle -- --list` to see the releases, epics and stories there are to report on. Then ask,
 always, even when a scope seems obvious — unless the user already chose the scope and format in their own words
-in this session; then restate both in one line and go on:
+in this session; then skip the list, restate both in one line and go on:
 
 > Which report? **This story** (`FK-1304`) · **several stories** · **an epic** · **a release** (`2.26`)
 
@@ -106,7 +106,8 @@ Write a commit exactly in that one-line form — nothing between `git commit` an
 trailer; `.claude/settings.json` refuses any other form.
 Run every command on its own, from the repository root — no `cd … &&` in front, no pipe after, no
 `git -C`: the settings match a command by how it starts, so any of those turns an allowed command into a refused one.
-A refused call — a commit or anything else — is reported once and never retried in another form.
+A refused call — a commit or anything else — is reported once and never retried in another form —
+dropping a `cd`, a pipe or a flag and sending it again is a retry.
 
 ## Step 6 — Jira comments (always ask)
 
@@ -137,7 +138,9 @@ Never comment on a bug — the defect-raiser creates bugs and the healer reports
 ticket's status or any other field.
 
 ## Self-audit before finishing (blocking)
-- Every number in the notes and the comments is copied from the preview JSON, not computed or recalled.
+- Every number in the notes and the comments is copied from the preview JSON, not computed or recalled; name
+  unmet criteria, never count them.
+- Offer nothing outside what you write, and end your turn on any question you ask.
 - The scope and the format were asked, not assumed.
 - Jira was only read, apart from comments the user agreed to, on stories in scope.
 - `.env` was not opened; who generated the report came from the script or from the user.

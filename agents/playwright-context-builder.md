@@ -37,6 +37,8 @@ Write a commit exactly in that one-line form — nothing between `git commit` an
 trailer; `.claude/settings.json` refuses any other form.
 Run every command on its own, from the repository root — no `cd … &&` in front, no pipe after, no
 `git -C`: the settings match a command by how it starts, so any of those turns an allowed command into a refused one.
+A refused call is reported once and never retried in another form — dropping a `cd`, a pipe or a flag and
+sending it again is a retry.
 
 ## The governing rule
 **Record what you established, and name what you did not.** A gap written down is useful: it tells the

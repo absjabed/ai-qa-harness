@@ -129,6 +129,14 @@ the agents you want. Each entry lists the files to port.
 - **Reports name the environment, never its address** — **Adopt.** The cycle report's Environment row printed
   the host from `BASE_URL`, which section 1 says is never written literally. It now prints `TEST_ENVIRONMENT`
   from `.env` (e.g. QA, UAT). Port: `scripts/lib/cycle.ts`, `.env.example`, `PROJECT-PROFILE.md` section 1.
+- **A clock, plain commands, and no marks on a broken rule** — **Adopt.** `npm run env -- now` is the one
+  clock agents use for a timestamp they record (`detectedAt`, `raisedAt`, `verifiedAt`), never estimated or
+  copied. Every agent runs a command bare from the repository root — no `cd … &&`, pipe or `git -C`, which turn
+  an allowed command into a refused one — and resending a refused command without them counts as a retry.
+  `npm run context:sync` no longer lists a rule with an open defect under Verified: its passing cases are held
+  on the contradiction. The executor re-reads the results after anything the user runs by hand and commits a
+  single-test re-run with that run's counts, hands the reporter only `scope; formats; by`, and never counts
+  for itself. Port: every agent, `scripts/env.js`, `scripts/context-sync.ts`.
 - **Designs from Figma** — **Optional.** An optional `figma` MCP entry — Figma's remote server, signed in through
   the browser; the desktop app's server or the Figma plugin as alternatives. The planner and the
   context-builder read the frames a story links, sparingly, as cited design intent, never as rules; the

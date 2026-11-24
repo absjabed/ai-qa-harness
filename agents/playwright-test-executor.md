@@ -83,12 +83,15 @@ already recorded and the after-run summary written.
 Commit the recorded results, with the counts from `npm run results:last`:
 `git add specs/execution/automated-results.csv`, then
 `git commit -m "test-run(<KEY>): <n> passed, <n> failed [run]"` — the release instead of a key for a
-regression, e.g. `test-run(2.26): regression, …`.
+regression, e.g. `test-run(2.26): regression, …`. A record changed by a narrower run — a single test the user
+re-ran by hand — is committed with that run's counts, from `results:last` read again after it:
+`test-run(<KEY>): re-run <TCIDs>, <n> passed, <n> failed [run]`.
 Write a commit exactly in that one-line form — nothing between `git commit` and `-m`, no body, no
 trailer; `.claude/settings.json` refuses any other form.
 Run every command on its own, from the repository root — no `cd … &&` in front, no pipe after, no
 `git -C`: the settings match a command by how it starts, so any of those turns an allowed command into a refused one.
-A refused call — a commit or anything else — is reported once and never retried in another form.
+A refused call — a commit or anything else — is reported once and never retried in another form —
+dropping a `cd`, a pipe or a flag and sending it again is a retry.
 
 ## Step 4 — The failures
 
@@ -114,7 +117,10 @@ defect, keeps its evidence, and re-runs what it healed. Do not re-run healed tes
 
 **Coming back.** When the healer is done, re-read the state before going on: `npm run results:last` for the
 tests it re-ran, and the pending entries in `specs/defects/log/` for the defects it recorded. Say
-where the run stands — what was fixed, what is a defect, what still fails and why.
+where the run stands — what was fixed, what is a defect, what still fails and why. Read them again too after
+the user runs anything by hand, before any commit or claim. If the user kept a defect's evidence by hand, commit
+it as the healer would — the entry and its evidence folder, `defect(<KEY>): <TCID> evidence kept
+[defect-recorded]` — saying so first.
 
 **Defect-raiser.** If there are pending defects, offer to file them: start `/playwright-defect-raiser` with
 the stories in scope. It asks the user once before filing anything.
@@ -135,8 +141,8 @@ for the healer to record, with the user's account — offer that hand-over.
 
 Offer the report and hand over to `/playwright-test-reporter`, suggesting the scope of this run: the stories
 for a story run, the release for a regression run. The reporter asks the scope and format and writes it.
-Hand over the scope and what the user chose, never figures or your own account of the run — the reporter
-takes those from the records.
+Hand over in exactly this shape — `scope: <KEYS or release>; formats: <what the user chose>; by: <name, if
+given>` — never figures or your own account of the run: the reporter takes those from the records.
 
 ## Step 8 — What the run confirmed in `context/`
 
@@ -147,12 +153,14 @@ and to the known unknowns it may answer.
 - Nothing linked → say so in one line and go on.
 - Otherwise show what it printed, as it printed it — rules **verified** by a passing case; rules a failing case
   **contradicted**, with the open defect (the rule stays); failures **not triaged** yet (nothing to apply);
-  **known unknowns** a passing case may answer (the user says which it did). Ask once: apply all, these, or
-  none?
+  **known unknowns** a passing case may answer (the user says which it did). A contradicted rule's passing
+  cases are held, not verified, until its defect is fixed — the script says so; add no commentary of your own.
+  Ask once: apply all, these, or none?
 - Yes → hand over to `/playwright-context-builder` for a context sync of those stories, with what the user
   chose.
 
-Never edit `context/` yourself, and never suggest a new rule from a result: a test confirms a rule or names a
+Never summarise commits, criteria or results by a count you made — quote the script's line. Never edit
+`context/` yourself, and never suggest a new rule from a result: a test confirms a rule or names a
 defect against it, nothing more.
 
 ## Step 9 — Merge, or put on hold

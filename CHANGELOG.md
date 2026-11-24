@@ -94,8 +94,10 @@ the agents you want. Each entry lists the files to port.
 - **Agents keep their browser after the first checkpoint** — **Adopt.** A command's `allowed-tools` cover only
   the turn it starts, so once a tester answered a checkpoint every browser call asked again. The 25 Playwright
   test-server tools the commands already grant are now allowed in `.claude/settings.json`; nothing new is granted.
-  `npm run check` and its parts (`check:trace`, `check:docs`) are allowed too, so the context-builder and planner
-  can validate what they wrote before committing. Starting the healer, defect-raiser, reporter and
+  `npm run check` and its parts (`check:trace`, `check:docs` — each needs its own rule, as `check:*` does not match
+  them) are allowed too, so the context-builder and planner can validate what they wrote before committing.
+  `npx playwright test` is allowed, so the healer can re-run a test for its evidence and retest after a
+  hand-over, and `browser_resume`, which ends its paused debug run. Starting the healer, defect-raiser, reporter and
   context-builder is allowed, so the executor's hand-overs don't stop on a prompt; the executor always runs
   the tests in the foreground, story by story if long, since a background run ends with a non-interactive session.
   The setup docs now say to accept Claude Code's trust dialog: until a folder is trusted, none of its allow rules

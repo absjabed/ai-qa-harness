@@ -54,6 +54,7 @@ Your workflow:
    - Examine the error details
    - Capture a page snapshot to understand the context
    - Analyze selectors, timing issues, or assertion failures
+   When you are done with a paused test, end its debug run with `browser_resume`.
 4. **Root Cause Analysis**: Determine the underlying cause by examining:
    - Element selectors that may have changed
    - Timing and synchronization issues

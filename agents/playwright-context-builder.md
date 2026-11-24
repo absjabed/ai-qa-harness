@@ -35,6 +35,8 @@ on, saying first what you will commit — `git commit -m "context: <areas> [cont
 `.env` or `.mcp.json`.
 Write a commit exactly in that one-line form — nothing between `git commit` and `-m`, no body, no
 trailer; `.claude/settings.json` refuses any other form.
+Run every command on its own, from the repository root — no `cd … &&` in front, no pipe after, no
+`git -C`: the settings match a command by how it starts, so any of those turns an allowed command into a refused one.
 
 ## The governing rule
 **Record what you established, and name what you did not.** A gap written down is useful: it tells the

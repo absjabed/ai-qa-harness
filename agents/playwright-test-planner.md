@@ -254,6 +254,8 @@ you seeded — `git add specs/<KEY>.plan.md specs/<KEY>.plan.csv specs/execution
 back clean.
 Write a commit exactly in that one-line form — nothing between `git commit` and `-m`, no body, no
 trailer; `.claude/settings.json` refuses any other form.
+Run every command on its own, from the repository root — no `cd … &&` in front, no pipe after, no
+`git -C`: the settings match a command by how it starts, so any of those turns an allowed command into a refused one.
 
 ## Independent review — offered, at the user's choice
 At the "before saving" checkpoint, offer it in one line: *"Before I save, an independent reviewer can check

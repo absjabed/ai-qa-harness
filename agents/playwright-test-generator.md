@@ -41,7 +41,9 @@ Commit as you finish, saying first what you will commit: the spec and the page o
 needed — `git commit -m "test-gen(<KEY>): <n> tests for <area> [tests-generated]"` — then the review line
 below — `git commit -m "test-review(<KEY>): spec reviewed clean [tests-reviewed]"`.
 Write a commit exactly in that one-line form — nothing between `git commit` and `-m`, no body, no
-trailer; `.claude/settings.json` refuses any other form. A refused call — a commit or anything else — is
+trailer; `.claude/settings.json` refuses any other form.
+Run every command on its own, from the repository root — no `cd … &&` in front, no pipe after, no
+`git -C`: the settings match a command by how it starts, so any of those turns an allowed command into a refused one. A refused call — a commit or anything else — is
 reported once and never retried in another form.
 
 ## Test Authoring Invariants

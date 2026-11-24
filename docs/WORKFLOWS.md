@@ -105,12 +105,16 @@ TCID, with the screenshots attached — searching first, so a bug already filed 
 than duplicated. Without one it appends rows to `specs/defects/defects.csv` for you to import; attach the
 screenshots and fill each `trackerKey` in the defect log afterwards.
 
-### Step 7 — Manual cases, and committing
+### Step 7 — Manual cases, the report, and the merge
 
-Execute the plan's **Manual** cases by hand and fill in their rows in `specs/execution/manual-results.csv`. A
-case that fails: tell the healer its TCID and what happened, and it records the defect like any other. Then
-rebuild the report — `npm run report:cycle -- --stories ACME-1234` — and commit the plan, the spec, page
-objects, `specs/execution/` and `specs/defects/`.
+Execute the plan's **Manual** cases by hand and fill in their rows in `specs/execution/manual-results.csv` —
+the executor asks about those still Not Run. A case that fails: tell the healer its TCID and what happened,
+and it records the defect like any other.
+
+Then the executor offers the report — `/playwright-test-reporter`, scope ACME-1234 — and, once the tests are
+generated, reviewed and run, the merge: `npm run story -- finish ACME-1234` brings the latest base in, then
+the push and a pull request into it, each asked. Each agent has committed its own step along the way
+(`docs/GIT-WORKFLOW.md`).
 
 ---
 

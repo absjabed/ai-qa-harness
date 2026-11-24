@@ -221,8 +221,8 @@
     <section class="slide" aria-label="Slide 2: how we test with the harness">
       <p class="eyebrow">2 · How we'll test with the harness</p>
       <h1>Same steps. Agents do the legwork, you make the calls</h1>
-      <p class="lede">Five AI agents on top of a Playwright test suite. Each one stops and asks at the points that
-      need judgment, and none of them files a bug or saves a plan without you.</p>
+      <p class="lede">AI agents on top of a Playwright test suite; these six take a story from Jira to a signed-off report.
+      Each one stops and asks at the points that need judgment, and none of them files a bug or saves a plan without you.</p>
 
       <div class="lanes">
         <div></div>
@@ -240,28 +240,29 @@
         <div class="cell agent"><span class="who">/test-generator</span>Performs every step in a <b>real browser</b>
           first, then writes the Playwright test from what actually happened, not from guesses. A reviewer then checks
           each test really proves what the plan expects.</div>
-        <div class="cell agent"><span class="who">test suite</span>Checks the environment is up, then runs every test,
-          across browsers and roles. Regression is one command.</div>
+        <div class="cell agent"><span class="who">/test-executor</span>Checks the environment is up, then runs the story's
+          tests or a release's regression, across browsers and roles. Groups the failures for the healer.</div>
         <div class="cell agent"><span class="who">/test-healer</span>Fixes broken tests (selectors, timing) in up to 3
           tries. If the <b>app</b> is wrong rather than the test, it says so and explains why.</div>
         <div class="cell agent"><span class="who">/defect-raiser</span>Creates the bug in Jira, with steps, expected vs
           actual, test ID and screenshots, linked to the story, after checking it isn't already filed. Parks the test until the
           fix lands; the healer retests it.</div>
-        <div class="cell agent"><span class="who">cycle report</span>Written the moment a run ends: pass rates by
-          priority, criteria coverage, open bugs, and whether each exit criterion was met.</div>
+        <div class="cell agent"><span class="who">/test-reporter</span>A report per story, epic or release, in Markdown,
+          HTML or PDF: pass rates by priority, criteria coverage, open bugs, each exit criterion. Every number from the records.</div>
 
         <div class="lane-label you">You<br>do</div>
         <div class="cell you"><span class="who">you</span>Give it the story's <b>Jira key</b> and confirm what it fetched
           is complete. Approve the plan at each checkpoint.</div>
         <div class="cell you"><span class="who">you</span>Confirm where the test goes and any new page it needs. Run the
           manual-only cases.</div>
-        <div class="cell you"><span class="who">you</span><code>npm run regression</code>: pick the client
-          release, then its tickets or epics.</div>
+        <div class="cell you"><span class="who">you</span>Say what to run: one story, or a release's regression and
+          its tickets or epics. Confirm before it starts.</div>
         <div class="cell you"><span class="who">you</span>Confirm whether it's a real bug. Nothing is filed on the
           agent's word alone.</div>
         <div class="cell you"><span class="who">you</span>Approve the batch before anything is created in Jira. Ask for
           a retest when it's fixed.</div>
-        <div class="cell you"><span class="who">you</span>Read the numbers and make the sign-off call.</div>
+        <div class="cell you"><span class="who">you</span>Pick the scope and format, read the numbers, make the
+          sign-off call.</div>
       </div>
 
       <div class="thread">
@@ -302,6 +303,7 @@
             <li><b>Confirming every bug.</b> Agents never raise one on their own.</li>
             <li><b>Exploratory and manual-only testing.</b> Results still get recorded, per case ID.</li>
             <li><b>Reviewing agent output</b> the way we'd review a colleague's, and <b>the sign-off call</b>.</li>
+            <li><b>Pushing and merging.</b> Each story has its own branch and agents commit every step; anything that reaches the shared repo asks first.</li>
           </ul>
         </div>
         <div class="col">

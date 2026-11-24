@@ -367,7 +367,7 @@ navigation or permissions — and name the area to re-walk just that part.
 Yes — tests are **written as code from the test cases**, and Playwright runs that code. Per story:
 
 ```
-Jira story ──▶ planner ──▶ test cases (TCIDs) ──▶ generator ──▶ Playwright code ──▶ npm run regression / npx playwright test
+Jira story ──▶ planner ──▶ test cases (TCIDs) ──▶ generator ──▶ Playwright code ──▶ executor (npm run regression)
                specs/<KEY>.plan.md                drives each case in the     tests/stories/<release>/<KEY>.spec.ts
                                                   real browser first          checked against the plan by the reviewer
 ```

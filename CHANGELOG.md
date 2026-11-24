@@ -39,20 +39,88 @@ commit, in each copy's `PROJECT-PROFILE.md` section 1 as the *harness* version.
 plan and the `tests/stories/<release>/` folders, which regression and the cycle report run by. The two
 numbers never share a field.
 
-**For now it stays 1.0.0, pre-release:** changes are not listed here — git history has them — and a copy is
-identified by the commit recorded in its profile. Once the version moves on, every change gets an entry at
-the top of this file with a new version number, marked **Adopt**, **Optional** or **New copies only**.
+**1.0.0 was the pre-release baseline:** its changes were not listed — git history has them — and a copy made
+from it is identified by the commit recorded in its profile. From 1.1.0 on, every change gets an entry at the
+top of this file with a new version number, marked **Adopt**, **Optional** or **New copies only**.
+
+---
+
+## 1.1.0
+
+Two agents that finish the cycle — one runs the tests and sees the run through, one writes the report — plus a
+git workflow for a project's QA repo, designs from Figma, and context that a run can confirm. Nine agents now.
+
+**For a copy on 1.0.0**, in order: the records changes first (they stop merge conflicts on their own), then
+the agents you want. Each entry lists the files to port.
+
+- **Records that merge cleanly** — **Adopt.** The results CSVs merge with `merge=union` and the scripts read the
+  newest row per test case; each defect is its own file in `specs/defects/log/<entry id>.json` instead of one
+  `defect-log.json`, so two branches recording defects never conflict. A copy's old `defect-log.json` is still
+  read; `npm run defect:evidence` writes its entries out as files.
+  Port: `.gitattributes`, `scripts/lib/defects.ts`, `scripts/lib/cycle.ts`, `scripts/defect-evidence.ts`, the
+  healer's and defect-raiser's defect-log wording, `specs/defects/log/.gitkeep`.
+- **`/playwright-test-executor`** — **Adopt.** Runs one story's tests or a release's regression, confirmed from a
+  dry run first, headless in the background. Groups the failures and asks once — heal all, these, skip or stop
+  — hands over to the healer, then offers the defect-raiser, the manual cases still Not Run, the report, the
+  context sync and, for a story, the merge. Every figure comes from the scripts. The generator now asks *run
+  these tests now?* after a clean review.
+  Port: `agents/playwright-test-executor.md` and its wrapper, `scripts/last-run.ts` (`npm run results:last`),
+  `scripts/regression.ts` (`--dry-run`, `--grep`, `--headless`, `--stories`/`--epics` without `--release`), the
+  generator's hand-over.
+- **`/playwright-test-reporter`** — **Adopt.** The formal test report for a story, several, an epic or a
+  release, in Markdown, HTML or PDF, asked every time; one report per scope in `specs/execution/reports/`,
+  replaced by the next. Verdict banner, headline figures, a status bar, details led by the story or release,
+  exit criteria, results split automated and manual, sign-off. Jira titles and status when connected; a test
+  summary comment on each story, asked first. The numbers come only from `npm run report:cycle`, which gains
+  `--epics`, `--formal`, `--format`, `--by`, `--jira`, `--notes`, `--list`, `--defaults` and `--preview`.
+  Port: `agents/playwright-test-reporter.md` and its wrapper, `scripts/cycle-report.ts`, `scripts/lib/cycle.ts`,
+  `scripts/lib/report-render.ts`, `QA_TESTER_NAME` and `QA_REPORT_FORMAT` in `.env.example`, and `.gitignore`'s
+  `/reports/` — anchored, because a bare `reports/` also ignores `specs/execution/reports/`; `npm run check`
+  now fails when a records folder is ignored.
+- **A git workflow** — **Optional**; your team's branch model may already be settled. `main`, `develop`,
+  `release/<x>`, `test/<KEY>-<desc>` and `harness/<desc>` (`docs/GIT-WORKFLOW.md`). The agents run git and the
+  tester answers: `npm run story` works out each story's status from the files, runs the story start protocol
+  (clean tree, fetch, resume an existing branch, the base the person picks, a fast-forward pull), switches
+  branches, creates release branches, and checks the merge rule — tests generated, reviewed and run, open
+  defects included — before bringing the latest base in. Every agent commits its own stage:
+  `<type>(<KEY>): <what> [<stage>]`. Plans gain `**Plan reviewed:**` and `**Tests reviewed:**`.
+  `.claude/settings.json` allows local git, asks before a push, merge, pull, checkout or pull request, and
+  denies force-pushes, hard resets, branch deletion and history rewrites.
+  Port: `docs/GIT-WORKFLOW.md`, `scripts/story.ts`, `scripts/lib/trace.ts`, the plan template's two lines, the
+  *Git* sections of the agents, the git rules in `.claude/settings.json`.
+- **Settings read by key** — **Adopt.** `npm run env -- get <KEY>` gives agents allow-listed, non-secret
+  settings without opening `.env`; `npm run check` fails when the code reads a setting `.env.example` does not
+  list. Port: `scripts/env.js`, `scripts/check-docs.js`.
+- **Designs from Figma** — **Optional.** An optional `figma` MCP entry — Figma's remote server, signed in through
+  the browser; the desktop app's server or the Figma plugin as alternatives. The planner and the
+  context-builder read the frames a story links, sparingly, as cited design intent, never as rules; the
+  reviewer never opens them. Read tools allowed, every Figma write denied, for both routes.
+  Port: the `figma` entry in `.mcp.json.example`, the Figma rules in `.claude/settings.json`, the planner's
+  *Designs* section and `**Design:**` plan line, the context-builder's preflight and *Design intent* steps,
+  the reviewer's line, `docs/MCP.md`.
+- **Context sync** — **Optional.** `npm run context:sync` links a run's test cases to the `context/` rules they
+  verified or contradicted, and to the known unknowns they may answer, through the IDs their acceptance
+  criteria cite. The executor offers the suggestions at the end of a run; the context-builder applies the
+  ones agreed — `verified: <TCID>, <date>` marks, a caveat naming an open defect. A result never becomes,
+  changes or removes a rule.
+  Port: `scripts/context-sync.ts`, the context-builder's *Context sync* section, the template's *Design
+  intent* section and verified-mark convention.
+- **Documentation** — **Optional.** The developer guide gains running tests and the git workflow, with 13
+  diagrams; the handbook, the walkthrough, the deck, `docs/AGENTS.md`, `docs/COMPONENTS.md`, `docs/MCP.md` and
+  `docs/WORKFLOWS.md` cover the new agents and the workflow.
+- **The practice example** — template only. The FleetKeep worked cycle gains a Vehicles context document
+  its run verified.
 
 ---
 
 ## 1.0.0 — pre-release
 
-A Playwright + TypeScript test harness driven by nine agents, application-agnostic by construction: every
+A Playwright + TypeScript test harness driven by seven agents, application-agnostic by construction: every
 project-specific value lives in `PROJECT-PROFILE.md`, `.env`, `.mcp.json` and `context/`.
 
 **What it contains**
 
-- **Nine agent definitions** in `agents/`, canonical and vendor-neutral. Claude Code wrappers in
+- **Seven agent definitions** in `agents/`, canonical and vendor-neutral. Claude Code wrappers in
   `.claude/commands/` carry no instructions, so they cannot drift. `agents/README.md` covers porting to
   another agentic tool.
   - `playwright-context-builder` — learns the application once at setup, writes the baseline the rest read;
@@ -68,12 +136,6 @@ project-specific value lives in `PROJECT-PROFILE.md`, `.env`, `.mcp.json` and `c
     fixed ones and records the result on the bug
   - `playwright-defect-raiser` — files the confirmed defects you choose, after one confirmation: in the
     tracker, linked to the story with the evidence attached, or as a CSV
-  - `playwright-test-executor` — runs one story's tests or a release's regression, confirmed from a dry run
-    first; groups the failures and asks once whether to heal them, then offers the defect-raiser, the manual
-    results still to enter and the report. Every figure it gives comes from the scripts
-  - `playwright-test-reporter` — writes the test report for stories, epics or a release in Markdown, HTML or
-    PDF, asking the scope and format; one report per scope, replaced when regenerated. Offers a Jira test
-    summary comment, asked first
   - `playwright-harness-improver` — adapts a QA repo's harness when it does not behave as the team needs:
     traces the cause to the right layer, proposes the smallest change, applies it on a yes with the docs
     that restate it, never lowers a credential or data protection, and records every change in
@@ -90,23 +152,6 @@ project-specific value lives in `PROJECT-PROFILE.md`, `.env`, `.mcp.json` and `c
   them for the full regression — then all of its tickets,
   some epics, or chosen tickets, runs them, and reports on exactly that selection. Each plan records its
   release and epic — from Jira's fix version and parent epic when the tracker is connected.
-- **A git workflow for a project's QA repo** — `main`, `develop`, `release/<x>`, `test/<KEY>-<desc>` and
-  `harness/<desc>` branches (`docs/GIT-WORKFLOW.md`). The agents run git and the tester answers:
-  `npm run story` works out each story's status from the files, runs the story start protocol (clean tree,
-  fetch, resume an existing branch, the base the person picks, a fast-forward pull), creates release branches,
-  and checks the merge rule — tests generated, reviewed and run, open defects included — before bringing the
-  latest base in. Commits are one line, `<type>(<KEY>): <what> [<stage>]`. The results CSVs merge with
-  `merge=union` and each defect is its own file in `specs/defects/log/`, so two stories never conflict.
-- **Settings read by key** — `npm run env -- get <KEY>` gives agents allow-listed, non-secret settings from
-  `.env` without opening it; `npm run check` fails when code reads a setting `.env.example` does not list.
-- **Designs from Figma** — an optional `figma` MCP entry: Figma's remote server, signed in through the
-  browser, with the desktop app's server or the Figma plugin as alternatives. The planner and the
-  context-builder read the frames a story links, sparingly, as cited design intent — never as rules — and the
-  reviewer never opens them. Read tools allowed, every Figma write denied.
-- **Context sync** — `npm run context:sync` links a run's test cases to the `context/` rules they verified or
-  contradicted and to the known unknowns they may answer. The executor offers the suggestions at the end of a
-  run; the context-builder applies the ones agreed. A result confirms a rule or names a defect against it; it
-  never becomes a rule.
 - **A prep folder for setup day** — `npm run prep -- <dir> --name "<Project>"` makes the folder a project's QA
   repo will become: `setup/` files to fill in before setup day (start-here, filling guide, checklist, accounts
   and roles, Jira, decisions, contacts, paths — never passwords) and `context/sources/` subfolders for the
@@ -126,12 +171,10 @@ project-specific value lives in `PROJECT-PROFILE.md`, `.env`, `.mcp.json` and `c
   test runner.
 - **Guard rails** — `.claude/settings.json` denies agents reading `.env` and `.mcp.json` and calling the
   database server's write tools, asks before any write to Jira — creating, editing, moving, commenting —
-  and denies Jira deletes and admin tools and every Figma write; asks before a push, merge or checkout, and denies force-pushes,
-  hard resets, branch deletion and history rewrites. A bug's status is only ever moved to a transition the team's own
+  and denies Jira deletes and admin tools. A bug's status is only ever moved to a transition the team's own
   Jira workflow offers, chosen by a person.
-- **MCP servers** — Playwright (required), a database server (optional, read-only account), Jira through
-  whichever connection the team already has: the Atlassian plugin in Claude Code, or the MCP server entry —
-  and Figma (optional, read-only).
+- **MCP servers** — Playwright (required), a database server (optional, read-only account), and Jira through
+  whichever connection the team already has: the Atlassian plugin in Claude Code, or the MCP server entry.
 - **Copying** — `npm run export -- <dir>` copies exactly the files a project needs, dotfiles included, and
   records where the copy came from.
 - **Documentation** — a self-contained handbook at `docs/index.html` (`npm run docs`), component, agent,
@@ -141,7 +184,7 @@ project-specific value lives in `PROJECT-PROFILE.md`, `.env`, `.mcp.json` and `c
 
 **Known limitations, stated plainly**
 
-- Eight of the nine agents are interactive by design. The suite runs on QA team members' own machines; there
+- Six of the seven agents are interactive by design. The suite runs on QA team members' own machines; there
   is no CI pipeline, and `npm run check` is run by hand before pushing.
 - The documentation restates things the code owns, so it drifts. `npm run check:docs` catches the
   countable cases; the rest is habit.

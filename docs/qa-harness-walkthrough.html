@@ -280,7 +280,7 @@
 
     <div class="row" role="row">
       <div class="step"><small>4</small>Setup day: copy the harness in</div>
-      <div><span class="cell-label">You</span><code class="cmd">npm run export -- &lt;path-to&gt;/acme-qa</code><p class="do">Then <code>git init</code>, <code>npm install</code>, <code>npx playwright install</code>, and <code>.env</code> from the password manager.</p></div>
+      <div><span class="cell-label">You</span><code class="cmd">npm run export -- &lt;path-to&gt;/acme-qa</code><p class="do">Then <code>git init</code> with a <code>develop</code> branch, <code>npm install</code>, <code>npx playwright install</code>, and <code>.env</code> from the password manager.</p></div>
       <div><span class="cell-label">The harness asks</span><div class="talk"><p class="say note">The export writes only harness files. <code>setup/</code> and <code>context/sources/</code> stay exactly as the team left them.</p></div></div>
       <div class="out"><span class="cell-label">You get</span><p class="file">The QA repo, ready for the context-builder<span>every answer it will ask for already written down</span></p></div>
     </div>
@@ -334,9 +334,9 @@
       <div><span class="cell-label">The harness asks</span><div class="talk">
         <p class="say h"><b>Harness</b>The Atlassian plugin is connected. Give me one story key you know exists.</p>
         <p class="say u"><b>You</b>ACME-1100</p>
-        <p class="say h"><b>Harness</b>Fetched it. The Jira connection works.</p>
+        <p class="say h"><b>Harness</b>Fetched it. The Jira connection works. Figma is connected too: one read says you are signed in.</p>
       </div></div>
-      <div class="out"><span class="cell-label">You get</span><p class="file">A confirmed Jira connection<span>recorded in the inventory</span></p></div>
+      <div class="out"><span class="cell-label">You get</span><p class="file">Confirmed Jira and Figma connections<span>recorded in the inventory</span></p></div>
     </div>
 
     <div class="row" role="row">
@@ -385,7 +385,7 @@
   <div class="after">
     <div><b>Correct the drafts</b>A wrong draft becomes a fact for every agent after it.</div>
     <div><b>Fill what only the team knows</b>Profile section 7, the severity scale, and section 10, the exit criteria.</div>
-    <div><b>Check and commit</b><code>npm run check</code>, then <code>git init</code> and the first commit.</div>
+    <div><b>Check and commit</b><code>npm run check</code>, then the first commit on <code>develop</code>, and <code>npm run story -- release-start 2.26</code> for the release.</div>
   </div>
 </section>
 
@@ -394,8 +394,8 @@
   <div class="phase-head">
     <span class="phase-tag">PER TICKET</span>
     <h2>Testing one ticket: ACME-1234</h2>
-    <p>Plan, generate, run, heal, raise, then the manual cases. Each agent reads its input from disk, so the steps can
-    happen on different days.</p>
+    <p>Plan, generate, run, heal, raise, the manual cases, the report — on the ticket's own branch, each agent
+    committing its own step. Each agent reads its input from disk, so the steps can happen on different days.</p>
   </div>
 
   <div class="sheet" role="table" aria-label="Testing one ticket">
@@ -405,7 +405,10 @@
       <div class="step"><small>1</small>Plan the test cases</div>
       <div><span class="cell-label">You</span><code class="cmd">/playwright-test-planner ACME-1234</code><p class="do">Answer its 7 checkpoints. Checkpoints 1 and 4 matter most.</p></div>
       <div><span class="cell-label">The harness asks</span><div class="talk">
-        <p class="say h"><b>Checkpoint 1</b>Fetched ACME-1234: AC1–AC4, release 2.26, epic ACME-100. AC3 says an invalid code shows an error. Do expired and unknown codes show the same message? I'll build on the 4 old checkout cases.</p>
+        <p class="say h"><b>Git</b>ACME-1234 is in release 2.26 and has no branch yet. Base it on release/2.26 (suggested) or develop?</p>
+        <p class="say u"><b>You</b>release/2.26.</p>
+        <p class="say h"><b>Git</b>Pulled release/2.26 and created test/ACME-1234-discount-code.</p>
+        <p class="say h"><b>Checkpoint 1</b>Fetched ACME-1234: AC1–AC4, release 2.26, epic ACME-100. I read the Figma frame it links for the field and message wording. AC3 says an invalid code shows an error. Do expired and unknown codes show the same message? I'll build on the 4 old checkout cases.</p>
         <p class="say u"><b>You</b>Different messages. Expired: "This code has expired".</p>
         <p class="say h"><b>Checkpoint 4</b>9 scenario titles: TC001 a valid code reduces the total … TC006 removing the code restores the total …</p>
         <p class="say u"><b>You</b>Drop TC008, it duplicates TC002.</p>
@@ -414,7 +417,8 @@
         <p class="say h"><b>Review</b>1 must fix: AC4 has no case that would fail if it broke. A case for it is added before saving.</p>
       </div></div>
       <div class="out"><span class="cell-label">You get</span>
-        <p class="file"><code>specs/ACME-1234.plan.md</code> <span class="pill c">committed</span><span>test cases TC001–TC009: steps, expected result, priority, manual or automated</span></p>
+        <p class="file">Branch <code>test/ACME-1234-discount-code</code><span>from the freshly pulled release/2.26</span></p>
+        <p class="file"><code>specs/ACME-1234.plan.md</code> <span class="pill c">committed</span><span>test cases TC001–TC009: steps, expected result, priority, manual or automated; the review recorded</span></p>
         <p class="file"><code>specs/ACME-1234.plan.csv</code> <span class="pill c">committed</span><span>the same, for a test tool or a spreadsheet</span></p>
         <p class="file"><code>specs/execution/manual-results.csv</code> <span class="pill c">committed</span><span>a Not Run row per manual case</span></p>
       </div>
@@ -437,6 +441,8 @@
         <p class="say h"><b>Harness</b>There's no page object for the discount panel. Create DiscountPanelPage.ts with applyCode()?</p>
         <p class="say u"><b>You</b>Yes.</p>
         <p class="say h"><b>Review, always</b>TC003 only checks the banner appears, not the new total. Fixed: it now asserts the total drops by 10%.</p>
+        <p class="say h"><b>Harness</b>The review is clean. Run these tests now?</p>
+        <p class="say u"><b>You</b>Yes.</p>
       </div></div>
       <div class="out"><span class="cell-label">You get</span>
         <p class="file"><code>tests/stories/2.26/ACME-1234.spec.ts</code> <span class="pill c">committed</span><span>one test per automated case, titled <code>ACME-1234-TC001 Validate that…</code>, tagged @Regression @Priority1 @Checkout</span></p>
@@ -446,8 +452,13 @@
 
     <div class="row" role="row">
       <div class="step"><small>4</small>Run</div>
-      <div><span class="cell-label">You</span><code class="cmd">npx playwright test tests/stories/2.26/ACME-1234.spec.ts</code></div>
-      <div><span class="cell-label">The harness asks</span><div class="talk"><p class="say h"><b>Result</b>7 passed, 2 failed: TC004, TC006.</p></div></div>
+      <div><span class="cell-label">You</span><code class="cmd">/playwright-test-executor ACME-1234</code><p class="do">Or the yes to the generator's offer.</p></div>
+      <div><span class="cell-label">The harness asks</span><div class="talk">
+        <p class="say h"><b>Harness</b>Story run for ACME-1234: 9 tests, chromium, build 2.26.0-rc2. Run it?</p>
+        <p class="say u"><b>You</b>Yes.</p>
+        <p class="say h"><b>Result</b>7 passed, 2 failed, in two groups: TC004 can't find the Apply button; TC006 expected the total back. Heal all, these, skip or stop?</p>
+        <p class="say u"><b>You</b>Heal all.</p>
+      </div></div>
       <div class="out"><span class="cell-label">You get</span>
         <p class="file"><code>specs/execution/automated-results.csv</code> <span class="pill c">committed</span><span>each case's latest result, with the build</span></p>
         <p class="file"><code>reports/cycle-summary-acme-1234-….md</code> <span class="pill n">local</span><span>written automatically as the run ends</span></p>
@@ -457,7 +468,7 @@
 
     <div class="row" role="row">
       <div class="step"><small>5</small>Heal the failures</div>
-      <div><span class="cell-label">You</span><code class="cmd">/playwright-test-healer ACME-1234</code><p class="do">Name what to heal: the ticket, a spec, a test case, or "what failed in the last run". If you name nothing, it lists the last run's failures and asks.</p></div>
+      <div><span class="cell-label">You</span><p class="do">The executor hands over. On its own: <code class="cmd">/playwright-test-healer ACME-1234</code> — the ticket, a spec, a test case, or "what failed in the last run".</p></div>
       <div><span class="cell-label">The harness asks</span><div class="talk">
         <p class="say h"><b>Harness</b>Healing ACME-1234: TC004 and TC006.</p>
         <p class="say h"><b>Harness</b>TC004: the button now reads "Redeem". Updating DiscountPanelPage. It passes now.</p>
@@ -466,14 +477,14 @@
       </div></div>
       <div class="out"><span class="cell-label">You get</span>
         <p class="file">TC004 fixed in the page object</p>
-        <p class="file"><code>specs/defects/defect-log.json</code> <span class="pill c">committed</span><span>TC006, status pending</span></p>
+        <p class="file"><code>specs/defects/log/ACME-1234-TC006-….json</code> <span class="pill c">committed</span><span>TC006, status pending — one file per defect</span></p>
         <p class="file"><code>specs/defects/evidence/ACME-1234-TC006-…/</code> <span class="pill c">committed</span><span>the failure screenshot and page snapshot</span></p>
       </div>
     </div>
 
     <div class="row" role="row">
       <div class="step"><small>6</small>Raise the bug</div>
-      <div><span class="cell-label">You</span><code class="cmd">/playwright-defect-raiser</code><p class="do">It takes every pending defect, or only the ticket or test cases you name.</p></div>
+      <div><span class="cell-label">You</span><p class="do">The executor offers it. On its own: <code class="cmd">/playwright-defect-raiser</code> — every pending defect, or the ticket or test cases you name.</p></div>
       <div><span class="cell-label">The harness asks</span><div class="talk">
         <p class="say note">It first searches Jira for an open bug already labelled ACME-1234-TC006.</p>
         <p class="say h"><b>Harness</b>Create 1 bug? "QA - discount kept after code removed in Checkout". High / Major. Test case TC006, story ACME-1234, 2 screenshots attached.</p>
@@ -489,23 +500,50 @@
       <div class="step"><small>7</small>Run the manual cases</div>
       <div><span class="cell-label">You</span><p class="do">Follow each manual case's steps in the plan. Fill its row: status, who, when, environment.</p></div>
       <div><span class="cell-label">The harness asks</span><div class="talk">
+        <p class="say h"><b>Harness</b>2 manual cases are still Not Run: TC008, TC009. Enter the results now, or leave them?</p>
         <p class="say note">TC009 fails by hand. Tell the healer the test case ID and what happened. It confirms the severity, records the defect the same way, and the raiser files it.</p>
       </div></div>
       <div class="out"><span class="cell-label">You get</span><p class="file"><code>specs/execution/manual-results.csv</code> <span class="pill c">committed</span></p></div>
     </div>
 
     <div class="row" role="row">
-      <div class="step"><small>8</small>Report and commit</div>
-      <div><span class="cell-label">You</span><code class="cmd">npm run report:cycle -- --stories ACME-1234</code><p class="do">Then commit the plan, spec, page objects, <code>specs/execution/</code> and <code>specs/defects/</code>.</p></div>
+      <div class="step"><small>8</small>The report</div>
+      <div><span class="cell-label">You</span><p class="do">The executor offers it. On its own: <code class="cmd">/playwright-test-reporter</code></p></div>
       <div><span class="cell-label">The harness asks</span><div class="talk">
-        <p class="say h"><b>Report</b>8 of 9 passing. AC2 is blocked by a known defect. Open P2 defects: 1, allowed 0. <span class="pill f">not met</span></p>
-        <p class="say note">Moving the story in Jira stays with people, under your team's own workflow.</p>
+        <p class="say h"><b>Harness</b>Which report — ACME-1234, as this run? Which format — Markdown and PDF, as your settings suggest?</p>
+        <p class="say u"><b>You</b>Yes to both.</p>
+        <p class="say h"><b>Report</b>8 of 9 passing. AC2 is blocked by a known defect. Open P2 defects: 1, allowed 0. <span class="pill f">not met</span> Post a test summary comment on ACME-1234?</p>
+        <p class="say u"><b>You</b>Yes.</p>
+        <p class="say note">Every figure comes from the script. Moving the story in Jira stays with people, under your team's own workflow.</p>
       </div></div>
-      <div class="out"><span class="cell-label">You get</span><p class="file">The ticket's cycle report<span>every test case, AC coverage, open defects, exit criteria</span></p></div>
+      <div class="out"><span class="cell-label">You get</span><p class="file"><code>specs/execution/reports/QA-Report_Acme_ACME-1234.md</code> + <code>.pdf</code> <span class="pill c">committed</span><span>every test case, AC coverage, open defects, exit criteria, sign-off; replaced by the next report for this ticket</span></p></div>
     </div>
 
     <div class="row" role="row">
-      <div class="step"><small>9</small>Retest the fix</div>
+      <div class="step"><small>9</small>What the run confirmed</div>
+      <div><span class="cell-label">You</span><p class="do">The executor asks.</p></div>
+      <div><span class="cell-label">The harness asks</span><div class="talk">
+        <p class="say h"><b>Harness</b>From this run: checkout.md rule 3 (DR-12) verified by TC002. Rule 5 (DR-14) contradicted by TC006 — the rule stays, defect ACME-1302 is open. Apply these to the context?</p>
+        <p class="say u"><b>You</b>Yes.</p>
+        <p class="say note">The context-builder records only what you agree to. A test result never becomes a new rule.</p>
+      </div></div>
+      <div class="out"><span class="cell-label">You get</span><p class="file"><code>context/checkout.md</code> <span class="pill c">committed</span><span>a verified mark on rule 3, a caveat naming ACME-1302</span></p></div>
+    </div>
+
+    <div class="row" role="row">
+      <div class="step"><small>10</small>Merge into the release</div>
+      <div><span class="cell-label">You</span><p class="do">The executor asks, once the tests are generated, reviewed and run.</p></div>
+      <div><span class="cell-label">The harness asks</span><div class="talk">
+        <p class="say h"><b>Harness</b>ACME-1234 may merge: generated, reviewed and run, 1 open defect. Bring release/2.26 in and prepare the pull request?</p>
+        <p class="say u"><b>You</b>Yes.</p>
+        <p class="say h"><b>Harness</b>No conflicts; no shared page objects changed. Push the branch and open a pull request into release/2.26?</p>
+        <p class="say u"><b>You</b>Yes.</p>
+      </div></div>
+      <div class="out"><span class="cell-label">You get</span><p class="file">Pull request <code>test(ACME-1234): Apply a discount code at checkout [ready-to-merge]</code><span>merged by the team once reviewed; the open defect goes with it, so the release sees it</span></p></div>
+    </div>
+
+    <div class="row" role="row">
+      <div class="step"><small>11</small>Retest the fix</div>
       <div><span class="cell-label">You</span><code class="cmd">/playwright-test-healer retest raised defects</code></div>
       <div><span class="cell-label">The harness asks</span><div class="talk">
         <p class="say h"><b>Harness</b>ACME-1302 is Done in Jira. TC006 passed twice and is active again. Add a comment to ACME-1302? The transitions it offers are Verified, Reopen, Closed. Which, if any?</p>
@@ -538,8 +576,9 @@
 
     <div class="row" role="row">
       <div class="step"><small>2</small>Run the regression</div>
-      <div><span class="cell-label">You</span><code class="cmd">npm run regression</code><p class="do">For the full regression, answer <code>all</code>. Earlier releases' tests catch what this release broke.</p></div>
+      <div><span class="cell-label">You</span><code class="cmd">/playwright-test-executor</code><p class="do">Say <i>regression for 2.26, epic ACME-100</i>. In a terminal, <code>npm run regression</code> asks the same, below. For the full regression, answer <code>all</code>.</p></div>
       <div><span class="cell-label">The harness asks</span>
+<div class="talk"><p class="say h"><b>Harness</b>Switched to release/2.26 and pulled it. 9 tickets, 64 tests tagged @Regression, chromium, build 2.26.0-rc3. Run it?</p></div>
 <pre class="term"><span class="q">Releases:</span>
   1. 2.25  (14 tickets)
   2. 2.26  (9 tickets)
@@ -557,24 +596,24 @@
 
     <div class="row" role="row">
       <div class="step"><small>3</small>Heal, raise, run manual cases</div>
-      <div><span class="cell-label">You</span><code class="cmd">/playwright-test-healer what failed in the last run</code><code class="cmd" style="margin-top:6px">/playwright-defect-raiser</code></div>
-      <div><span class="cell-label">The harness asks</span><div class="talk"><p class="say h"><b>Harness</b>The last run had 3 failures: ACME-1240-TC002, ACME-1255-TC005, ACME-1255-TC007. Heal all three?</p></div></div>
+      <div><span class="cell-label">You</span><p class="do">The executor carries on, as for one ticket.</p></div>
+      <div><span class="cell-label">The harness asks</span><div class="talk"><p class="say h"><b>Harness</b>3 failures in 2 groups: ACME-1240-TC002; ACME-1255-TC005 and TC007, same error. Heal all, these, skip or stop?</p></div></div>
       <div class="out"><span class="cell-label">You get</span><p class="file">Fixed tests, raised bugs, manual results</p></div>
     </div>
 
     <div class="row" role="row">
       <div class="step"><small>4</small>Report the whole cycle</div>
-      <div><span class="cell-label">You</span><code class="cmd">npm run report:cycle -- --release 2.26 --since 2026-10-01</code></div>
+      <div><span class="cell-label">You</span><code class="cmd">/playwright-test-reporter</code><p class="do">Release 2.26, since the cycle began; PDF and Markdown.</p></div>
       <div><span class="cell-label">The harness asks</span><div class="talk">
         <p class="say note">The record keeps each case's latest result, so a test healed after the regression counts as passing. <code>--since</code> stops last cycle's passes from counting in this one.</p>
         <p class="say h"><b>Report</b>Build 2.26.0-rc3. P1 100%, P2 96%, AC coverage 100%, open P1/P2 defects 0, not executed 0. <span class="pill c">all met</span></p>
       </div></div>
-      <div class="out"><span class="cell-label">You get</span><p class="file">The release's report<span>each test case, pass rate per priority, AC coverage, open defects, each exit criterion</span></p></div>
+      <div class="out"><span class="cell-label">You get</span><p class="file"><code>specs/execution/reports/QA-Report_Acme_release-2.26.pdf</code> <span class="pill c">committed</span><span>each test case, pass rate per priority, AC coverage, open defects, each exit criterion, sign-off</span></p></div>
     </div>
 
     <div class="row" role="row">
       <div class="step"><small>5</small>Decide and keep it</div>
-      <div><span class="cell-label">You</span><code class="cmd">npm run report:cycle -- --release 2.26 --since 2026-10-01 --closure</code><p class="do">Then commit.</p></div>
+      <div><span class="cell-label">You</span><code class="cmd">npm run report:cycle -- --release 2.26 --since 2026-10-01 --closure</code><p class="do">Then commit, and close the branch: pull requests from <code>release/2.26</code> into <code>main</code> and back into <code>develop</code>, each asked.</p></div>
       <div><span class="cell-label">The harness asks</span><div class="talk"><p class="say note">The report states facts. Whether the release closes is a person's decision. Missing a criterion on purpose, with the reason written down, is a valid outcome.</p></div></div>
       <div class="out"><span class="cell-label">You get</span><p class="file"><code>specs/execution/closure/…release-2.26….md</code> <span class="pill c">committed</span><span>the record of what was tested, on which build</span></p></div>
     </div>
@@ -640,12 +679,16 @@
         <tr><td>Plan</td><td><code>/playwright-test-planner &lt;KEY&gt;</code></td><td>How to read the AC, which scenarios</td><td>The plan and its test case IDs</td></tr>
         <tr><td>Generate</td><td><code>/playwright-test-generator &lt;plan&gt;</code></td><td>File path, new page objects, SQL</td><td>The test code, reviewed against the plan</td></tr>
         <tr><td>Review</td><td>Automatic after generating; offered before saving a plan</td><td>Whether to review the plan; which suggestions to take</td><td>Findings, fixed or shown to you</td></tr>
-        <tr><td>Run</td><td><code>npx playwright test …</code></td><td>Nothing</td><td>Results recorded, cycle report</td></tr>
+        <tr><td>Branch</td><td>The planner, through <code>npm run story -- start</code></td><td>The base branch</td><td><code>test/&lt;KEY&gt;-&lt;desc&gt;</code>, freshly pulled</td></tr>
+        <tr><td>Run</td><td><code>/playwright-test-executor</code></td><td>Run it; which failures to heal</td><td>Results recorded, failures to the healer, the rest offered</td></tr>
         <tr><td>Heal</td><td><code>/playwright-test-healer &lt;KEY&gt;</code></td><td>Is it a bug, and how bad</td><td>Fixed tests, or a defect with screenshots</td></tr>
         <tr><td>Raise</td><td><code>/playwright-defect-raiser</code></td><td>Which bugs to file</td><td>Jira bugs, linked, with evidence</td></tr>
         <tr><td>Manual cases</td><td>You, by hand</td><td>Each outcome</td><td>Manual results</td></tr>
         <tr><td>Retest</td><td><code>/playwright-test-healer</code>, retest</td><td>Comment, and which transition</td><td>Test active again, Jira updated</td></tr>
-        <tr><td>Regression</td><td><code>npm run regression</code></td><td>Release, then epics or tickets</td><td>The release's cycle report</td></tr>
+        <tr><td>Report</td><td><code>/playwright-test-reporter</code></td><td>Scope, format, the Jira comment</td><td>The formal report, committed</td></tr>
+        <tr><td>Context sync</td><td>Offered by the executor</td><td>Which suggestions to apply</td><td>Rules marked verified, caveats for open defects</td></tr>
+        <tr><td>Merge</td><td>Offered by the executor, <code>npm run story -- finish</code></td><td>Push, and the pull request</td><td>The story in its release branch</td></tr>
+        <tr><td>Regression</td><td><code>/playwright-test-executor</code> or <code>npm run regression</code></td><td>Release, then epics or tickets</td><td>The release's cycle report</td></tr>
         <tr><td>Closure</td><td><code>npm run report:cycle -- --closure</code></td><td>Close or not</td><td>The committed final report</td></tr>
         <tr><td>The harness falls short</td><td><code>/playwright-harness-improver</code></td><td>The problem, and the change</td><td>The harness adjusted, recorded in <code>HARNESS-CHANGES.md</code></td></tr>
       </tbody>

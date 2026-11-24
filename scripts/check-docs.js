@@ -274,6 +274,16 @@ for (const secret of ['.env', '.mcp.json']) {
     if (exists(secret)) notes.push(`${secret} exists locally${inGit ? ' (correctly untracked)' : ''}`);
 }
 
+// The records are committed so the whole team shares them; an ignore rule that catches them loses them silently.
+// A bare `reports/` once did, hiding every formal report in specs/execution/reports/.
+if (inGit) {
+    for (const record of ['specs/execution/reports/QA-Report_x.md', 'specs/execution/closure/x.md', 'specs/defects/log/x.json']) {
+        let ignored = true;
+        try { execFileSync('git', ['check-ignore', '-q', record], { cwd: root, stdio: 'ignore' }); } catch { ignored = false; }
+        check(`.gitignore ignores ${path.dirname(record)}/`, !ignored, 'records there must be committed — anchor the rule, e.g. /reports/ rather than reports/');
+    }
+}
+
 // ---------------------------------------------------------------- generator target folder
 
 check(

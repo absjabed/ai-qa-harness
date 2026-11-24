@@ -13,7 +13,7 @@ purpose, with `--example`.
 |---|---|
 | [`demo-app/`](demo-app/README.md) | The app: drivers report vehicle defects, the transport manager triages them and raises job cards, technicians fix them, and a vehicle returns to service only when every category-A defect on it is closed. `node server.js`, no install. **One defect is planted** — [`KNOWN-DEFECT.md`](demo-app/KNOWN-DEFECT.md) says what; don't read it until you have tried to find it. |
 | `qa-setup/` | A practice QA repo's setup, as changes on top of an export: the three roles and a login file each, the login, signed-in and sign-out selectors, the demo data reset through the app, profile section 1, and `.env.example` filled with the demo accounts. |
-| `worked-cycle/` | What one ticket's full cycle left behind, on top of `qa-setup`: FK-1304's plan and spec, the page objects and fixtures it needed, the results record, the planted defect logged with its screenshot, raised as a CSV bug and verified after the fix, the release 2.26 closure report, and `HARNESS-CHANGES.md` entries. |
+| `worked-cycle/` | What one ticket's full cycle left behind, on top of `qa-setup`: FK-1304's plan and spec, the page objects and fixtures it needed, the results record, the planted defect logged with its screenshot, raised as a CSV bug and verified after the fix, the Vehicles context document its run verified, the release 2.26 formal report and closure report, and `HARNESS-CHANGES.md` entries. |
 
 Both layers are lists of changes (`overlay.json`) plus the project's own new files — never copies of harness
 files — so they keep up as the template improves. `npm run check` fails if a template change stops one

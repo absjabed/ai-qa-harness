@@ -1,5 +1,5 @@
 {
-  "description": "What one ticket's full cycle left behind: FK-1304's plan and spec, the Vehicles context document its run verified, the page objects and fixtures it needed, the results, the planted defect logged with its evidence, raised as a CSV bug and verified after the fix, the release 2.26 closure report, and HARNESS-CHANGES.md entries. Applied on top of qa-setup.",
+  "description": "What one ticket's full cycle left behind: FK-1304's plan and spec, the Vehicles context document its run verified, the page objects and fixtures it needed, the results, the planted defect logged with its evidence, raised as a CSV bug and verified after the fix, the release 2.26 formal report and closure report, and HARNESS-CHANGES.md entries. Applied on top of qa-setup.",
   "files": [
     "context/vehicles.md",
     "pages/FleetPages.ts",
@@ -9,7 +9,8 @@
     "specs/defects/log/FK-1304-TC002-1791999759.json",
     "specs/defects/evidence/FK-1304-TC002-1791999759/error-context.md",
     "specs/defects/evidence/FK-1304-TC002-1791999759/test-failed-1.png",
-    "specs/execution/closure/cycle-summary-release-2.26-2026-10-14-17-45.md"
+    "specs/execution/closure/cycle-summary-release-2.26-2026-10-14-17-45.md",
+    "specs/execution/reports/QA-Report_FleetKeep_release-2.26.md"
   ],
   "replaces": [
     "specs/execution/automated-results.csv",

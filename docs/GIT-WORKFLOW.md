@@ -76,12 +76,17 @@ One line, no body:
 | `harness` | The harness itself changes, on `harness/<desc>` | `harness` |
 
 `context` and `harness` commits have no key: `context: vehicles, defects [context-updated]`. For a release's
-regression the key is the release: `test-run(2.26): regression, 41 passed, 2 failed [run]`.
+regression the key is the release: `test-run(2.26): regression, 41 passed, 2 failed [run]`. A narrow re-run
+is committed with its own counts: `test-run(<KEY>): re-run <TCIDs>, 1 passed, 0 failed [run]`. A retest's
+`defect-verified` commit holds the spec, the defect entry and the results file, on the branch the spec lives
+on — the release branch once the story is merged.
 A story put on hold — blocked by a defect or a question — gets a commit ending `[on-hold]`, and its branch is
 pushed (asked first) so the work is not only on one machine.
 
 Each agent commits **its own** files at the end of its stage, after saying what it will commit. It never
 commits `.env`, `.mcp.json`, `test-results/` or `reports/` — `.gitignore` keeps them out, and it checks.
+It commits in the plain one-line `git commit -m` form, from the repo root — no `cd … &&` or `git -C` — and a
+refused commit is reported once, never retried in another form.
 
 ## When a story merges
 

@@ -116,7 +116,7 @@ harness in Claude Code:
 |---|---|
 | **Deny** | Reading `.env` and `.mcp.json` — agents never see a password. The database server's write tools. Jira deletes, worklogs, sprints, boards, versions and project admin. |
 | **Ask** | Creating, editing or moving a Jira issue, linking one, commenting, attaching. A person approves every write to the tracker. |
-| **Allow** | The read-only database and Jira tools, so agents do not prompt on every lookup. |
+| **Allow** | The read-only database and Jira tools, so agents do not prompt on every lookup; the Playwright test server's tools; the commands the agents run — the harness's own scripts, `npm run check` and its parts, `npx playwright test`. |
 
 Database writes are denied because nothing in the harness needs them — `data/seed.ts` writes through the
 suite's own connection, not the agents'. If your team later wants an agent to write, move those tools from

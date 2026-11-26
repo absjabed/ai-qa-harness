@@ -68,10 +68,12 @@ story run. Or start it yourself:
 /playwright-test-executor ACME-1234
 ```
 
-It shows what it will run — the tests, the browser, the build — and waits for a yes, then runs them. From
-there it takes any failures to the healer (step 5), confirmed defects to the defect-raiser (step 6), asks for
+It shows what it will run — the tests, the browser, the build — and waits for a yes, then runs them in the
+foreground, story by story if the run is long. A narrow re-run you ask for — these TCIDs — shows the dry run
+without a second yes and is committed with its own counts. From there it takes any failures to the healer (step 5), confirmed defects to the defect-raiser (step 6), asks for
 the manual results (step 7), offers the report, and lists what the run confirmed in `context/` — rules
 verified or contradicted, known unknowns a case may answer — for the context-builder to apply on your yes.
+It takes the session back after every hand-over, so later runs, reports and syncs go through it.
 Running by hand still works:
 
 ```bash
@@ -90,7 +92,8 @@ cycle report for that story is written to `reports/` — no separate step.
 Name what to heal — the story key, a spec, a TCID, or "what failed in the last run". Name nothing and it
 lists the last run's failures and asks. Three attempts per test. If it finds a genuine bug it stops and asks
 you to confirm it and its severity, then keeps the screenshots in `specs/defects/evidence/`. When it is done
-it runs the healed spec once more, so the record has the final results.
+it runs any spec it changed once more, so the record has the final results. A call that is refused it never
+reroutes: it gives you the exact command to run instead.
 
 ### Step 6 — File confirmed defects
 
@@ -307,7 +310,9 @@ Each release has its tickets — the plans whose `**Release:**` names it — and
 The STLC's last phase depends on the TCIDs being intact end to end, which is why I8 exists.
 
 1. **Name the build and retest anything reported fixed.** Set `BUILD_UNDER_TEST` in `.env` to the build
-   deployed for testing — it is recorded with every result and printed in the report. Then retest (workflow
+   deployed for testing — it is recorded with every result and printed in the report — and, optionally,
+   `TEST_ENVIRONMENT` to the environment's name (QA, UAT), which the report prints in place of the `BASE_URL`
+   host. Then retest (workflow
    9): a defect fixed in the tracker but still `fixme`'d here counts as blocked coverage.
 2. **Run the regression** — with `/playwright-test-executor`: say *regression for 2.26*. It shows the
    selection from a dry run and waits for a yes, then runs it and sees it through — steps 4 and 5 below,
@@ -361,7 +366,7 @@ The STLC's last phase depends on the TCIDs being intact end to end, which is why
    ticket in Jira.
 
 **The report after every run.** Any `playwright test` run — one spec, a whole folder — writes a cycle report
-for the stories it ran, without being asked. `AUTO_CYCLE_REPORT=false` in `.env` turns that off.
+for the stories it ran, without being asked; `npx playwright test --list` runs nothing and records nothing. `AUTO_CYCLE_REPORT=false` in `.env` turns that off.
 `npm run report:cycle` is always there to build one by hand: for everything, `--release`, or `--stories`, and
 `--strict` to exit non-zero when a criterion is unmet.
 
@@ -384,7 +389,8 @@ A `test.fixme` is only correct while its bug is open. Once it is fixed, the skip
    Fails either → `fixme` restored exactly, entry stays `raised`, retest recorded — worth telling whoever
    marked the ticket fixed. With a tracker it offers, asking first, to comment the result on the bug and
    to move it: it lists the transitions your team's Jira workflow offers on that bug, and applies only the
-   one you pick.
+   one you pick. It commits the spec, the entry and the results file together, on the branch the spec lives
+   on — the release branch once the story is merged.
 
 ---
 
@@ -449,7 +455,8 @@ the application, fix the document in the same change as the test.
 
 **After a run**, the executor offers a narrow *context sync*: `npm run context:sync` links the run's test cases
 to the rules they verified or contradicted, and the context-builder records only what you agree to — a
-`verified:` mark, a caveat naming an open defect, a known unknown answered. A result never becomes a new rule.
+`verified:` mark, a caveat naming an open defect, a known unknown answered. A rule with an open defect gets no
+`verified:` mark — its passing cases are held until the defect is fixed. A result never becomes a new rule.
 
 ---
 

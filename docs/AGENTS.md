@@ -55,6 +55,11 @@ or a SQL query when it can't find one — it flags the gap.
 unregistered module tag stops the run. A missing SQL query stops the run. Every one of those is a point
 where a guess would produce work that looks right and is wrong.
 
+**They run commands plainly and never work around a refusal.** Each command runs on its own from the repo
+root — no `cd … &&`, pipe or `git -C`, which turn an allowed command into a refused one — and a refused call
+is reported once, never retried in another form. A timestamp they record comes from `npm run env -- now`,
+never estimated.
+
 ---
 
 ## `/playwright-context-builder`
@@ -359,14 +364,20 @@ Runs the tests and sees the run through to a report.
   `all` for every release.
 
 It shows the selection from a dry run — tickets, test count, browsers, build — and waits for a yes. Running
-touches a shared environment, so it never starts without one.
+touches a shared environment, so it never starts without one. A narrow re-run you ask for in so many words —
+these TCIDs, on this build — needs the dry run shown, not a second yes, and is committed with that run's own
+counts.
+
+It always runs in the foreground — a background run ends with a non-interactive session, cut off part-way —
+and splits a run that could outlast the command time limit story by story.
 
 ### After the run
 
 1. `npm run results:last` groups the failures by spec and error. It asks **once**: heal all, heal these groups,
    skip, or stop.
-2. It hands over to the healer with that scope, then re-reads the results and the defect log to say where the
-   run stands — it never relies on memory for a count.
+2. It hands over to the healer with that scope, then takes the session back and re-reads the results and the
+   defect log to say where the run stands — it never relies on memory for a count. It takes the session back
+   after every hand-over, so later runs, reports and syncs go through it.
 3. It offers the defect-raiser for pending defects.
 4. It asks about manual cases still not run: enter results now, or leave them.
 5. It offers the report, suggesting this run's scope.
@@ -390,7 +401,7 @@ Diagnoses and fixes failing tests. Stops short of filing defects.
 | | |
 |---|---|
 | **Model** | opus |
-| **Tools** | Read/Edit/Write + Playwright MCP snapshot, console, network, `test_run`, `test_debug`, `test_list`, and `AskUserQuestion`; the database's and tracker's read tools, if wired |
+| **Tools** | Read/Edit/Write + Playwright MCP snapshot, console, network, `test_run`, `test_debug`, `test_list`, `browser_resume`, and `AskUserQuestion`; `npx playwright test` for a re-run; the database's and tracker's read tools, if wired |
 | **Input** | What to heal: a story key, spec files, TCIDs, or the last run's failures — it asks if not told |
 | **Output** | Fixed tests, or an entry in `specs/defects/log/` with its evidence in `specs/defects/evidence/` |
 
@@ -398,9 +409,12 @@ Diagnoses and fixes failing tests. Stops short of filing defects.
 
 What you point it at — `PROJ-1234`, a spec, a TCID, or "what failed in the last run", read from
 `test-results/results.json`. Point it at nothing and it lists the last run's failures and asks which; it runs
-the whole suite only when asked for exactly that. When it finishes, it runs the healed specs once more
-through the test runner, so the fixed results reach `specs/execution/automated-results.csv` and the cycle
-report.
+the whole suite only when asked for exactly that. If it changed a test, it runs the healed specs once more
+with `npx playwright test`, so the fixed results reach `specs/execution/automated-results.csv` and the cycle
+report; healed nothing, no re-run.
+
+A refused call is never rerouted — through another command, the MCP test runner or `npm run regression`. It
+says what was refused and gives you the exact command to run.
 
 ### The three-attempt rule
 
@@ -474,6 +488,9 @@ shows as done — and says which it found. Without one, tell it which were fixed
 - **passes both times** → keeps it active, removes the defect comment, marks the log entry `verified`
 - **fails either time** → restores the `fixme` exactly, leaves the entry `raised`, records the retest
 
+It commits the spec, the entry and `specs/execution/automated-results.csv` together, on the branch the spec
+lives on — the release branch once the story is merged.
+
 With a tracker, it offers to record the result on the bug — asking first: a comment, and a status change.
 The statuses come from your team's own Jira workflow: it lists the transitions that bug currently offers and
 asks which one, if any, to apply. It never picks one itself, and edits nothing else on the bug.
@@ -490,7 +507,8 @@ tag, which is test-coverage priority, not defect impact.
 
 On your confirmation it writes the entry as its own file in `specs/defects/log/`, then runs `npm run defect:evidence`,
 which copies the failure's screenshots and page snapshot into `specs/defects/evidence/<entry id>/` before the
-next run wipes `test-results/`. It does not file the bug and does not mark the test `fixme()`. The test stays
+next run wipes `test-results/`. If none are left, it re-runs that one test — `npx playwright test <spec> -g
+<TCID>`, or asks you to, never a wider run — and runs the script again. It does not file the bug and does not mark the test `fixme()`. The test stays
 red until the defect-raiser processes it.
 
 ### Defects found by hand

@@ -196,6 +196,9 @@ about each tool instead. The `deny` and `ask` rules apply from the start, truste
 depends on it. A headless run (`claude -p`) shows no dialog: open the repo interactively once and accept it
 first.
 
+A rule matches a command by how it starts, so the agents run each command plainly from the repo root — no
+`cd … &&`, pipe or `git -C` — and report a refused call once, never retrying it in another form.
+
 These are a second line behind the agents' own instructions, not a sandbox — a shell command can still read
 a file the `Read` rule denies. Personal overrides belong in `.claude/settings.local.json`, which is
 gitignored.

@@ -87,7 +87,8 @@ Propose the **smallest change in the right layer**, and show it exactly before m
 - **what else it touches** — every other agent that reads the same file or cites the same rule, and every
   doc that restates it (`docs/index.html`, `docs/AGENTS.md`, `docs/WORKFLOWS.md`, `docs/COMPONENTS.md`,
   `SETUP.md`, `README.md`, `docs/NEW-QA-REPO.md`, `docs/qa-harness-walkthrough.html`,
-  `docs/harness-docs/ai-qa-harness.md` and its draw.io diagrams). Search for how the
+  `docs/harness-docs/ai-qa-harness.md` and its draw.io diagrams — `docs/how-it-works.html` is generated from it,
+  so after editing the `.md` run `python docs/harness-docs/build-html.py`). Search for how the
   behavior is *described*, not only for the agent's name;
 - **how to check it worked** — the same input run again, and what should now come out.
 

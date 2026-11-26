@@ -167,6 +167,11 @@ the agents you want. Each entry lists the files to port.
 - **Documentation** — **Optional.** The developer guide gains running tests and the git workflow, with 13
   diagrams; the handbook, the walkthrough, the deck, `docs/AGENTS.md`, `docs/COMPONENTS.md`, `docs/MCP.md` and
   `docs/WORKFLOWS.md` cover the new agents and the workflow.
+- **The developer guide, redrawn and published as a page** — **Optional.** The testing lifecycle now runs once per
+  ticket from the Jira story, with set-up moved to its own section; a new page and section cover the results
+  record and the cycle report (14 diagrams); the guide and every diagram label read without dashes and say Jira
+  for the issue tracker. `docs/how-it-works.html` is generated from the guide by
+  `docs/harness-docs/build-html.py` (`--check` reports a stale page); edit the Markdown, then run it.
 - **The practice example** — template only. The FleetKeep worked cycle gains a Vehicles context document
   its run verified.
 

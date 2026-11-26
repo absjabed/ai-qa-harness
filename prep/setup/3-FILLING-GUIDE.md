@@ -74,7 +74,8 @@ write, and is used only by the test runner.
 ### `decisions.md` — environment, scope, severity, exit criteria
 
 **Environment:** the full address of the QA or staging site, as you would type it in a browser, with
-`https://` and no trailing slash: `https://<qa-host>`. Not production, ever.
+`https://` and no trailing slash: `https://<qa-host>`. Not production, ever. Give its name too — QA, UAT —
+which goes in `TEST_ENVIRONMENT`: reports print the name, never the address.
 
 **Areas to stay out of:** be specific — the screen or menu, and why: *"Admin → Payments → Run batch — opening
 it starts a batch"*, *"Integrations — shared with another team's tests"*.

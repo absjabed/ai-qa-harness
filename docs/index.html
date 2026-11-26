@@ -1156,7 +1156,7 @@ cp .mcp.json.example .mcp.json</code></pre>
                   <tbody>
                     <tr><td><b>Deny</b></td><td>Reading <code>.env</code> and <code>.mcp.json</code> — agents never see a password. The database server's write tools — nothing in the harness needs them. Jira deletes, worklogs, sprints, boards, versions, project admin.</td></tr>
                     <tr><td><b>Ask</b></td><td>Creating, editing, moving, linking, commenting on or attaching to a Jira issue — a person approves every tracker write.</td></tr>
-                    <tr><td><b>Allow</b></td><td>The read-only database and Jira tools, so lookups don't prompt.</td></tr>
+                    <tr><td><b>Allow</b></td><td>The read-only database and Jira tools, so lookups don't prompt; the Playwright test server's tools; the commands the agents run — the harness's own scripts, <code>npm run check</code> and its parts, <code>npx playwright test</code>.</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -1935,9 +1935,14 @@ Run it? [Y/n]: y</code></pre>
           <li><b>What it confirmed</b> — the <code>context/</code> rules the run verified or contradicted, and
           known unknowns a case may answer: apply them, through the context-builder?</li>
         </ul>
-        <p>Every figure it gives comes from <code>npm run regression -- --dry-run</code> and
-        <code>npm run results:last</code>. After each hand-over it reads them again, so a long session never
-        works from a stale memory of the run; a session that ends mid-way picks up from the last run.</p>
+        <p>It always runs the tests in the foreground — a background run ends with a non-interactive session —
+        and splits a run that could outlast the command time limit story by story. A narrow re-run you ask for
+        in so many words — these TCIDs, on this build — shows the dry run but needs no second yes, and is
+        committed with that run's own counts.</p>
+        <p>Every figure it gives comes from <code>npm run regression -- --dry-run</code>,
+        <code>npm run results:last</code> and <code>npm run story -- status</code>. After each hand-over it takes
+        the session back and reads them again, so later runs, reports and syncs go through it and a long session
+        never works from a stale memory of the run; a session that ends mid-way picks up from the last run.</p>
       </article>
 
       <!-- healer -->
@@ -1964,9 +1969,10 @@ Run it? [Y/n]: y</code></pre>
         <h4>What it heals</h4>
         <p>What you name: <code>/playwright-test-healer ACME-1234</code>, a spec, a TCID, or "what failed in
         the last run" — read from <code>test-results/results.json</code>. Name nothing and it lists the last
-        run's failures and asks which; it runs the whole suite only when asked for exactly that. When it
-        finishes it runs the healed specs once more through the test runner, so the fixed results reach the
-        record and the cycle report.</p>
+        run's failures and asks which; it runs the whole suite only when asked for exactly that. If it changed a
+        test, it runs the healed specs once more with <code>npx playwright test</code>, so the fixed results reach
+        the record and the cycle report; healed nothing, no re-run. A refused call it never reroutes through
+        another runner or command: it says what was refused and gives you the exact command to run.</p>
 
         <h4>The three-attempt rule</h4>
         <p>Up to 3 fix attempts per test, then one of three things:</p>
@@ -2046,7 +2052,8 @@ Run it? [Y/n]: y</code></pre>
         shows as done; otherwise the ones you name. It switches each <code>test.fixme(</code> back to
         <code>test(</code> and runs it twice. Passes both → active again, log entry marked
         <code>verified</code>. Fails either → the <code>fixme</code> is restored exactly and the entry stays
-        <code>raised</code>.</p>
+        <code>raised</code>. It commits the spec, the log entry and the results file together, on the branch the
+        spec lives on — the release branch once the story is merged.</p>
         <p>With Jira connected it then offers, asking first, to comment the result on the bug and to move its
         status. The statuses are your team's own Jira workflow: it lists the transitions that bug offers and
         applies only the one you pick — never one of its own choosing.</p>
@@ -2058,7 +2065,9 @@ Run it? [Y/n]: y</code></pre>
         tag, which is coverage priority, not defect impact.</p>
         <p>On your confirmation it writes the entry as its own file in <code>specs/defects/log/</code> and runs
         <code>npm run defect:evidence</code>, which keeps the failure's screenshots and page snapshot in
-        <code>specs/defects/evidence/&lt;entry id&gt;/</code> before the next run wipes them. It does not file
+        <code>specs/defects/evidence/&lt;entry id&gt;/</code> before the next run wipes them. If none are left, it
+        re-runs that one test — <code>npx playwright test &lt;spec&gt; -g &lt;TCID&gt;</code>, or asks you to, never
+        a wider run — and keeps them then. It does not file
         the bug and does not mark the test <code>fixme()</code>. The test stays red until the defect-raiser
         runs.</p>
 
@@ -2323,7 +2332,8 @@ Run it? [Y/n]: y</code></pre>
       <code>--release all</code>.</p>
       <p>As the run ends, each test case's result is recorded in
       <code>specs/execution/automated-results.csv</code> — with the build under test, <code>BUILD_UNDER_TEST</code>
-      in <code>.env</code> — and the cycle report is written for exactly that selection; after any other run,
+      in <code>.env</code> — and the cycle report, naming the environment by <code>TEST_ENVIRONMENT</code> (QA, UAT),
+      never the <code>BASE_URL</code> host, is written for exactly that selection; after any other run,
       for the stories it ran. Because the record keeps each case's latest result, the report covers the whole
       cycle — the regression, the healer's re-runs, the retests — not just the last run.
       <code>npm run report:cycle</code> rebuilds it by hand, for example after recording manual results;
@@ -2331,7 +2341,7 @@ Run it? [Y/n]: y</code></pre>
       writes the final report to <code>specs/execution/closure/</code> to commit. It reads the plans, the
       automated and manual records and the defect log, and writes <code>reports/cycle-summary-&lt;scope&gt;-&lt;time&gt;.md</code>: every test case's outcome — Passed, Flaky, Failed,
       Blocked by a known defect, Skipped, or Not Run — pass rates by priority, acceptance-criteria coverage
-      per story, open defects, traceability gaps, and each exit criterion marked met or not.</p>
+      per story (an AC passes only when every one of its test cases does), open defects, traceability gaps, and each exit criterion marked met or not.</p>
       <div class="note">
         <p><strong>It reports; it does not decide.</strong> Closing a cycle is a person's call, and a criterion
         missed knowingly — with the reason written down — is a legitimate outcome. <code>--strict</code> exits
@@ -2511,7 +2521,10 @@ Run it? [Y/n]: y</code></pre>
         <p>Agents may not read <code>.env</code> or <code>.mcp.json</code>, may not call the database
         server's write tools, and may not delete anything in Jira. Creating, editing, moving, linking or
         commenting on a Jira issue always asks a person first. Read-only lookups are pre-approved so they
-        do not prompt. It is a second line behind the agents' own instructions — not a sandbox.</p>
+        do not prompt, and so are the commands the agents run — the harness's own scripts,
+        <code>npm run check</code> and its parts, <code>npx playwright test</code>. A rule matches a command by how it starts, so agents run each one plainly from the repo root — no
+        <code>cd … &amp;&amp;</code>, pipe or <code>git -C</code> — and never retry a refused call in another form.
+        It is a second line behind the agents' own instructions — not a sandbox.</p>
         <p class="you-do"><b>You touch it:</b> only if you rename a server key in <code>.mcp.json</code> or
         choose a different database or tracker server — the rules name their tools. Personal overrides go in
         <code>.claude/settings.local.json</code>.</p>
@@ -3031,9 +3044,9 @@ Run it? [Y/n]: y</code></pre>
             <tr><td><code>npm run regression</code></td><td>A client release's regression — choose the release (or <em>all</em>), then its tickets or epics; writes the cycle report</td></tr>
             <tr><td><code>npm run test:regression</code></td><td>Every test tagged <code>@Regression</code>, no selection</td></tr>
             <tr><td><code>npm run story -- status</code></td><td>Where each story is and whether it may merge; <code>start</code>, <code>switch</code>, <code>release-start</code>, <code>finish</code> — see <code>docs/GIT-WORKFLOW.md</code></td></tr>
-            <tr><td><code>npm run env -- get &lt;KEY&gt;</code></td><td>An allow-listed, non-secret setting from <code>.env</code></td></tr>
+            <tr><td><code>npm run env -- get &lt;KEY&gt;</code></td><td>An allow-listed, non-secret setting from <code>.env</code>, <code>TEST_ENVIRONMENT</code> among them; <code>npm run env -- now</code> is the clock agents use for a timestamp they record</td></tr>
             <tr><td><code>npm run results:last</code></td><td>The last run's results, failures grouped by spec and error; <code>--text</code> for a summary</td></tr>
-            <tr><td><code>npm run context:sync</code></td><td>Which <code>context/</code> rules the last run verified or contradicted, and known unknowns it may answer — suggestions only</td></tr>
+            <tr><td><code>npm run context:sync</code></td><td>Which <code>context/</code> rules the last run verified or contradicted, and known unknowns it may answer — suggestions only; a rule with an open defect gets no verified mark</td></tr>
             <tr><td><code>npm run test:headed</code></td><td>Watched</td></tr>
             <tr><td><code>npm run test:debug</code></td><td>Stepped through the inspector</td></tr>
             <tr><td><code>npm run test:ui</code></td><td>Interactive UI mode</td></tr>
@@ -3091,7 +3104,8 @@ npx playwright test --project=api                                 # API only</co
         <a href="GIT-WORKFLOW.md">GIT-WORKFLOW.md</a> ·
         <a href="qa-harness-intro.html">team intro slides</a> ·
         <a href="qa-harness-walkthrough.html">cycle walkthrough</a> ·
-        <a href="harness-docs/ai-qa-harness.md">developer guide with diagrams</a> ·
+        <a href="how-it-works.html">developer guide with diagrams</a>
+        (<a href="harness-docs/ai-qa-harness.md">Markdown source</a>) ·
         <a href="../SETUP.md">SETUP.md</a> ·
         <a href="../PROJECT-PROFILE.md">PROJECT-PROFILE.md</a> ·
         <a href="../context/README.md">context/README.md</a>

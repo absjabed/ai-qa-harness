@@ -7,7 +7,7 @@ Answer what you can now; the rest is decided after the context-builder. On setup
 
 | Question | Answer |
 |---|---|
-| Environment the harness runs against — QA or staging, **never production** | |
+| Environment the harness runs against — QA or staging, **never production** — by the name reports print (`TEST_ENVIRONMENT`) | |
 | Its address (`BASE_URL`) — with `https://`, no trailing slash | |
 | Areas the agents must stay out of — out of scope, or where even opening a screen has an effect | |
 | Who has been told someone will be exploring the environment | |

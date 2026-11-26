@@ -523,7 +523,7 @@
       <div class="step"><small>9</small>What the run confirmed</div>
       <div><span class="cell-label">You</span><p class="do">The executor asks.</p></div>
       <div><span class="cell-label">The harness asks</span><div class="talk">
-        <p class="say h"><b>Harness</b>From this run: checkout.md rule 3 (DR-12) verified by TC002. Rule 5 (DR-14) contradicted by TC006 — the rule stays, defect ACME-1302 is open. Apply these to the context?</p>
+        <p class="say h"><b>Harness</b>From this run: checkout.md rule 3 (DR-12) verified by TC002. Rule 5 (DR-14) contradicted by TC006 — the rule stays, and its passing cases are held, not verified, while defect ACME-1302 is open. Apply these to the context?</p>
         <p class="say u"><b>You</b>Yes.</p>
         <p class="say note">The context-builder records only what you agree to. A test result never becomes a new rule.</p>
       </div></div>
@@ -549,7 +549,7 @@
         <p class="say h"><b>Harness</b>ACME-1302 is Done in Jira. TC006 passed twice and is active again. Add a comment to ACME-1302? The transitions it offers are Verified, Reopen, Closed. Which, if any?</p>
         <p class="say u"><b>You</b>Comment, and Verified.</p>
       </div></div>
-      <div class="out"><span class="cell-label">You get</span><p class="file">The defect marked verified<span>the test counts again; Jira updated as you chose</span></p></div>
+      <div class="out"><span class="cell-label">You get</span><p class="file">The defect marked verified <span class="pill c">committed</span><span>the spec, the entry and the results, on the branch the spec lives on; the test counts again; Jira updated as you chose</span></p></div>
     </div>
   </div>
 </section>
@@ -606,7 +606,7 @@
       <div><span class="cell-label">You</span><code class="cmd">/playwright-test-reporter</code><p class="do">Release 2.26, since the cycle began; PDF and Markdown.</p></div>
       <div><span class="cell-label">The harness asks</span><div class="talk">
         <p class="say note">The record keeps each case's latest result, so a test healed after the regression counts as passing. <code>--since</code> stops last cycle's passes from counting in this one.</p>
-        <p class="say h"><b>Report</b>Build 2.26.0-rc3. P1 100%, P2 96%, AC coverage 100%, open P1/P2 defects 0, not executed 0. <span class="pill c">all met</span></p>
+        <p class="say h"><b>Report</b>Build 2.26.0-rc3. P1 100%, P2 96%, ACs with every case passing 100%, open P1/P2 defects 0, not executed 0. <span class="pill c">all met</span></p>
       </div></div>
       <div class="out"><span class="cell-label">You get</span><p class="file"><code>specs/execution/reports/QA-Report_Acme_release-2.26.pdf</code> <span class="pill c">committed</span><span>each test case, pass rate per priority, AC coverage, open defects, each exit criterion, sign-off</span></p></div>
     </div>

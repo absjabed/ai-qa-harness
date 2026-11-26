@@ -39,9 +39,141 @@ commit, in each copy's `PROJECT-PROFILE.md` section 1 as the *harness* version.
 plan and the `tests/stories/<release>/` folders, which regression and the cycle report run by. The two
 numbers never share a field.
 
-**For now it stays 1.0.0, pre-release:** changes are not listed here — git history has them — and a copy is
-identified by the commit recorded in its profile. Once the version moves on, every change gets an entry at
-the top of this file with a new version number, marked **Adopt**, **Optional** or **New copies only**.
+**1.0.0 was the pre-release baseline:** its changes were not listed — git history has them — and a copy made
+from it is identified by the commit recorded in its profile. From 1.1.0 on, every change gets an entry at the
+top of this file with a new version number, marked **Adopt**, **Optional** or **New copies only**.
+
+---
+
+## 1.1.0
+
+Two agents that finish the cycle — one runs the tests and sees the run through, one writes the report — plus a
+git workflow for a project's QA repo, designs from Figma, and context that a run can confirm. Nine agents now.
+
+**For a copy on 1.0.0**, in order: the records changes first (they stop merge conflicts on their own), then
+the agents you want. Each entry lists the files to port.
+
+- **Records that merge cleanly** — **Adopt.** The results CSVs merge with `merge=union` and the scripts read the
+  newest row per test case; each defect is its own file in `specs/defects/log/<entry id>.json` instead of one
+  `defect-log.json`, so two branches recording defects never conflict. A copy's old `defect-log.json` is still
+  read; `npm run defect:evidence` writes its entries out as files.
+  Port: `.gitattributes`, `scripts/lib/defects.ts`, `scripts/lib/cycle.ts`, `scripts/defect-evidence.ts`, the
+  healer's and defect-raiser's defect-log wording, `specs/defects/log/.gitkeep`.
+- **`/playwright-test-executor`** — **Adopt.** Runs one story's tests or a release's regression, confirmed from a
+  dry run first, headless in the foreground. Groups the failures and asks once — heal all, these, skip or stop
+  — hands over to the healer, then offers the defect-raiser, the manual cases still Not Run, the report, the
+  context sync and, for a story, the merge. Every figure comes from the scripts. The generator now asks *run
+  these tests now?* after a clean review.
+  Port: `agents/playwright-test-executor.md` and its wrapper, `scripts/last-run.ts` (`npm run results:last`),
+  `scripts/regression.ts` (`--dry-run`, `--grep`, `--headless`, `--stories`/`--epics` without `--release`), the
+  generator's hand-over.
+- **`/playwright-test-reporter`** — **Adopt.** The formal test report for a story, several, an epic or a
+  release, in Markdown, HTML or PDF, asked every time; one report per scope in `specs/execution/reports/`,
+  replaced by the next. Verdict banner, headline figures, a status bar, details led by the story or release,
+  exit criteria, results split automated and manual, sign-off. Jira titles and status when connected; a test
+  summary comment on each story, asked first. The numbers come only from `npm run report:cycle`, which gains
+  `--epics`, `--formal`, `--format`, `--by`, `--jira`, `--notes`, `--list`, `--defaults` and `--preview`.
+  Port: `agents/playwright-test-reporter.md` and its wrapper, `scripts/cycle-report.ts`, `scripts/lib/cycle.ts`,
+  `scripts/lib/report-render.ts`, `QA_TESTER_NAME` and `QA_REPORT_FORMAT` in `.env.example`, and `.gitignore`'s
+  `/reports/` — anchored, because a bare `reports/` also ignores `specs/execution/reports/`; `npm run check`
+  now fails when a records folder is ignored.
+- **A git workflow** — **Optional**; your team's branch model may already be settled. `main`, `develop`,
+  `release/<x>`, `test/<KEY>-<desc>` and `harness/<desc>` (`docs/GIT-WORKFLOW.md`). The agents run git and the
+  tester answers: `npm run story` works out each story's status from the files, runs the story start protocol
+  (clean tree, fetch, resume an existing branch, the base the person picks, a fast-forward pull), switches
+  branches, creates release branches, and checks the merge rule — tests generated, reviewed and run, open
+  defects included — before bringing the latest base in. Every agent commits its own stage:
+  `<type>(<KEY>): <what> [<stage>]`. Plans gain `**Plan reviewed:**` and `**Tests reviewed:**`.
+  `.claude/settings.json` allows local git, asks before a push, merge, pull, checkout or pull request, and
+  denies force-pushes, hard resets, branch deletion and history rewrites.
+  Port: `docs/GIT-WORKFLOW.md`, `scripts/story.ts`, `scripts/lib/trace.ts`, the plan template's two lines, the
+  *Git* sections of the agents, the git rules in `.claude/settings.json`.
+- **Settings read by key** — **Adopt.** `npm run env -- get <KEY>` gives agents allow-listed, non-secret
+  settings without opening `.env`; `npm run check` fails when the code reads a setting `.env.example` does not
+  list. Port: `scripts/env.js`, `scripts/check-docs.js`.
+- **Agents keep their browser after the first checkpoint** — **Adopt.** A command's `allowed-tools` cover only
+  the turn it starts, so once a tester answered a checkpoint every browser call asked again. The 25 Playwright
+  test-server tools the commands already grant are now allowed in `.claude/settings.json`; nothing new is granted.
+  `npm run check` and its parts (`check:trace`, `check:docs` — each needs its own rule, as `check:*` does not match
+  them) are allowed too, so the context-builder and planner can validate what they wrote before committing.
+  `npx playwright test` is allowed, so the healer can re-run a test for its evidence and retest after a
+  hand-over, and `browser_resume`, which ends its paused debug run. Starting the healer, defect-raiser, reporter and
+  context-builder is allowed, so the executor's hand-overs don't stop on a prompt; the executor always runs
+  the tests in the foreground, story by story if long, since a background run ends with a non-interactive session.
+  The setup docs now say to accept Claude Code's trust dialog: until a folder is trusted, none of its allow rules
+  apply (deny and ask rules always do).
+  The context-builder also stops at every checkpoint, reads nothing outside the repository unless named in its
+  inventory, and marks each fact observed, read from source or assumed. Port: `.claude/settings.json`,
+  `agents/playwright-context-builder.md`.
+- **Planner keeps the plan honest after review** — **Adopt.** It applies a reviewer's `consider` only once you
+  decide, re-runs its self-audit and shows every changed scenario in full. An Expected Result states what must
+  hold for a pass, with no rationale in it; wording from a spec not yet seen in the app is asserted like any
+  other. The CSV checkpoint shows a field-by-field comparison with the markdown. I4 now covers a test that
+  switches role part-way. Port: `agents/playwright-test-planner.md`, `TEST-AUTHORING-INVARIANTS.md` (I4).
+- **Generator: no credentials, no unreported gaps** — **Adopt.** It never fills a login form or reaches for
+  credentials from any source, environment variables included; a role switch is a new seed session. It reads
+  the log before each new session, reports a step it could not drive rather than calling it driven, and lists
+  every plan line it cannot implement as written at its first checkpoint. Re-reviews get no author
+  reasoning; step titles are the plan line verbatim. Every committing agent uses the one-line
+  `git commit -m` form and never retries a refused call. Port: `agents/playwright-*.md`.
+- **The run chain stays inside what you agreed** — **Adopt.** The healer never reroutes a refused test run
+  through another runner, re-runs only tests it changed, commits a defect without the results file, and names
+  any test case it cites as evidence with its plan title. The executor hands the reporter only the scope and
+  your choices, and quotes `npm run story -- status` rather than git. The reporter writes its summary from the
+  preview and the plan, and restates a scope you already chose instead of asking again. Context sync adds no
+  `verified:` mark to a rule with an open defect, and moves answered unknowns out of `BASELINE.md`. The
+  defect CSV's Reporter is the tester, as a tracker import needs a real user. Port: those five agents and the
+  worked cycle's `defects.csv`.
+- **An acceptance criterion passes only when all its test cases pass** — **Adopt.** The cycle report used to
+  count an AC as met when any one of its test cases passed, so an AC the app breaks could still read Passing.
+  One failing or defect-blocked case now fails it; the exit criterion is renamed "Acceptance criteria with every
+  test case passing". Port: `scripts/lib/cycle.ts`, `config/projectProfile.ts`, `PROJECT-PROFILE.md` section 10.
+- **Reports name the environment, never its address** — **Adopt.** The cycle report's Environment row printed
+  the host from `BASE_URL`, which section 1 says is never written literally. It now prints `TEST_ENVIRONMENT`
+  from `.env` (e.g. QA, UAT). Port: `scripts/lib/cycle.ts`, `.env.example`, `PROJECT-PROFILE.md` section 1.
+- **A clock, plain commands, and no marks on a broken rule** — **Adopt.** `npm run env -- now` is the one
+  clock agents use for a timestamp they record (`detectedAt`, `raisedAt`, `verifiedAt`), never estimated or
+  copied. Every agent runs a command bare from the repository root — no `cd … &&`, pipe or `git -C`, which turn
+  an allowed command into a refused one — and resending a refused command without them counts as a retry.
+  `npm run context:sync` no longer lists a rule with an open defect under Verified: its passing cases are held
+  on the contradiction. The executor re-reads the results after anything the user runs by hand and commits a
+  single-test re-run with that run's counts, hands the reporter only `scope; formats; by`, and never counts
+  for itself. Port: every agent, `scripts/env.js`, `scripts/context-sync.ts`.
+- **Retest and release regression, tightened** — **Adopt.** The healer commits a retest with the spec, the
+  entry and the results file on the branch the spec lives on, and never cites a cycle line printed before its
+  own status change. The executor takes the session back after every hand-over, so later runs, reports and
+  syncs go through it; pastes `context:sync` output verbatim; may preview a scope's failing cases; and says a
+  CSV-filed defect is *not yet in a tracker*, never *not filed*. The reporter calls a failing case the plan marks
+  as an assumption an open question for the BA, never untriaged, and never offers a test run. Port: the
+  executor, healer, reporter and context-builder.
+- **Listing tests records nothing** — **Adopt.** `npx playwright test --list` used to overwrite every recorded
+  result with Skipped: the cycle reporter recorded a run in which no test ran. It now records only when a test
+  ended, and the results reader ignores a listed test with no results. Port: `lib/cycleReporter.ts`,
+  `scripts/lib/cycle.ts`.
+- **Designs from Figma** — **Optional.** An optional `figma` MCP entry — Figma's remote server, signed in through
+  the browser; the desktop app's server or the Figma plugin as alternatives. The planner and the
+  context-builder read the frames a story links, sparingly, as cited design intent, never as rules; the
+  reviewer never opens them. Read tools allowed, every Figma write denied, for both routes.
+  Port: the `figma` entry in `.mcp.json.example`, the Figma rules in `.claude/settings.json`, the planner's
+  *Designs* section and `**Design:**` plan line, the context-builder's preflight and *Design intent* steps,
+  the reviewer's line, `docs/MCP.md`.
+- **Context sync** — **Optional.** `npm run context:sync` links a run's test cases to the `context/` rules they
+  verified or contradicted, and to the known unknowns they may answer, through the IDs their acceptance
+  criteria cite. The executor offers the suggestions at the end of a run; the context-builder applies the
+  ones agreed — `verified: <TCID>, <date>` marks, a caveat naming an open defect. A result never becomes,
+  changes or removes a rule.
+  Port: `scripts/context-sync.ts`, the context-builder's *Context sync* section, the template's *Design
+  intent* section and verified-mark convention.
+- **Documentation** — **Optional.** The developer guide gains running tests and the git workflow, with 13
+  diagrams; the handbook, the walkthrough, the deck, `docs/AGENTS.md`, `docs/COMPONENTS.md`, `docs/MCP.md` and
+  `docs/WORKFLOWS.md` cover the new agents and the workflow.
+- **The developer guide, redrawn and published as a page** — **Optional.** The testing lifecycle now runs once per
+  ticket from the Jira story, with set-up moved to its own section; a new page and section cover the results
+  record and the cycle report (14 diagrams); the guide and every diagram label read without dashes and say Jira
+  for the issue tracker. `docs/how-it-works.html` is generated from the guide by
+  `docs/harness-docs/build-html.py` (`--check` reports a stale page); edit the Markdown, then run it.
+- **The practice example** — template only. The FleetKeep worked cycle gains a Vehicles context document
+  its run verified.
 
 ---
 

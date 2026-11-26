@@ -74,19 +74,19 @@ step 9, which says what to edit when you remove something.
 
 | Folder / file | What it is | In the new repo you… |
 |---|---|---|
-| `.claude/commands/` (7 files), `.claude/agents/` | The seven agents' Claude Code commands, and the reviewer as a sub-agent | leave as they are |
+| `.claude/commands/` (9 files), `.claude/agents/` | The nine agents' Claude Code commands, and the reviewer as a sub-agent | leave as they are |
 | `.claude/settings.json` | Guard rails — what agents may never do | leave, unless you rename an MCP server |
 | `.env.example` | Every setting the suite reads, labelled required/optional | copy to `.env` and fill in |
 | `.mcp.json.example` | Browser, database and Jira connections for the agents | copy to `.mcp.json` and fill in |
 | `.gitignore`, `.gitattributes` | Keep `.env`, `.mcp.json` and results out of git | leave — **never skip `.gitignore`** |
 | `PROJECT-PROFILE.md` | The project's identity: roles, vocabulary, modules, strategy | fill in |
 | `SETUP.md`, `TEST-AUTHORING-INVARIANTS.md` | The setup reference, and the eight test rules | read |
-| `agents/` | The seven agent definitions, and how to port them | leave — change them through `/playwright-harness-improver` |
+| `agents/` | The nine agent definitions, and how to port them | leave — change them through `/playwright-harness-improver` |
 | `HARNESS-CHANGES.md` | The record of changes this repo makes to its own harness | `/playwright-harness-improver` adds to it |
 | `config/` (`projectProfile.ts`, `testConfig.ts`, `DbConnection.ts`, `testDbConnection.ts`, `db/` ×3) | Settings and the database connection | set the roles in `projectProfile.ts` |
 | `context/` (3 files) | Where the context-builder writes what it learns | review what it writes |
 | `data/` (`auth_data.ts`, `testData.ts`, `sql_queries.ts`, `seed.ts`) | Credentials lookup, test data, queries, data seeding | fill in as you go |
-| `docs/` (8 files, `harness-docs/`) | The handbook, references, this guide, the team deck, the cycle walkthrough, and the developer guide with diagrams | read |
+| `docs/` (10 files, `harness-docs/`) | The handbook, references, this guide, the git workflow, the team deck, the cycle walkthrough, and the developer guide with diagrams, also as a browsable page | read |
 | `lib/` (`BaseTest.ts`, `globalSetup.ts`, `cycleReporter.ts`, `api/ApiClient.ts`) | Fixtures, readiness check, the after-run report, the API client | add a fixture per page object |
 | `pages/` (`BasePage.ts`, `LoginPage.ts`, `DashboardPage.ts`, `common/` ×2) | Page objects | replace the `CHANGE_ME` selectors |
 | `scripts/` (`check-docs.js`, `check-trace.ts`, `cycle-report.ts`, `regression.ts`, `open-docs.js`, `lib/` ×2) | Checks, regression, the cycle report | leave |
@@ -103,6 +103,7 @@ step 9, which says what to edit when you remove something.
 | `scripts/export-harness.js`, `scripts/lib/overlay.js` | A copy has nothing to export, and no example layers to apply |
 | `examples/` | The FleetKeep practice app and worked cycle — for learning on, never part of a project's repo |
 | `prep/`, `scripts/prep-folder.js` | The prep-folder templates and the command that writes them — `npm run prep` runs from the template |
+| `plans/` | The template maintainers' plans for the next harness version |
 | `.env`, `.mcp.json` | They hold passwords — each project creates its own from the `.example` files |
 | `node_modules/`, `test-results/`, `playwright-report/`, `reports/` | Installed or generated |
 
@@ -241,10 +242,14 @@ Three ways to fill them — pick one:
 
 1. `cp .mcp.json.example .mcp.json`. Keep `playwright-test`. Fill in `database` with a **read-only** QA
    account, or delete it. For Jira: in Claude Code, install the Atlassian plugin and delete the `tracker`
-   entry; with another tool, keep `tracker`. No Jira connection → delete it.
+   entry; with another tool, keep `tracker`. No Jira connection → delete it. Figma: keep `figma` to read
+   designs (or install the Figma plugin and delete the entry); no Figma → delete it.
 2. **Open Claude Code in the new repo's folder** — that is where it picks up the agents, the guard rails and
-   the MCP servers. The first time, it asks you to approve the project's servers — approve them. Then run
-   `/mcp`: `playwright-test` must show connected; sign in to Jira there if you use it.
+   the MCP servers. The first time, it asks you to **trust the folder** — accept: the dialog lists the allow rules
+   in `.claude/settings.json`, and until you accept, Claude Code applies none of them (the deny and ask rules
+   apply either way), so the agents would ask about every tool. Then it asks you to approve the project's
+   servers — approve them. Then run
+   `/mcp`: `playwright-test` must show connected; sign in to Jira and Figma there if you use them.
 
 ---
 
@@ -365,7 +370,7 @@ navigation or permissions — and name the area to re-walk just that part.
 Yes — tests are **written as code from the test cases**, and Playwright runs that code. Per story:
 
 ```
-Jira story ──▶ planner ──▶ test cases (TCIDs) ──▶ generator ──▶ Playwright code ──▶ npm run regression / npx playwright test
+Jira story ──▶ planner ──▶ test cases (TCIDs) ──▶ generator ──▶ Playwright code ──▶ executor (npm run regression)
                specs/<KEY>.plan.md                drives each case in the     tests/stories/<release>/<KEY>.spec.ts
                                                   real browser first          checked against the plan by the reviewer
 ```
@@ -388,7 +393,7 @@ recorded. Everything is files in the new QA repo, reviewed and committed like an
 | Run output and the HTML report | Playwright | `test-results/`, `playwright-report/` | no |
 | Cycle reports after each run | written automatically | `reports/` | no |
 | The cycle's final report | `npm run report:cycle -- --closure` | `specs/execution/closure/` | yes |
-| Confirmed defects, before and after filing, and their screenshots | healer, defect-raiser | `specs/defects/defect-log.json`, `specs/defects/evidence/` | yes |
+| Confirmed defects, before and after filing, and their screenshots | healer, defect-raiser | `specs/defects/log/`, `specs/defects/evidence/` | yes |
 | Bugs to import, when Jira is not connected | defect-raiser | `specs/defects/defects.csv` | yes |
 | Changes to the harness itself, and why | harness-improver | `HARNESS-CHANGES.md` | yes |
 

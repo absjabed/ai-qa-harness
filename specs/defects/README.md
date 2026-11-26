@@ -5,7 +5,7 @@ regression sees the open defects in its cycle report, and whoever retests a fix 
 
 | File | Written by | What it is |
 |---|---|---|
-| `defect-log.json` | the healer, then the defect-raiser | Every confirmed defect and where it is in its life: `pending` → `raised` → `verified` |
+| `log/<entry id>.json` | the healer, then the defect-raiser | Every confirmed defect, one file each, and where it is in its life: `pending` → `raised` → `verified` |
 | `evidence/<entry id>/` | `npm run defect:evidence` (the healer runs it), or you | The failure's screenshots and page snapshot, attached to the bug when it is raised |
 | `defects.csv` | the defect-raiser, only without a Jira connection | Bugs to import into the tracker by hand |
 
@@ -25,7 +25,8 @@ regression sees the open defects in its cycle report, and whoever retests a fix 
 
 - **Never put personal data here.** Screenshots come from the test environment with QA test accounts; check
   one before committing if a page could show anything else.
-- **Two people adding entries at once** produce a merge conflict in `defect-log.json` — keep both entries; an
-  entry is never removed or renumbered.
+- **One file per defect**, so two people or two story branches recording defects at once never conflict. An
+  entry's file is never renamed or removed. A copy set up before 1.1 may still have the single
+  `defect-log.json`: its entries are read too, and `npm run defect:evidence` writes them out as files.
 - Traces and videos are large and stay in `test-results/` unless copied with
   `npm run defect:evidence -- --with-traces`.

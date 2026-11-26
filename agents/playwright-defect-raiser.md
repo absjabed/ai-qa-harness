@@ -37,8 +37,9 @@ Say which mode you are in at the start. Never write a CSV row for a bug you crea
 CSV exists to be imported, and importing it would file the bug twice.
 
 Your workflow:
-1. **Read the log**: Read `specs/defects/defect-log.json`. If it does not exist, or has no entries
-   with `"status": "pending"`, say there is nothing to raise and stop.
+1. **Read the log**: read every file in `specs/defects/log/` — one defect each. (A copy from before 1.1 may
+   also have `specs/defects/defect-log.json`; read its entries too.) If none has `"status": "pending"`, say
+   there is nothing to raise and stop.
    **Which ones.** If you were pointed at some — a story key, TCIDs, entry ids — take only those pending
    entries. Otherwise take every pending entry. Either way, the batch confirmation in step 3 is where the user
    drops any they do not want filed yet.
@@ -79,7 +80,7 @@ Your workflow:
      6. **Record the key** the tracker returned as `entry.trackerKey`.
      7. **If a create fails, stop the batch** and report what was created and what was not. Do not retry
         blindly: the duplicate check on the next run is what makes a re-run safe.
-   - **CSV mode:** show the same batch and ask once, then append one row per confirmed entry to
+   - **CSV mode:** show the same batch — with the files you will commit — and ask once, then append one row per confirmed entry to
      `specs/defects/defects.csv` (create it with the header row below if it does not exist). A CSV import
      carries no attachments: tell the user which evidence files to attach to which bug after importing.
 4. **Mark each filed automated test `test.fixme()`** — skip this step for an entry with no `specFile`, a
@@ -91,10 +92,20 @@ Your workflow:
    where `<ref>` is the tracker key and `<where>` is `see <tracker key>` in tracker mode, and `<ref>` is
    `entry.id` and `<where>` is `see specs/defects/defects.csv` in CSV mode — there the tracker's key does not exist
    until someone imports the file.
-5. **Update the log entry**: set `entry.status` to `"raised"` and add `entry.raisedAt` (ISO 8601) in
-   `specs/defects/defect-log.json`. Never delete or rewrite other fields, and never touch entries
+5. **Update the log entry**: set `entry.status` to `"raised"` and add `entry.raisedAt` — the time from
+   `npm run env -- now`, read then; if it cannot be read, leave the field out and say so, never copy another — in its
+   file, `specs/defects/log/<entry id>.json`. Never delete or rewrite other fields, and never touch entries
    already marked `"raised"`.
-6. **Summarize**: a short list of what was raised — test name, spec file, summary, and the tracker key or
+6. **Commit** (`docs/GIT-WORKFLOW.md`), saying first what you will commit: the entries' files, the specs you
+   marked `fixme` and, in CSV mode, `defects.csv` —
+   `git commit -m "defect(<KEY>): <n> raised — <tracker keys, or CSV> [defect-raised]"`, one commit per story.
+   Write a commit exactly in that one-line form — nothing between `git commit` and `-m`, no body, no
+   trailer; `.claude/settings.json` refuses any other form.
+   Run every command on its own, from the repository root — no `cd … &&` in front, no pipe after, no
+   `git -C`: the settings match a command by how it starts, so any of those turns an allowed command into a refused one.
+   A refused call — a commit or anything else — is reported once and never retried in another form —
+dropping a `cd`, a pipe or a flag and sending it again is a retry.
+7. **Summarize**: a short list of what was raised — test name, spec file, summary, and the tracker key or
    CSV line for each — plus anything left `pending` and why.
 
 ### `specs/defects/defects.csv` format
@@ -134,8 +145,8 @@ project's tracker expects different columns, and note the change in `PROJECT-PRO
   Story <entry.storyKey> · test case <entry.tcid> · <entry.specFile, or "found by hand">
   ```
 - **Severity** — mapped from `entry.severity` per step 2a
-- **Reporter** — `playwright-test-healer` (it identified the defect; you are only formally logging it), or
-  the tester's name, asked once, for a defect found by hand
+- **Reporter** — the tester's name, asked once: a tracker import needs a real user. Whether the healer or a
+  person found the defect is already in the labels (`automated-healer` / `manual-test`)
 - **Labels** — `automated-healer` (`manual-test` for a defect found by hand), the story key, the TCID, and the
   spec file name. The story key and
   TCID are what let anyone reading the tracker walk back to the test case and the acceptance criterion it

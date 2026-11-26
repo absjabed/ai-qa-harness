@@ -9,6 +9,8 @@
 
   "//  tracker": "OPTIONAL. Jira through Atlassian's remote MCP server: the planner fetches a story by its key, the defect-raiser creates bugs, the healer reads their status for retests. Run /mcp in Claude Code to sign in (OAuth). Keep ?tools=all, so every Jira operation is its own tool and .claude/settings.json can rule on each; without it, writes go through one generic 'execute' and ask with only an operation name. Keep the key 'tracker': the rules name tools as mcp__tracker__<tool>. Using the Atlassian plugin for Claude Code instead? Delete this entry, so Jira is not connected twice — the rules cover the plugin too. Delete it also if you will paste stories and import the defect CSV by hand.",
 
+  "//  figma": "OPTIONAL. Figma designs through Figma's remote MCP server: the planner and the context-builder read the frames a ticket links, as design intent. Run /mcp in Claude Code, choose figma, Authenticate — OAuth in the browser, no token in a file. Read-only here: .claude/settings.json allows the read tools and denies every tool that writes to Figma. Reads count against each person's Figma seat, and a View or Collab seat allows very few a month — see docs/MCP.md. Keep the key 'figma': the rules name tools as mcp__figma__<tool>. Rather use the Figma desktop app's server? Enable it in the app (a Design file, Dev Mode, 'Enable desktop MCP server') and set the url below to http://127.0.0.1:3845/mcp, keeping the key. Using the Figma plugin for Claude Code instead? Delete this entry — the rules cover the plugin too. No Figma? Delete it.",
+
   "mcpServers": {
     "playwright-test": {
       "command": "npx",
@@ -33,6 +35,11 @@
     "tracker": {
       "type": "http",
       "url": "https://mcp.atlassian.com/v2/mcp?tools=all"
+    },
+
+    "figma": {
+      "type": "http",
+      "url": "https://mcp.figma.com/mcp"
     }
   }
 }

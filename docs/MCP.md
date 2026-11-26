@@ -1,8 +1,8 @@
-# MCP servers — how agents reach the browser, the database and the tracker
+# MCP servers — how agents reach the browser, the database, the tracker and the designs
 
-Three of the seven agents cannot work without a browser, and several work considerably better with read
-access to the database and the issue tracker. All three arrive through MCP servers configured in
-`.mcp.json`.
+Three of the nine agents cannot work without a browser, and several work considerably better with read
+access to the database, the issue tracker and the designs. All of them arrive through MCP servers configured
+in `.mcp.json`.
 
 Copy `.mcp.json.example` to `.mcp.json` and fill it in. `.mcp.json` is gitignored, because a database entry
 carries a password — and `.claude/settings.json` denies agents reading it.
@@ -134,13 +134,70 @@ Another tracker works the same way if it has an MCP server: wire it under the ke
 tool names in `.claude/settings.json`. The agents describe what they need — fetch an issue, search, create a
 bug, comment — rather than naming Jira's tools.
 
+## `figma` — optional
+
+| | |
+|---|---|
+| Used by | `playwright-test-planner` to read the frames a story links — the labels, fields, states and messages its acceptance criteria leave open · `playwright-context-builder` to record an area's design intent |
+| Without it | Designs are pasted into the conversation as screenshots, as before. Nothing else changes. |
+
+Connect it **one** of three ways:
+
+| | `figma` entry — remote (the default) | `figma` entry — desktop app | Figma plugin for Claude Code |
+|---|---|---|---|
+| Set up | The entry in `.mcp.json.example` | In the Figma desktop app: open a Design file, Dev Mode (Shift+D), *Enable desktop MCP server*; then set the entry's `url` to `http://127.0.0.1:3845/mcp` | `/plugin install figma@claude-plugins-official`, and delete the entry |
+| Sign in | `/mcp` → figma → Authenticate, in the browser | The desktop app's own sign-in | `/plugin` → figma → sign in |
+| Pointing at a frame | Its link (*Copy link to selection*) | Its link, or the current selection in the app | Its link |
+| Tools | `mcp__figma__<tool>` | `mcp__figma__<tool>` | `mcp__plugin_figma_figma__<tool>` |
+
+Remote is the default: no desktop app, any machine. The desktop server needs the app and a Dev or Full seat on
+a paid plan. Keep the key `figma` either way — the rules name its tools that way.
+
+### Reads are rationed
+
+Figma limits how many reads each person's seat allows, and a View or Collab seat allows very few a month
+([Figma's current limits](https://developers.figma.com/docs/figma-mcp-server/rate-limits-access/)). So the
+agents read sparingly: `get_metadata` for a frame's outline first, then `get_design_context` or
+`get_screenshot` for only the frames the acceptance criteria concern. What they learn is written down, cited —
+in the plan, or in `context/<area>.md` — so nobody reads the same frame twice. Agents see only the files the
+signed-in person can already open.
+
+### What agents may do in Figma
+
+| | Tools | Why |
+|---|---|---|
+| **Allowed** | `whoami`, `get_metadata`, `get_design_context`, `get_screenshot`, `get_variable_defs`, `get_figjam`, `get_comments`, `search_design_system`, `get_libraries`, `get_code_connect_map` | Reading designs |
+| **Denied** | every tool that writes — `use_figma`, `create_new_file`, the `generate_…` tools, `html_to_figma`, `upload_assets`, `send_code_to_figma`, the Code Connect, plugin and shader writes, `send_prompt`, the Weave runs | QA reads designs; it never changes them |
+| **Neither** | anything else, including tools Figma adds later | Prompts if used |
+
+### Designs are intent, not rules
+
+The planner uses a design the way it uses a pasted screenshot: for the labels, fields, states and messages the
+acceptance criteria leave open. The acceptance criteria and the rules in `context/` decide; where a design
+disagrees with them, the planner raises it at its first checkpoint instead of choosing. Every frame it used is
+cited in the plan's `**Design:**` line — link, node and date read — and an Expected Result detail taken only
+from a design ends `(design: <node>)`.
+
+The reviewer never opens Figma. It reviews the plan against the ticket, so it stays independent of the design
+the planner read, and a `(design: …)` detail is checked for not contradicting the ticket. The context-builder
+records an area's design intent in its own section of `context/<area>.md`, never as a rule.
+
 ---
 
 ## Guard rails — `.claude/settings.json`
 
 Shipped with the harness and committed, so they apply to everyone who runs it in Claude Code. Besides the
-database and tracker rules above, it denies agents reading `.env` and `.mcp.json`: no agent needs a
+database, tracker and Figma rules above, it denies agents reading `.env` and `.mcp.json`: no agent needs a
 password, because each role's seed in `tests/seeds/` logs in inside the test runner.
+
+**The allow rules apply only once you trust the folder.** Claude Code asks the first time you open the repo,
+listing the allow rules first; until you accept, it ignores every `allow` in this file, and the agents ask
+about each tool instead. The `deny` and `ask` rules apply from the start, trusted or not, so no protection
+depends on it. A headless run (`claude -p`) shows no dialog: open the repo interactively once and accept it
+first.
+
+A rule matches a command by how it starts, so the agents run each command plainly from the repo root — no
+`cd … &&`, pipe or `git -C` — and report a refused call once, never retrying it in another form.
 
 These are a second line behind the agents' own instructions, not a sandbox — a shell command can still read
 a file the `Read` rule denies. Personal overrides belong in `.claude/settings.local.json`, which is
@@ -153,7 +210,8 @@ Other tools have their own permission systems; [`agents/README.md`](../agents/RE
 ## Verifying
 
 After configuring, confirm each server is connected before running an agent that needs it — `/mcp` in
-Claude Code lists them, and signs you in to the tracker. If the generator reports that
+Claude Code lists them, and signs you in to the tracker and Figma. The context-builder's preflight checks Figma
+with one read: who is signed in, or — on the desktop server — the outline of a frame you link. If the generator reports that
 `generator_setup_page` is unavailable, the Playwright MCP server is not connected — fix that rather than
 letting it proceed, because an agent that cannot drive the browser produces nothing usable.
 

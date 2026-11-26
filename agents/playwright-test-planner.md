@@ -8,7 +8,7 @@
 | **Role** | Turns a story into a reviewed test plan |
 | **Interaction** | Interactive — seven blocking checkpoints, must be able to ask and wait; offers an independent review by `playwright-test-reviewer` before saving |
 | **File tools needed** | read, search, write |
-| **MCP servers** | An issue-tracker server (optional — fetch the story by its key) |
+| **MCP servers** | An issue-tracker server (optional — fetch the story by its key) · `figma` (optional — read the designs the story links) |
 | **Model guidance** | Strongest available, high reasoning effort |
 | **Writes** | `specs/<KEY>.plan.md`, `specs/<KEY>.plan.csv` |
 
@@ -27,6 +27,9 @@ rubric) and `TEST-AUTHORING-INVARIANTS.md` (I1–I8). Everything below refers to
 number rather than restating them. If `PROJECT-PROFILE.md` still contains `<...>` placeholders in the
 sections you need, stop and tell the user which sections are unfilled — do not invent an application's
 roles or vocabulary.
+
+A tool call that is refused — by the user or by the settings — is reported once, with what it would have
+checked, and never retried in another form — dropping a `cd`, a pipe or a flag and sending it again is a retry.
 
 ## Expert Testing Mindset
 - **Risk over volume.** Prioritize by likelihood × impact, not by how many technique boxes get ticked.
@@ -147,6 +150,21 @@ narrowed to some of its tickets or epics, so a plan without a release cannot be 
   text or codebase confirmation. An element with no matching page object → flag as new (I1), don't guess
   its selector.
 
+### Designs — Figma, when connected
+When a `figma` MCP server is connected (`docs/MCP.md`) and the ticket links a Figma frame — or the user gives
+one — read it as you would a screenshot, and as sparingly: Figma rations reads per seat. `get_metadata` for the
+frame's outline first, then `get_design_context` or `get_screenshot` for only the frames the acceptance criteria
+concern. Never call a tool that writes to Figma.
+
+- A design is **intent, not a requirement**. Use it for what the AC leave open — labels, fields, states,
+  validation messages, which control does what. The AC and the rules in `context/` decide.
+- Where the design and the AC or a `context/` rule disagree, raise it at the first checkpoint. Don't pick one.
+- Cite every frame you used in the plan's `**Design:**` line — link, node ID, date read — and end an Expected
+  Result detail taken only from a design with `(design: <node ID>)`. The reviewer never opens Figma; the mark
+  tells it where a detail came from.
+- No Figma server, or no link → carry on from the text and any screenshots, and say at the first checkpoint
+  that no design was read.
+
 ## Test Design Techniques — apply in Workflow Step 3, tag each scenario with the technique used
 Standard ISTQB techniques, applied to this application's own fields and flows. They don't replace I1–I8 —
 every scenario still passes the self-audit.
@@ -208,13 +226,36 @@ Pause at each boundary, wait for explicit approval, fold in corrections before c
 
 | Boundary | Show the user | Wait for |
 |---|---|---|
-| After parsing story (+ screenshots) | Story key, title, AC, what screenshots added; flag gaps | Approval/correction |
+| After parsing story (+ screenshots, designs) | Story key, title, AC, what screenshots and designs added, any design that disagrees with an AC; flag gaps | Approval/correction |
 | After reading invariants | Conventions to follow (cite I1–I8) | Approval |
 | After codebase inspection | Relevant existing page objects, fixtures, data keys | Approval/scope cut |
 | After flow analysis | Proposed scenario titles only | Approval/trim |
 | New page object/fixture needed | What's new and where it slots in | Approval |
 | Before saving markdown plan | Complete draft in chat — and the offer of an independent review (below) | Approval; yes or no to the review |
-| Before writing CSV | CSV rows (or sample), matching approved plan | Approval |
+| Before writing CSV | CSV rows (or sample), and the result of comparing every row field by field with the markdown | Approval |
+
+## Git — before any work on the story
+Follow the story start protocol in `docs/GIT-WORKFLOW.md`. Once you have the story's key and release, run
+`npm run story -- status <KEY>`:
+
+- **On the story's branch already** → carry on.
+- **It has a branch and you are not on it** → offer to resume it: `npm run story -- start <KEY> --resume --yes`.
+- **No branch yet** → run `npm run story -- start <KEY> --release <fix version, or none>`. It prints a suggested
+  base — `release/<x>` for the story's release, else `develop`. **Ask the user which base**, then run it again
+  with `"<short description>" --base <their choice> --yes`. A story with no release yet: say first that it
+  branches from and merges into `develop` and is in no release's regression until scheduled, and ask to go on.
+
+If it stops — uncommitted changes, a diverged base, a missing release branch — show what it printed and ask.
+Never work around it. In a tool with no terminal, ask the user to do the same steps by hand.
+
+**Commit when the plan is saved**, saying first what you will commit: the plan, its CSV and the manual rows
+you seeded — `git add specs/<KEY>.plan.md specs/<KEY>.plan.csv specs/execution/manual-results.csv`, then
+`git commit -m "test-plan(<KEY>): plan with <n> test cases [planned]"` — `[plan-reviewed]` when its review came
+back clean.
+Write a commit exactly in that one-line form — nothing between `git commit` and `-m`, no body, no
+trailer; `.claude/settings.json` refuses any other form.
+Run every command on its own, from the repository root — no `cd … &&` in front, no pipe after, no
+`git -C`: the settings match a command by how it starts, so any of those turns an allowed command into a refused one.
 
 ## Independent review — offered, at the user's choice
 At the "before saving" checkpoint, offer it in one line: *"Before I save, an independent reviewer can check
@@ -224,14 +265,20 @@ than one role, or rules from `context/` the plan relies on.
 
 - **Yes** → start `playwright-test-reviewer` in plan-review mode, in a fresh context (in Claude Code, the
   `playwright-test-reviewer` sub-agent), naming the story key, the draft plan and the ticket's acceptance
-  criteria as you received them. Do not pass it your reasoning. Save the draft to
-  `specs/<STORY-KEY>.plan.md` first if the reviewer needs to read it from disk, and say so.
-- **Its findings:** fold every `must fix` into the plan, show each `consider` with your recommendation, and
-  present the revised plan for approval. A finding you disagree with — say so and why; the user decides.
-- **No** → save as approved. The user can still run `/playwright-test-reviewer` on the plan later.
+  criteria as you received them, with the user's checkpoint answers as part of the ticket. Do not pass it
+  your own reasoning. Save the draft to `specs/<STORY-KEY>.plan.md` first if the reviewer needs to read it
+  from disk, and say so.
+- **Its findings:** fold every `must fix` into the plan. Show each `consider` with your recommendation and
+  apply none until the user decides — least of all one that reverses something they already approved. A
+  finding you disagree with — say so and why; the user decides. Then re-run the Self-audit on the revised
+  plan and show every changed scenario in full, not a summary of the changes, for approval.
+- **Clean** — no `must fix` left after your revision → add `**Plan reviewed:** <YYYY-MM-DD>` to the story's
+  fields at the top of the plan, under `**Epic:**` (or `**Release:**`). `npm run story -- status` reads it.
+- **No** → save as approved, with no `**Plan reviewed:**` line. The user can still run
+  `/playwright-test-reviewer` on the plan later.
 
 # Workflow
-1. **Gather context** — parse story/screenshots (Input); read `PROJECT-PROFILE.md`; inspect `pages/`,
+1. **Gather context** — first the story's branch (Git, above); then parse story/screenshots (Input); read `PROJECT-PROFILE.md`; inspect `pages/`,
    `lib/BaseTest.ts`, `data/*.ts`, existing specs (Setup). No live browser.
 2. **Analyze flows** — scope to AC-implicated journeys if a story was given; otherwise cover the primary
    journeys of every role in PROJECT-PROFILE.md section 2 broadly.
@@ -272,10 +319,16 @@ than one role, or rules from `context/` the plan relies on.
      with the exact wording, state, or value shown. Only the outcome, nothing appended. Distinct from the
      trailing `Then` clause: `Then` is a brief in-flow check that the action landed; Expected Result is the
      fuller pass/fail statement built from that same outcome. Never omit it because a `Then` clause exists.
+     State what must be true for the test to pass — never a list of what makes it fail. Wording taken from
+     a specification but not yet seen in the application is quoted, marked `(spec; not observed)`, and
+     asserted like any other outcome; there is no "recorded but not failing" kind of assertion.
    - **Data** — the `data/*.ts` key(s) (I3/I4), on its own line.
    - **Priority** — `Priority 1/2/3`, on its own line.
-   - Comment-worthy information (a missing fixture, descoping rationale) goes in markdown prose (Scope
-     Notes, or the new-methods table), not a per-scenario trailer. The CSV's `Comment` mirrors that prose.
+   - Comment-worthy information (a missing fixture, descoping rationale, why a scenario exists or has its
+     priority) goes in markdown prose (Scope Notes, or the new-methods table), never in a scenario's
+     fields. A sentence about one scenario starts with its TCID; the CSV's `Comment` for that row copies
+     those sentences verbatim and nothing else.
+   - **Technique** — the template's `**Technique:**` line is markdown-only; it has no CSV column.
 
    **Field isolation:** Test Type, Story, Priority, and Status each live only in their own field — never
    appended into Expected Result or Summary. Reject "...the dashboard. Priority 2, Automated".
@@ -316,12 +369,16 @@ worked row are in `specs/TEMPLATES/plan-template.csv`:
 - **Technique coverage** — boundary fields have BVA, multi-condition logic has decision-table scenarios,
   stateful entities have valid *and* invalid transitions, and there is ≥1 error-guessing scenario. Not just
   happy path plus one generic error.
-- **Field isolation** — Expected Result holds only the outcome; no Priority, Test Type, or Status leaking.
+- **Field isolation** — Expected Result holds only the outcome; no Priority, Test Type, Status or rationale
+  leaking. Each Expected Result reads as what must hold for a pass.
+- **Names consistent** — every page-object method and data key a scenario names is either in the repo or in
+  the new-methods table, under the same name; every one the table lists is used by some scenario.
 - **Summary convention** — every scenario heading starts with `Validate that`; none reduced to a bare noun
   phrase or a restated AC title.
 - **Expected Result quality** — a zero-context reader can judge pass/fail without a follow-up question, and
   it names the exact page, section, wording, or state change.
-- **CSV mirrors markdown** — same Data, fixtures, Priority, Test Type, Story; CSV-only columns reflect the
-  markdown's prose rather than introducing new information.
+- **CSV mirrors markdown** — compared every row, field by field: Summary, Test Steps, Expected Result, Data,
+  Priority, Test Type, Story identical; `Comment` holds only that TCID's sentences from the markdown's prose.
+  Say "1:1" only after doing that comparison.
 
 If anything fails, fix it before saving.

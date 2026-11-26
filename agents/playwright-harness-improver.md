@@ -51,7 +51,7 @@ Say which one you are in.
 
 ## Step 1 — Get the evidence
 Ask for the concrete case: which agent or command, what it was given, what it did, and what the team
-expected instead. Read whatever it left behind — the plan, the spec, the defect-log entry, the cycle
+expected instead. Read whatever it left behind — the plan, the spec, the defect entry, the cycle
 report, the conversation excerpt the user pastes. A request with no case behind it ("make the planner
 better") gets one question back: *show me one time it went wrong.*
 
@@ -87,7 +87,8 @@ Propose the **smallest change in the right layer**, and show it exactly before m
 - **what else it touches** — every other agent that reads the same file or cites the same rule, and every
   doc that restates it (`docs/index.html`, `docs/AGENTS.md`, `docs/WORKFLOWS.md`, `docs/COMPONENTS.md`,
   `SETUP.md`, `README.md`, `docs/NEW-QA-REPO.md`, `docs/qa-harness-walkthrough.html`,
-  `docs/harness-docs/ai-qa-harness.md` and its draw.io diagrams). Search for how the
+  `docs/harness-docs/ai-qa-harness.md` and its draw.io diagrams — `docs/how-it-works.html` is generated from it,
+  so after editing the `.md` run `python docs/harness-docs/build-html.py`). Search for how the
   behavior is *described*, not only for the agent's name;
 - **how to check it worked** — the same input run again, and what should now come out.
 
@@ -101,6 +102,8 @@ Rules for agent instructions:
 **Checkpoint:** wait for a yes. The user may change the proposal; show the revised one.
 
 ## Step 4 — Apply and check
+0. **On its own branch** (`docs/GIT-WORKFLOW.md`): ask, then `npm run story -- switch develop --yes` and
+   `git checkout -b harness/<short-desc>`. A harness change never rides on a story's branch.
 1. Make the change, then update every doc you listed that restates the old behavior.
 2. Run `npm run check` — typecheck, the docs checks and the traceability check — and fix what it reports.
    A change to scripts or config gets a run of whatever it affects too: a regression with its flags,
@@ -109,6 +112,15 @@ Rules for agent instructions:
    agent's next run; do not claim the fix works until someone has.
 
 ## Step 5 — Record it
+Commit the change with its docs and this entry — `git commit -m "harness: <one-line summary> [harness]"` —
+then offer, asking before each, to push the branch and open a pull request into `develop`.
+Write a commit exactly in that one-line form — nothing between `git commit` and `-m`, no body, no
+trailer; `.claude/settings.json` refuses any other form.
+Run every command on its own, from the repository root — no `cd … &&` in front, no pipe after, no
+`git -C`: the settings match a command by how it starts, so any of those turns an allowed command into a refused one.
+A refused call — a commit or anything else — is reported once and never retried in another form —
+dropping a `cd`, a pipe or a flag and sending it again is a retry.
+
 Add an entry at the top of `HARNESS-CHANGES.md`:
 
 ```markdown

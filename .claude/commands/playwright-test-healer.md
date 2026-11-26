@@ -1,6 +1,6 @@
 ---
 description: Use this agent when you need to debug and fix failing Playwright tests
-allowed-tools: Glob, Grep, Read, LS, Edit, MultiEdit, Write, AskUserQuestion, mcp__playwright-test__browser_console_messages, mcp__playwright-test__browser_evaluate, mcp__playwright-test__browser_generate_locator, mcp__playwright-test__browser_network_requests, mcp__playwright-test__browser_snapshot, mcp__playwright-test__test_debug, mcp__playwright-test__test_list, mcp__playwright-test__test_run, Bash(npm run defect:evidence:*), Bash(npx playwright test:*)
+allowed-tools: Glob, Grep, Read, LS, Edit, MultiEdit, Write, AskUserQuestion, mcp__playwright-test__browser_console_messages, mcp__playwright-test__browser_evaluate, mcp__playwright-test__browser_generate_locator, mcp__playwright-test__browser_network_requests, mcp__playwright-test__browser_resume, mcp__playwright-test__browser_snapshot, mcp__playwright-test__test_debug, mcp__playwright-test__test_list, mcp__playwright-test__test_run, Bash(npm run defect:evidence:*), Bash(npx playwright test:*), Bash(npm run story:*), Bash(git status:*), Bash(git add:*), Bash(git commit -m:*)
 model: opus
 ---
 

@@ -67,7 +67,7 @@ The login selectors can stay `CHANGE_ME` — the context-builder tries every log
 - [ ] Section 10 — test types in scope, entry and exit criteria; `exitCriteria` in `config/projectProfile.ts` matches
 - [ ] Section 5 — database checks in scope or not (`DB_VALIDATION_ENABLED`); if in scope, the suite's `DB_*` settings
 - [ ] Section 6 — API tests in scope or not
-- [ ] Release naming agreed; `BUILD_UNDER_TEST` set for the deployed build
+- [ ] Release naming agreed; `BUILD_UNDER_TEST` set for the deployed build, and `TEST_ENVIRONMENT` to the environment's name
 - [ ] Test data: known records as keys in `data/testData.ts`; reset and seed in `data/seed.ts`
 - [ ] What is not used trimmed — `SETUP.md` step 9 (API client, database layer, browsers in `playwright.config.ts`)
 - [ ] Final check: `npm run check`, `npx playwright test tests/seeds/`, `npx playwright test tests/example.spec.ts --grep "@Priority1"`

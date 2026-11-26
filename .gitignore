@@ -20,9 +20,11 @@ playwright/.cache/
 allure-report/
 allure-results/
 
-# Cycle reports written after every run. The cycle's final report is kept in specs/execution/closure/
-# (npm run report:cycle -- --closure), which is committed. specs/defects/ and specs/execution/ are committed.
-reports/
+# Cycle reports written after every run — the top-level reports/ only. Formal reports
+# (specs/execution/reports/) and the cycle's final report (specs/execution/closure/) are committed, as are
+# specs/defects/ and specs/execution/. The leading slash matters: without it, specs/execution/reports/ is
+# ignored too.
+/reports/
 
 # TypeScript build output
 dist/

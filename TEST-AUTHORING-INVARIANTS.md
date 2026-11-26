@@ -50,7 +50,8 @@ it under that file's naming and formatting conventions.
 
 **I4 — Credentials.**
 Only `testUsers.<role>` / `defaultUsers.<role>` from `@data/auth_data`, driven through the
-`userLogin` helper (`pages/common/login.ts`) in a `test.beforeEach`. Role keys are listed in
+`userLogin` helper (`pages/common/login.ts`) in a `test.beforeEach` — and, in a test that switches role
+part-way, through `userLogin` again at each switch or in a second browser context. Role keys are listed in
 `PROJECT-PROFILE.md` section 2. Never a literal email or password, not even as an example — the
 values themselves live in `.env`, and nothing in the repo should be able to leak them.
 Agents never read `.env` at all: one that needs to be logged in starts from its role's seed,

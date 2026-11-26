@@ -274,6 +274,16 @@ for (const secret of ['.env', '.mcp.json']) {
     if (exists(secret)) notes.push(`${secret} exists locally${inGit ? ' (correctly untracked)' : ''}`);
 }
 
+// The records are committed so the whole team shares them; an ignore rule that catches them loses them silently.
+// A bare `reports/` once did, hiding every formal report in specs/execution/reports/.
+if (inGit) {
+    for (const record of ['specs/execution/reports/QA-Report_x.md', 'specs/execution/closure/x.md', 'specs/defects/log/x.json']) {
+        let ignored = true;
+        try { execFileSync('git', ['check-ignore', '-q', record], { cwd: root, stdio: 'ignore' }); } catch { ignored = false; }
+        check(`.gitignore ignores ${path.dirname(record)}/`, !ignored, 'records there must be committed — anchor the rule, e.g. /reports/ rather than reports/');
+    }
+}
+
 // ---------------------------------------------------------------- generator target folder
 
 check(
@@ -320,6 +330,31 @@ for (const doc of contextDocs) {
         if (/^\d+\.\s+`?</.test(first)) continue; // template placeholder
         check(`context/${doc}: invariant "${first.slice(0, 60)}" names no source`, /source:/i.test(rule),
             'end each rule with — source: <document §n | issue key | observed | module>');
+    }
+}
+
+// ---------------------------------------------------------------- every setting the code reads is in .env.example
+
+// .env.example is how a team learns what to fill in; a setting the code reads but the example never lists is
+// found only when a run misbehaves. Read through process.env, or config/testConfig.ts's required()/optional().
+// Exempt: CI, set by CI systems; CYCLE_REPORT_SCOPE, passed between the harness's own scripts; and the per-role
+// login keys (<ROLE>_EMAIL / <ROLE>_PASSWORD), which data/auth_data.ts builds from the role names.
+const ENV_EXEMPT = new Set(['CI', 'CYCLE_REPORT_SCOPE']);
+if (exists('.env.example')) {
+    const listed = new Set([...read('.env.example').matchAll(/^\s*([A-Z][A-Z0-9_]*)\s*=/gm)].map((m) => m[1]));
+    const code = trackedFiles().filter((f) => /\.(ts|js)$/.test(f) && !f.startsWith('examples/') && exists(f));
+    const PATTERNS = [/process\.env\.([A-Z][A-Z0-9_]*)/g, /process\.env\[['"]([A-Z][A-Z0-9_]*)['"]\]/g, /\b(?:required|optional)\(\s*['"]([A-Z][A-Z0-9_]*)['"]/g];
+    const unlisted = new Map();
+    for (const file of code) {
+        const text = read(file);
+        for (const re of PATTERNS) {
+            for (const [, key] of text.matchAll(re)) {
+                if (!listed.has(key) && !ENV_EXEMPT.has(key) && !unlisted.has(key)) unlisted.set(key, file);
+            }
+        }
+    }
+    for (const [key, file] of unlisted) {
+        check(`.env.example does not list ${key}`, false, `${file} reads it — add it to .env.example with a comment saying what it is`);
     }
 }
 

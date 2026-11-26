@@ -20,7 +20,7 @@ Release: 2.26.
 |---|---|---|---|
 | Priority 1 test cases passing | 100% | 100% (2/2) | yes |
 | Priority 2 test cases passing | 95% | 100% (2/2) | yes |
-| Acceptance criteria with a passing test case | 100% | 100% (3/3) | yes |
+| Acceptance criteria with every test case passing | 100% | 100% (3/3) | yes |
 | Open defects at P1 | ≤ 0 | 0 | yes |
 | Open defects at P2 | ≤ 0 | 0 | yes |
 | Test cases not executed | ≤ 0 | 0 | yes |

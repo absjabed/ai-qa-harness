@@ -1,6 +1,6 @@
 ---
 description: Use this agent when the harness does not behave as the team needs — an agent did the wrong thing, or the harness does not fit how the team works. It finds the cause, proposes the smallest change in the right file, applies it on agreement and records it in HARNESS-CHANGES.md.
-allowed-tools: Glob, Grep, Read, LS, Edit, MultiEdit, Write, AskUserQuestion, Bash(npm run check:*), Bash(npm run check)
+allowed-tools: Glob, Grep, Read, LS, Edit, MultiEdit, Write, AskUserQuestion, Bash(npm run check:*), Bash(npm run check), Bash(npm run story:*), Bash(git status:*), Bash(git add:*), Bash(git commit -m:*), Bash(git checkout -b:*)
 model: opus
 ---
 

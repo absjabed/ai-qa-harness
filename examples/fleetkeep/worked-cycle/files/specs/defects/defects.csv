@@ -21,4 +21,4 @@ Attached: test-failed-1.png, error-context.md
 chromium, Windows, build demo-1
 
 *Traceability:*
-Story FK-1304 · test case FK-1304-TC002 · tests/stories/2.26/FK-1304.spec.ts",Major,playwright-test-healer,automated-healer FK-1304 FK-1304-TC002 FK-1304.spec.ts,"chromium, Windows, build demo-1"
+Story FK-1304 · test case FK-1304-TC002 · tests/stories/2.26/FK-1304.spec.ts",Major,Practice run,automated-healer FK-1304 FK-1304-TC002 FK-1304.spec.ts,"chromium, Windows, build demo-1"

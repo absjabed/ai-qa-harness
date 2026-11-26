@@ -11,7 +11,7 @@ Ordered by how often you touch it — configuration first, then the layers a tes
 
 ### `agents/`
 
-**What** The seven agent definitions, canonical and vendor-neutral — plain markdown with no tool's
+**What** The nine agent definitions, canonical and vendor-neutral — plain markdown with no tool's
 frontmatter and no tool's tool names. Each opens with a header stating its role, interaction model, file
 access, MCP servers and model guidance.
 
@@ -28,18 +28,21 @@ agent uses (`allowed-tools`) so they run without a prompt — it restricts nothi
 
 | Rule | Covers |
 |---|---|
-| Deny | Reading `.env` and `.mcp.json`; the database server's write tools; Jira deletes, worklogs, sprints, boards, versions, project admin |
+| Deny | Reading `.env` and `.mcp.json`; the database server's write tools; Jira deletes, worklogs, sprints, boards, versions, project admin; every Figma tool that writes |
 | Ask | Creating, editing, moving, linking, commenting on or attaching to a Jira issue |
-| Allow | The read-only database and Jira tools |
+| Allow | The read-only database, Jira and Figma tools; the Playwright test server's tools the agents use, `browser_resume` among them, so a browser is still there after the first checkpoint; the `npm run` scripts the agents use, `npm run check` with `check:trace` and `check:docs` each by its own rule, and `npx playwright test`; starting the healer, defect-raiser, reporter and context-builder, so the executor's hand-overs don't stop on a prompt |
 
 **How to use** The rules name tools as `mcp__database__<tool>`, and Jira's for both routes —
-`mcp__tracker__<tool>` and the Atlassian plugin's `mcp__plugin_atlassian_atlassian__<tool>` — so they follow
-the server keys in `.mcp.json`. Database writes are denied rather than asked because nothing in the harness
+`mcp__tracker__<tool>` and the Atlassian plugin's `mcp__plugin_atlassian_atlassian__<tool>` — and Figma's the
+same way, `mcp__figma__<tool>` and `mcp__plugin_figma_figma__<tool>`, so they follow the server keys in
+`.mcp.json`. Database writes are denied rather than asked because nothing in the harness
 needs them; move them to `ask` deliberately if that changes. Change a key, or choose a different server, and update the names. Personal
 overrides go in `.claude/settings.local.json`, which is gitignored.
 
 **What to expect** A second line behind the agents' own instructions, not a sandbox — a shell command can
 still read a file the `Read` rule denies. For the database, the read-only account remains the real guard.
+A rule matches a command by how it starts, so the agents run each command plainly from the repo root — no
+`cd … &&`, pipe or `git -C` — and report a refused call once, never retrying it in another form.
 
 **What to expect** Changing an agent's behavior is one edit in one file, regardless of how many tools you
 have wired up.
@@ -76,7 +79,7 @@ agent will act on it confidently. Fix the document in the same change as the tes
 `.mcp.json.example`; gitignored, because the database entry carries a password.
 
 **The required entry** `playwright-test` — `npx playwright run-test-mcp-server`, which ships with
-`@playwright/test`, nothing extra to install. Three of the seven agents cannot work without it.
+`@playwright/test`, nothing extra to install. Three of the nine agents cannot work without it.
 
 **The optional entries**
 - `database` — `@executeautomation/database-server`, PostgreSQL or SQL Server, version pinned. Biggest
@@ -86,6 +89,9 @@ agent will act on it confidently. Fix the document in the same change as the tes
   by key, the defect-raiser creates bugs, the healer reads bug status and records retest results. Keep
   `?tools=all` and the key `tracker`; `.claude/settings.json` depends on both. The Atlassian plugin is the
   alternative — use one, not both.
+- `figma` — Figma's remote MCP server, signed in with `/mcp`; the desktop app's server or the Figma plugin are
+  the alternatives. The planner and context-builder read the frames a story links, as design intent. Read
+  tools allowed, every write denied; reads are rationed per Figma seat. Keep the key `figma`.
 
 **What to expect** Introspection reports structure, and not always correctly — confirm anything surprising
 with a direct query before writing it into a context document. Full reasoning in
@@ -107,6 +113,11 @@ same folder without touching it — see `docs/NEW-QA-REPO.md` section 0.
 
 **Keep in step** When a setup step, a profile section or a `.env` key changes, check the templates that
 mention it — `2-CHECKLIST.md` and `3-FILLING-GUIDE.md` above all.
+
+### `plans/`
+
+**What** Template maintainers' plans for the next harness version — what is being added and why, the design,
+and the phases. Never copied into a project's QA repo.
 
 ### `examples/`
 
@@ -136,7 +147,8 @@ whole cycle — setup, one ticket, regression and closure — showing for each s
 harness asks and what comes out; the handbook's *Follow a whole cycle* covers the same in reference form.
 `harness-docs/` is the developer guide to the agent system: `ai-qa-harness.md`, with one editable multi-page
 draw.io file and a PNG per page, covering the architecture, the agent pattern, each workflow, the guardrails
-and harness improvement.
+and harness improvement. `how-it-works.html` is the same guide as a browsable page, generated from the
+Markdown by `python docs/harness-docs/build-html.py` — edit the Markdown, never the page.
 
 **How to use** `npm run docs` opens the handbook. The markdown files are read in place, and are also what
 the agents read when they need a convention rather than an instruction.
@@ -164,6 +176,11 @@ pairing, thin wrappers, section and invariant totals, links, and that `.gitignor
 | `check-docs.js` | `npm run check:docs` | Asserts the docs still match the repository |
 | `check-trace.ts` | `npm run check:trace` | Enforces I8 — TCIDs present, planned, unique, not retired |
 | `regression.ts` | `npm run regression` | Regression for a client release, on the tickets or epics you choose |
+| `story.ts` | `npm run story` | The git side of a story — status, the start protocol, release branches, the merge rule |
+| `env.js` | `npm run env -- get <KEY>` | Reads an allow-listed, non-secret setting from `.env` for agents that may not open it |
+| `lib/defects.ts` | — | Reads and writes the defect log, one file per defect |
+| `last-run.ts` | `npm run results:last` | The last run's results, failures grouped by spec and error — what the executor reads |
+| `context-sync.ts` | `npm run context:sync` | Which `context/` rules a run's test cases verified or contradicted, and the known unknowns they may answer — suggestions only |
 | `cycle-report.ts` | `npm run report:cycle` | Rebuilds the test-cycle closure report by hand, for any scope |
 | `lib/cycle.ts` | — | Builds the cycle report — used by the two above and by `lib/cycleReporter.ts` |
 | `lib/trace.ts` | — | The one parser all of them share, so they cannot disagree about what a TCID is |
@@ -200,7 +217,64 @@ like an issue key is never read as a release. These are the project's own releas
 never appears in them.
 
 **Without a terminal** Pass the answers as flags — `--release`, `--epics`, `--stories`, `--all-tests`,
-`--browser`, `--yes`. An agent asks you in the conversation, then runs it that way.
+`--browser`, `--yes`. An agent asks you in the conversation, then runs it that way. `--stories` or `--epics`
+without `--release` look across every release.
+
+**For the executor** `--dry-run` prints the selection as JSON — tickets, test count, browsers, build, tickets
+with no spec — and runs nothing; the record is untouched. `--grep <text>` narrows the run (combined with
+`@Regression` when only regression tests run); `--headless` runs without a visible browser.
+
+---
+
+### `scripts/story.ts`
+
+**What** `npm run story` — the git side of working on a story, so every agent and tester does it the same
+way. `status` works out where each story is from the files — plan, reviews, spec, results, open defects,
+branches — and whether it may merge; nothing is stored. `start` is the story start protocol: a clean working
+tree, a fetch, an offer to resume an existing branch, the base the person chooses, a fast-forward pull of it,
+then `test/<KEY>-<desc>`. `switch` checks out and fast-forwards a branch, before a regression.
+`release-start` creates `release/<x>` from the pulled `develop`. `finish` checks the merge rule, brings the
+latest base into the story's branch and lists shared files that changed.
+
+**Never** pushes, merges into a shared branch, deletes a branch or rewrites history. Without `--yes`, each
+command shows what it would do and changes nothing. The workflow it serves is in `docs/GIT-WORKFLOW.md`.
+
+---
+
+### `scripts/env.js`
+
+**What** `npm run env -- get <KEY>…` — prints settings from `.env` by name, for agents, which are denied
+reading the file. Answers only for an allow-list of non-secret keys — `QA_TESTER_NAME`, `QA_REPORT_FORMAT`,
+`BUILD_UNDER_TEST`, `TEST_ENVIRONMENT`, `APP_NAME`, `BASE_URL`, `TRACKER_PROJECT_KEY`, `DB_VALIDATION_ENABLED` — and refuses every other key, and any
+password, email, token or database setting even if someone adds one to the list. `npm run env -- now` prints the
+current time, the one clock agents use for a timestamp they record.
+
+---
+
+### `scripts/context-sync.ts`
+
+**What** `npm run context:sync` — what a test run can tell `context/`, as suggestions. For the last run's stories
+(or `--stories`), it links each test case to the rules under *Invariants* in `context/<area>.md` and to the
+known unknowns — `BASELINE.md` section 8, each area's *Caveats* — by the references they share: the rule and
+document IDs its acceptance criteria and scenario cite (`BR-019`), and its story key for rules. Each link is
+**verified** (a passing case; record `verified: <TCID>, <date>` on the rule), **contradicted** (a failing case
+with a defect recorded; the rule stays, and its passing cases are held rather than verified until the defect
+is fixed), **not triaged** (a failure with no defect yet), or a **known unknown**
+a passing case may answer. JSON, or `--text`.
+
+**Never** writes anything. The executor shows the suggestions at the end of a run; the context-builder applies
+the ones agreed. A result never becomes a new rule.
+
+---
+
+### `scripts/last-run.ts`
+
+**What** `npm run results:last` — the last run, from Playwright's JSON results: when it started, its stories,
+the totals (passed, failed, flaky, skipped), the failures grouped by spec and error signature with each test's
+TCID and browser, and the manual cases still *Not Run*. JSON by default, `--text` for a person.
+
+**Who reads it** `/playwright-test-executor`, after every run and every hand-over, so it never counts from
+memory.
 
 ---
 
@@ -213,12 +287,22 @@ or nothing for every story; `--since <date>` ignores results from before the cyc
 `reports/cycle-summary-<scope>-<time>.md`, which is not committed — or, with `--closure`, to
 `specs/execution/closure/`, which is: the cycle's final report, kept for the record.
 
+**Formal reports** `--formal` writes `QA-Report_<app>_<scope>.md` — one per release, story, epic or set of
+stories, replaced by the next report for that scope; git keeps the earlier versions — to the committed
+`specs/execution/reports/`, with a sign-off block — the report `/playwright-test-reporter` produces. Also:
+`--epics`, `--format md,html,pdf` (Markdown always; HTML and PDF from `scripts/lib/report-render.ts`, PDF printed
+by Playwright's Chromium), `--by`, `--jira <file>` (ticket titles and status, and the scope's tickets with no
+plan), `--notes <file>`, and for the agent `--list`, `--defaults` and `--preview` (the numbers as JSON, nothing
+written). The after-run summaries in `reports/` are timestamped and never overwrite one another.
+
 **Reads** Plans, `specs/execution/automated-results.csv` (each test case's latest result across runs),
-`specs/execution/manual-results.csv` and `specs/defects/defect-log.json` — all optional; it says plainly which
-were missing. It names the build under test (`BUILD_UNDER_TEST`) and warns when results come from several.
+`specs/execution/manual-results.csv` and `specs/defects/log/` — all optional; it says plainly which
+were missing. It names the build under test (`BUILD_UNDER_TEST`) and warns when results come from several,
+and the environment by `TEST_ENVIRONMENT` from `.env` — never the `BASE_URL` host.
 
 **Reports** Every active test case and how it ended (Passed · Flaky · Failed · Blocked by a `fixme` ·
-Skipped · Not Run), pass rates by priority, acceptance-criteria coverage per story, open defects by
+Skipped · Not Run), pass rates by priority, acceptance-criteria coverage per story — an AC passes only when
+every one of its test cases does — open defects by
 severity, traceability gaps, and each exit criterion from PROJECT-PROFILE.md section 10 as met or not.
 
 **What to expect** It states facts; it does not decide. `--strict` exits non-zero when a criterion is
@@ -232,7 +316,7 @@ unmet, for use as a gate — by default it only reports, because closing a cycle
 is not copied, since a copy has nothing to export.
 
 **Copies** Every tracked file except `README.md`, `CHANGELOG.md`, itself, `scripts/lib/overlay.js`,
-`scripts/prep-folder.js`, `examples/` and `prep/` — dotfiles included. A hand-made copy most often misses `.gitignore`, and without it `.env` is
+`scripts/prep-folder.js`, `examples/`, `prep/` and `plans/` — dotfiles included. A hand-made copy most often misses `.gitignore`, and without it `.env` is
 committed on the first push.
 
 **Also** Names the package after the target folder, writes a starter README if the target has none,
@@ -276,7 +360,7 @@ differences were deliberate, whether a fix worked, or what is worth sending upst
 modules, data layer, API layer, severity rubric, file layout, knowledge sources, test strategy (scope,
 entry and exit criteria), setup checklist.
 
-**Who reads it** All seven agents, every run, before doing anything else. You, when onboarding.
+**Who reads it** All nine agents, every run, before doing anything else. You, when onboarding.
 
 **How to use** Fill in every `<...>` placeholder. Delete rows that don't apply. Never delete a section
 heading — the agents look sections up by name and number.
@@ -560,7 +644,8 @@ marked *Not Run*. `npm run regression` hands it its own scope: the release and t
 the order listed, so it is listed last in `playwright.config.ts`.
 
 **Escape hatch** `AUTO_CYCLE_REPORT=false` turns the report off; the results are recorded regardless. A
-failure to record or report is printed and never fails the run.
+failure to record or report is printed and never fails the run. A test that never ran is not recorded, so
+`npx playwright test --list` leaves the record untouched.
 
 ### `scripts/defect-evidence.ts`
 
@@ -665,8 +750,8 @@ Columns: `TCID, Status, Executed By, Executed On, Environment, Notes`; Status is
 
 ### `specs/defects/`
 
-**What** Committed, so the whole team shares one defect record. `defect-log.json` — every confirmed defect
-and its status (`pending` → `raised` → `verified`); `evidence/<entry id>/` — its screenshots;
+**What** Committed, so the whole team shares one defect record. `log/<entry id>.json` — every confirmed
+defect, one file each so two branches never conflict, and its status (`pending` → `raised` → `verified`); `evidence/<entry id>/` — its screenshots;
 `defects.csv` — bugs to import, only without a Jira connection. The cycle report counts open defects from
 the log, so a regression run on any machine sees them.
 
@@ -719,6 +804,10 @@ helpers from `tests/common/`, and keeping two implementations in sync is a bug w
 | `npm test` | Full suite |
 | `npm run regression` | Regression for a client release — choose its tickets or epics; writes the cycle report |
 | `npm run test:regression` | Every test tagged `@Regression`, no selection |
+| `npm run results:last` | The last run's results, failures grouped — `--text` for a summary |
+| `npm run context:sync` | Which `context/` rules the last run verified or contradicted — suggestions; `--stories`, `--text` |
+| `npm run story -- status` | Where each story is and whether it may merge; `start`, `switch`, `release-start`, `finish` — see `docs/GIT-WORKFLOW.md` |
+| `npm run env -- get <KEY>` | An allow-listed, non-secret setting from `.env`; `npm run env -- now`, the agents' clock |
 | `npm run test:headed` / `test:debug` / `test:ui` | Watched, stepped, interactive |
 | `npm run test:api` | The `api` project only |
 | `npm run db:check` | Database connectivity |

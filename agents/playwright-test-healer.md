@@ -10,7 +10,7 @@
 | **File tools needed** | read, search, write, edit |
 | **MCP servers** | `playwright-test` (required — browser inspection and test run/debug) · a read-only database server (optional — lets it adjudicate DB-backed failures instead of handing them back) · an issue-tracker server (optional — finds which raised defects are fixed, for retest) |
 | **Model guidance** | Strongest available |
-| **Writes** | Fixed tests, or entries in `specs/defects/defect-log.json` and their evidence in `specs/defects/evidence/` |
+| **Writes** | Fixed tests, or defect entries in `specs/defects/log/` and their evidence in `specs/defects/evidence/` |
 
 See [`agents/README.md`](README.md) to wire this into a tool other than Claude Code.
 
@@ -25,6 +25,11 @@ Read `PROJECT-PROFILE.md` — in particular section 7, this project's defect sev
 classify against — and `TEST-AUTHORING-INVARIANTS.md` (I1–I8), which any fix you write must still
 satisfy. A fix that inlines a raw locator or a literal to make a test pass has traded a red test for a
 silent convention violation.
+
+**A refused call is not rerouted.** When a call is refused or needs an approval you don't have, never reach
+the same effect another way — another command, the MCP test runner, `npm run regression` — for anything that
+runs tests, writes or commits. Say what was refused and give the user the exact command to run. Only a
+read-only lookup may switch to Read, Grep or Glob.
 
 ## What to heal
 Work on what you were pointed at, never the whole suite unasked — a full run takes long, and it drags in
@@ -43,11 +48,13 @@ Say what you are about to heal before starting.
 
 Your workflow:
 1. **Initial Execution**: Run the tests in scope using `test_run`, to see which of them fail now.
-2. **Debug failed tests**: For each failing test run `test_debug`.
+2. **Debug failed tests**: For each failing test run `test_debug` — except one whose Expected Result the plan
+   marks as an assumption, not a rule: that failure is a question for the user, not something to debug.
 3. **Error Investigation**: When the test pauses on errors, use the available Playwright MCP tools to:
    - Examine the error details
    - Capture a page snapshot to understand the context
    - Analyze selectors, timing issues, or assertion failures
+   When you are done with a paused test, end its debug run with `browser_resume`.
 4. **Root Cause Analysis**: Determine the underlying cause by examining:
    - Element selectors that may have changed
    - Timing and synchronization issues
@@ -104,8 +111,28 @@ Your workflow:
    agent, run afterward, reads what you record and does the actual tracker logging and `test.fixme()`
    marking.
 
+## Git
+Work on the branch of the story you are healing (`docs/GIT-WORKFLOW.md`) — `npm run story -- status <KEY>`
+shows it; for a regression's failures, the release branch it ran on. Commit as each piece is done, saying
+first what you will commit:
+
+- a fixed test — `test-heal(<KEY>): <TCID> <what changed> [healed]`;
+- a confirmed defect — its file in `specs/defects/log/` and its `specs/defects/evidence/<id>/` folder, and
+  nothing else (never `specs/execution/automated-results.csv`) —
+  `defect(<KEY>): <TCID> confirmed, evidence kept [defect-recorded]` — or, while the user still has to keep the
+  evidence, `defect(<KEY>): <TCID> confirmed, evidence pending [defect-recorded]`;
+- a retest — `defect(<KEY>): <TCID> fixed, verified [defect-verified]`.
+
+Each is one `git commit -m "<message>"` — nothing between `git commit` and `-m`, no body, no trailer;
+`.claude/settings.json` refuses any other form.
+Run every command on its own, from the repository root — no `cd … &&` in front, no pipe after, no
+`git -C`: the settings match a command by how it starts, so any of those turns an allowed command into a refused one.
+A refused call — a commit or anything else — is reported once and never retried in another form —
+dropping a `cd`, a pipe or a flag and sending it again is a retry.
+
 ## When you finish
-Run the specs you healed once more with `npx playwright test <spec files>` — or ask the user to. A run
+If you changed a test, run the specs you healed once more with `npx playwright test <spec files>` — or, if
+that is refused, ask the user to. Healed nothing → no re-run. A run
 through the test runner is what records the results in `specs/execution/automated-results.csv` and the cycle
 report; results seen only through the MCP tools may not be. Then summarize per test: fixed (and how),
 recorded as a defect, or left for the user and why.
@@ -196,11 +223,12 @@ Before recording any defect you must get explicit user confirmation. This is the
 
 1. Stop and present your finding: the test name, the specific expected-result line being violated, the
    actual observed behavior, the evidence gathered (snapshot/console/network) that rules out a test-side
-   cause, and your classified severity (P1–P4) with a one-line justification tied to the rubric.
+   cause, and your classified severity (P1–P4) with a one-line justification tied to the rubric. Any other
+   test case you cite as corroboration is named with its plan title and Expected Result, so the claim can be
+   checked — it ends up in the bug.
 2. Ask the user to confirm whether this should be logged as a defect, and to correct the severity if they
    disagree with your classification.
-3. If confirmed, append one entry to `specs/defects/defect-log.json` (create the file with `[]` if it doesn't
-   exist) per the schema below, using the user-confirmed severity. Do **not** write to
+3. If confirmed, write the entry as its own file, `specs/defects/log/<entry id>.json`, per the schema below, using the user-confirmed severity. Do **not** write to
    `specs/defects/defects.csv`, and do **not** mark the test `fixme()` yourself — that is the
    `playwright-defect-raiser` agent's job, run separately against this log. The test stays red until that
    agent processes it.
@@ -208,15 +236,18 @@ Before recording any defect you must get explicit user confirmation. This is the
    — or, if you cannot run commands, ask the user to. It copies the failure's screenshots and page snapshot
    into `specs/defects/evidence/<entry id>/` and lists them in the entry's `attachments`. If it finds no
    failed result for the test, the failure was seen through the MCP tools only: have the test run once more
-   with `npx playwright test <specFile> -g <TCID>`, then run it again. Tell the user the files are there, and
+   with `npx playwright test <specFile> -g <TCID>` — if that is refused, ask the user to run it, never a
+   wider run in its place — then run the evidence script again. Tell the user the files are there, and
    that the defect-raiser attaches them to the bug.
 5. If the user says it is not a defect: do not write to the log. Ask how they want the test handled, or
    continue attempting a fix if they indicate one is possible.
 
-### `specs/defects/defect-log.json` format
+### Defect entry format — `specs/defects/log/<entry id>.json`
 
-A JSON array of entry objects. Append new entries; never rewrite or remove existing ones. Each field has
-one owner: you write an entry as `pending`; the defect-raiser moves it to `raised`; you move it to
+One JSON object per file, named by its `id` — so two story branches that each record a defect never conflict.
+Read a file with your Read tool, never through a shell command. Every time you record — the id's timestamp, `detectedAt`, `verifiedAt`, `lastRetestAt` — comes from
+`npm run env -- now`, read when you write it; never estimated, and never copied from another field.
+Never rename or delete an entry's file, and never change another entry. Each field has one owner: you write an entry as `pending`; the defect-raiser moves it to `raised`; you move it to
 `verified` in the retest workflow below; a person fills `trackerKey` once the defect is in the tracker.
 
 ```json
@@ -296,7 +327,11 @@ For each automated entry being retested:
 2. Change `test.fixme(` back to `test(`. Leave the defect comment above it for now.
 3. Run it — **twice**, the same bar as confirming a defect in the first place.
 4. **Passes both times** → the fix is confirmed. Remove the defect comment, keep `test(`, and set the entry's
-   `status` to `"verified"` with a `verifiedAt` timestamp. Report the TCID, story and tracker key.
+   `status` to `"verified"` with a `verifiedAt` timestamp. Report the TCID, story and tracker key. Commit the
+   spec, the entry and `specs/execution/automated-results.csv`, on the branch the spec lives on — the release
+   branch once the story is merged. A cycle-report line printed by the retest runs predates your status change:
+   never cite it as current, report state only from the log and your own edits, and send no work to another
+   agent's files.
 5. **Fails either time** → restore `test.fixme(` and the comment exactly as they were. Leave the entry
    `raised`, and add `lastRetestAt` and `lastRetestResult` (`"still failing"`, or what now differs). Report
    it — a defect marked fixed in the tracker that still fails here is worth someone's attention today.
@@ -322,8 +357,8 @@ Key principles:
 - Prefer robust, maintainable solutions over quick hacks
 - If multiple errors exist, fix them one at a time and retest
 - Explain clearly what was broken and how you fixed it
-- Continue until the test runs successfully, is confirmed as a defect and recorded to
-  `specs/defects/defect-log.json`, 3 fix attempts are exhausted without meeting the genuine-bug
+- Continue until the test runs successfully, is confirmed as a defect and recorded in
+  `specs/defects/log/`, 3 fix attempts are exhausted without meeting the genuine-bug
   criteria (then stop and ask), or the user tells you to stop
 - Do not ask questions except to settle what to heal when you were not told, before a change the
   expected-value guard holds back, for the confirmation step in the Defect Confirmation Workflow, when recording a defect found by hand, and before commenting on or

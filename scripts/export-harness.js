@@ -33,7 +33,7 @@ const root = path.join(__dirname, '..');
  * README.md is replaced by one written for the project; the template's history stays with the template.
  */
 const TEMPLATE_ONLY = ['README.md', 'CHANGELOG.md', 'scripts/export-harness.js', 'scripts/lib/overlay.js', 'scripts/prep-folder.js'];
-const TEMPLATE_ONLY_DIRS = ['examples/', 'prep/'];
+const TEMPLATE_ONLY_DIRS = ['examples/', 'prep/', 'plans/'];
 
 function fail(message) {
     console.error(`\nexport: ${message}\n`);
@@ -190,8 +190,8 @@ harness's version, not this project's: the project's releases are its client's, 
 
 Defined in [agents/](agents/), wired into Claude Code by \`.claude/commands/\`:
 \`/playwright-context-builder\`, \`/playwright-test-planner\`, \`/playwright-test-generator\`,
-\`/playwright-test-reviewer\`, \`/playwright-test-healer\`, \`/playwright-defect-raiser\` — and
-\`/playwright-harness-improver\` when the harness itself does not fit; it records each change in
+\`/playwright-test-reviewer\`, \`/playwright-test-executor\`, \`/playwright-test-healer\`,
+\`/playwright-defect-raiser\`, \`/playwright-test-reporter\` — and \`/playwright-harness-improver\` when the harness itself does not fit; it records each change in
 [HARNESS-CHANGES.md](HARNESS-CHANGES.md).
 
 Every story must arrive with its issue key — the planner stops and asks for one if it is missing.

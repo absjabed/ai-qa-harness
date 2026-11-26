@@ -1,6 +1,11 @@
 # Normalize line endings so a Windows clone and a CI Linux runner see the same files.
 * text=auto eol=lf
 
+# The execution records merge by keeping both sides' lines, so two story branches that each ran tests never
+# conflict here. A test case can then have two rows; the scripts read the newest (scripts/lib/cycle.ts).
+specs/execution/automated-results.csv merge=union
+specs/execution/manual-results.csv merge=union
+
 # Binary / generated
 *.png binary
 *.jpg binary

@@ -2,7 +2,7 @@
  * `npm run defect:evidence` — keep a defect's screenshots with the defect log, before the next run wipes them.
  *
  * Playwright clears `test-results/` at the start of every run, so the screenshot of a failure is gone by the
- * time anyone files the bug unless it is copied out. For each entry in `specs/defects/defect-log.json` that
+ * time anyone files the bug unless it is copied out. For each defect in `specs/defects/log/` that
  * has a spec file and no evidence yet, this finds the test's failed result in `test-results/results.json`
  * and copies its screenshots and page snapshot (`error-context.md`) into
  * `specs/defects/evidence/<entry id>/`, recording the copied paths in the entry's `attachments`. The healer
@@ -18,21 +18,20 @@
 
 import fs from 'fs';
 import path from 'path';
-import { DEFECT_LOG, eachSpec, type PwAttachment, type PwReport } from './lib/cycle';
+import { eachSpec, type PwAttachment, type PwReport } from './lib/cycle';
+import { DEFECT_DIR, LEGACY_DEFECT_LOG, readDefects, writeDefect } from './lib/defects';
 import { ROOT } from './lib/trace';
-
-interface Entry { id: string; status: string; tcid?: string; specFile?: string | null; testName?: string; attachments?: string[] }
 
 const args = process.argv.slice(2);
 const withTraces = args.includes('--with-traces');
 const only = args.filter((a) => !a.startsWith('--'));
 const abs = (p: string) => path.join(ROOT, p);
 
-if (!fs.existsSync(abs(DEFECT_LOG))) {
-    console.log(`defect:evidence — no ${DEFECT_LOG} yet; nothing to do.`);
+const { entries: log, legacy } = readDefects();
+if (!log.length) {
+    console.log(`defect:evidence — no defects in ${DEFECT_DIR}/ yet; nothing to do.`);
     process.exit(0);
 }
-const log = JSON.parse(fs.readFileSync(abs(DEFECT_LOG), 'utf8')) as Entry[];
 const results = abs('test-results/results.json');
 const report: PwReport | null = fs.existsSync(results) ? JSON.parse(fs.readFileSync(results, 'utf8')) : null;
 const specs = report ? eachSpec(report) : [];
@@ -40,7 +39,7 @@ const specs = report ? eachSpec(report) : [];
 const wanted = (a: PwAttachment) =>
     !!a.path && (a.contentType.startsWith('image/') || a.name === 'error-context' || (withTraces && /zip|video/.test(a.contentType)));
 
-let changed = false;
+const changed = new Set<string>();
 for (const entry of log) {
     if (!entry.specFile || entry.attachments?.length || entry.status === 'verified') continue;
     if (only.length && !only.includes(entry.id) && !only.includes(entry.tcid ?? '')) continue;
@@ -65,9 +64,15 @@ for (const entry of log) {
         kept.push(dest);
     }
     entry.attachments = kept;
-    changed = true;
+    changed.add(entry.id);
     console.log(`  ${entry.id}: kept ${kept.length} file(s) in ${dir.split(path.sep).join('/')}/`);
 }
 
-if (changed) fs.writeFileSync(abs(DEFECT_LOG), JSON.stringify(log, null, 2) + '\n', 'utf8');
-console.log(changed ? `defect:evidence — ${DEFECT_LOG} updated.` : 'defect:evidence — nothing new to keep.');
+// A copy from before 1.1 keeps its defects in one file. Write each out as its own, once, and say so: the old
+// file is then left for the team to delete in the same commit.
+if (legacy) {
+    for (const entry of log) if (!fs.existsSync(abs(`${DEFECT_DIR}/${entry.id}.json`))) changed.add(entry.id);
+}
+for (const entry of log) if (changed.has(entry.id)) writeDefect(entry);
+if (legacy) console.log(`defect:evidence — ${LEGACY_DEFECT_LOG} is the old single log; every entry is now in ${DEFECT_DIR}/. Delete the old file in the same commit.`);
+console.log(changed.size ? `defect:evidence — ${changed.size} defect file(s) updated in ${DEFECT_DIR}/.` : 'defect:evidence — nothing new to keep.');

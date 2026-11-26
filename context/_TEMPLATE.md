@@ -29,7 +29,9 @@ matter. Leave out everything a test author will never touch.>`
 so they stay true through a refactor. Say what happens when one is violated — usually the answer is
 "behavior is undefined", and that is worth writing down.>`
 
-Every rule ends with its source — `npm run check` fails one without `source:`.
+Every rule ends with its source — `npm run check` fails one without `source:`. A rule a test case has
+exercised and passed also carries `· verified: <TCID>, <YYYY-MM-DD>` — added by the context-builder from
+`npm run context:sync`, on a yes. A result only ever confirms a rule; it never creates or rewrites one.
 
 1. `<Rule.>` `<Why it matters, or what breaks without it.>` — `<source: observed / source module / document §n / PROJ-123>`
 2. `<Rule.>` — `<source>`
@@ -77,6 +79,16 @@ reusing.>`
 | Source | Cases | Edge cases and data worth reusing |
 |---|---|---|
 | `<file, sheet or suite>` | `<IDs or count>` | `<the boundary, the odd input, the role combination someone already found>` |
+
+## Design intent
+
+`<Optional. What the designs show for this area — read from Figma or the team's design tool, cited. Not rules:
+the Invariants are what the application must do; this is what it was designed to look like. Where the running
+application or a rule disagrees with a design, record it under Caveats and ask.>`
+
+| Screen or state | What the design shows | Design — link, node | Read on |
+|---|---|---|---|
+| `<screen>` | `<labels, fields, messages, states>` | `<link — node ID>` | `<YYYY-MM-DD>` |
 
 ## Caveats
 

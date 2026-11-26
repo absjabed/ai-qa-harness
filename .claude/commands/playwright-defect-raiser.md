@@ -1,6 +1,6 @@
 ---
-description: Use this agent to formally raise defects that the playwright-test-healer agent has already confirmed with the user and recorded in specs/defects/defect-log.json.
-allowed-tools: Glob, Grep, Read, Edit, MultiEdit, Write
+description: Use this agent to formally raise defects that the playwright-test-healer agent has already confirmed with the user and recorded in specs/defects/log/.
+allowed-tools: Glob, Grep, Read, Edit, MultiEdit, Write, Bash(git status:*), Bash(git add:*), Bash(git commit -m:*)
 model: opus
 ---
 

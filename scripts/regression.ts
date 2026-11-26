@@ -15,6 +15,10 @@
  *   npm run regression -- --release 2.26 --browser chromium      one Playwright project (browser)
  *   npm run regression -- --release none                         tickets with no release yet
  *   npm run regression -- --release all                          every release — the full regression
+ *   npm run regression -- --stories PROJ-12 --all-tests          one story, every test — no release needed
+ *   npm run regression -- --release 2.26 --grep @Checkout        only tests matching an expression, e.g. a module tag
+ *   npm run regression -- --release 2.26 --headless              no browser windows — for a run in the background
+ *   npm run regression -- --release 2.26 --dry-run               the selection and its test count as JSON; runs nothing
  *
  * A release's own tickets are what changed in it; the earlier releases' tests are what it might have
  * broken. Picking several releases, or all of them, runs both.
@@ -26,7 +30,7 @@
 import 'dotenv/config';
 import readline from 'readline/promises';
 import { spawnSync } from 'child_process';
-import { buildCycleReport, plansWithRelease } from './lib/cycle';
+import { buildCycleReport, eachSpec, plansWithRelease } from './lib/cycle';
 import { NO_RELEASE, rel, releaseOfSpec, ROOT, storyKeyOf, storySpecFiles, type Plan } from './lib/trace';
 
 const args = process.argv.slice(2);
@@ -112,6 +116,9 @@ async function main(): Promise<void> {
     if (chosenReleases.length) {
         const unknown = chosenReleases.filter((r) => !releases.includes(r));
         if (unknown.length) fail(`no tickets in release ${unknown.join(', ')}. Known releases: ${releases.join(', ')}.`);
+    } else if (values('--stories').length || values('--epics').length) {
+        // Chosen tickets or epics need no release: look in every one.
+        chosenReleases = releases;
     } else if (rl) {
         console.log('\nReleases:');
         releases.forEach((r, i) => console.log(`  ${i + 1}. ${shown(r)}  (${tickets.filter((t) => t.release === r).length} tickets)`));
@@ -160,14 +167,54 @@ async function main(): Promise<void> {
     const noSpec = pool.filter((t) => !t.spec);
     const project = option('--browser');
 
-    const label = chosenReleases.map((r) => (r === NO_RELEASE ? 'no release' : `release ${r}`)).join(', ') + (pool.length < tickets.filter((t) => chosenReleases.includes(t.release)).length ? ` — ${pool.length} ticket${pool.length === 1 ? '' : 's'}` : '');
+    const releaseGiven = values('--release').length > 0 || !(byStories.length || byEpics.length);
+    const label = releaseGiven
+        ? chosenReleases.map((r) => (r === NO_RELEASE ? 'no release' : `release ${r}`)).join(', ') + (pool.length < tickets.filter((t) => chosenReleases.includes(t.release)).length ? ` — ${pool.length} ticket${pool.length === 1 ? '' : 's'}` : '')
+        : byEpics.length ? byEpics.map((e) => `epic ${e}`).join(', ') : pool.length === 1 ? pool[0].key : `${pool.length} stories`;
+    const grep = option('--grep');
+    // Playwright takes one --grep: combine @Regression and the user's expression as two lookaheads.
+    const grepArg = regressionOnly && grep ? `^(?=.*@Regression)(?=.*${grep})` : regressionOnly ? '@Regression' : grep;
+    const headless = flag('--headless');
 
-    console.log(`\nRegression: ${label}`);
-    console.log(`  tickets   ${pool.map((t) => t.key).join(', ')}`);
-    console.log(`  tests     ${regressionOnly ? 'tagged @Regression' : 'all'}`);
-    console.log(`  browsers  ${project ?? 'every browser project in playwright.config.ts — pass --browser <name> for one'}`);
-    console.log(`  build     ${process.env.BUILD_UNDER_TEST?.trim() || 'not recorded — set BUILD_UNDER_TEST in .env to name the build under test'}`);
-    if (noSpec.length) console.log(`  no spec   ${noSpec.map((t) => t.key).join(', ')} — reported from manual results only`);
+    const dryRun = flag('--dry-run');
+    // A dry run prints only its JSON, so the executor can read it as data.
+    const say = (line: string) => { if (!dryRun) console.log(line); };
+    say(`\nRegression: ${label}`);
+    say(`  tickets   ${pool.map((t) => t.key).join(', ')}`);
+    say(`  tests     ${regressionOnly ? 'tagged @Regression' : 'all'}${grep ? `, matching ${grep}` : ''}`);
+    say(`  browsers  ${project ?? 'every browser project in playwright.config.ts — pass --browser <name> for one'}`);
+    say(`  build     ${process.env.BUILD_UNDER_TEST?.trim() || 'not recorded — set BUILD_UNDER_TEST in .env to name the build under test'}`);
+    if (noSpec.length) say(`  no spec   ${noSpec.map((t) => t.key).join(', ')} — reported from manual results only`);
+
+    if (dryRun) {
+        // The exact tests Playwright would run — counted by Playwright itself, not guessed.
+        // --reporter=json replaces the configured reporters for the listing, so the results record and the cycle
+        // report are not touched — a listing through them would record every test as skipped.
+        let testCount: number | null = null;
+        if (files.length) {
+            const listed = spawnSync(process.execPath, [require.resolve('@playwright/test/cli'), 'test', ...files, '--list', '--reporter=json',
+                ...(grepArg ? ['--grep', grepArg] : []), ...(project ? ['--project', project] : [])],
+                { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, env: { ...process.env, PLAYWRIGHT_JSON_OUTPUT_NAME: '' } });
+            try {
+                // The JSON starts on its own line; a loader may print a tip line before it, and a tip can contain a brace.
+                const start = listed.stdout.search(/^\{/m);
+                const json = JSON.parse(listed.stdout.slice(start));
+                testCount = eachSpec(json).reduce((n, s) => n + s.tests.length, 0);
+            } catch { testCount = null; }
+        }
+        console.log(JSON.stringify({
+            label,
+            tickets: pool.map((t) => ({ key: t.key, title: t.title, release: t.release === NO_RELEASE ? null : t.release, epic: t.epic, spec: t.spec, automated: t.automated, manual: t.manual })),
+            tests: regressionOnly ? 'tagged @Regression' : 'all',
+            grep: grep ?? null,
+            browsers: project ?? 'every browser project in playwright.config.ts',
+            testRuns: testCount,
+            build: process.env.BUILD_UNDER_TEST?.trim() || null,
+            noSpec: noSpec.map((t) => t.key),
+        }, null, 2));
+        rl?.close();
+        return;
+    }
 
     if (rl && !flag('--yes')) {
         if ((await ask('Run it? [Y/n]: ', 'y')).toLowerCase().startsWith('n')) {
@@ -192,11 +239,11 @@ async function main(): Promise<void> {
 
     // Playwright's own CLI, run by this Node — avoids depending on a shell or on npx being on PATH.
     const cli = require.resolve('@playwright/test/cli');
-    const pwArgs = ['test', ...files, ...(regressionOnly ? ['--grep', '@Regression'] : []), ...(project ? ['--project', project] : [])];
+    const pwArgs = ['test', ...files, ...(grepArg ? ['--grep', grepArg] : []), ...(project ? ['--project', project] : [])];
     const run = spawnSync(process.execPath, [cli, ...pwArgs], {
         cwd: ROOT,
         stdio: 'inherit',
-        env: { ...process.env, CYCLE_REPORT_SCOPE: JSON.stringify(scope) },
+        env: { ...process.env, CYCLE_REPORT_SCOPE: JSON.stringify(scope), ...(headless ? { HEADLESS: 'true' } : {}) },
     });
 
     // The cycle report was written by lib/cycleReporter.ts as the run finished, scoped to this selection.

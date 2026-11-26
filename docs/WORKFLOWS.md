@@ -61,11 +61,26 @@ Out: the spec, plus new page object methods and fixtures, implemented, wired and
 
 ### Step 4 — Run
 
+When the generator finishes it asks *run these tests now?* — a yes starts `/playwright-test-executor` for a
+story run. Or start it yourself:
+
+```
+/playwright-test-executor ACME-1234
+```
+
+It shows what it will run — the tests, the browser, the build — and waits for a yes, then runs them in the
+foreground, story by story if the run is long. A narrow re-run you ask for — these TCIDs — shows the dry run
+without a second yes and is committed with its own counts. From there it takes any failures to the healer (step 5), confirmed defects to the defect-raiser (step 6), asks for
+the manual results (step 7), offers the report, and lists what the run confirmed in `context/` — rules
+verified or contradicted, known unknowns a case may answer — for the context-builder to apply on your yes.
+It takes the session back after every hand-over, so later runs, reports and syncs go through it.
+Running by hand still works:
+
 ```bash
 npx playwright test "tests/stories/<release>/<KEY>.spec.ts"
 ```
 
-When the run ends, each test case's result is recorded in `specs/execution/automated-results.csv` and the
+When any run ends, each test case's result is recorded in `specs/execution/automated-results.csv` and the
 cycle report for that story is written to `reports/` — no separate step.
 
 ### Step 5 — Heal what fails
@@ -77,7 +92,8 @@ cycle report for that story is written to `reports/` — no separate step.
 Name what to heal — the story key, a spec, a TCID, or "what failed in the last run". Name nothing and it
 lists the last run's failures and asks. Three attempts per test. If it finds a genuine bug it stops and asks
 you to confirm it and its severity, then keeps the screenshots in `specs/defects/evidence/`. When it is done
-it runs the healed spec once more, so the record has the final results.
+it runs any spec it changed once more, so the record has the final results. A call that is refused it never
+reroutes: it gives you the exact command to run instead.
 
 ### Step 6 — File confirmed defects
 
@@ -92,12 +108,16 @@ TCID, with the screenshots attached — searching first, so a bug already filed 
 than duplicated. Without one it appends rows to `specs/defects/defects.csv` for you to import; attach the
 screenshots and fill each `trackerKey` in the defect log afterwards.
 
-### Step 7 — Manual cases, and committing
+### Step 7 — Manual cases, the report, and the merge
 
-Execute the plan's **Manual** cases by hand and fill in their rows in `specs/execution/manual-results.csv`. A
-case that fails: tell the healer its TCID and what happened, and it records the defect like any other. Then
-rebuild the report — `npm run report:cycle -- --stories ACME-1234` — and commit the plan, the spec, page
-objects, `specs/execution/` and `specs/defects/`.
+Execute the plan's **Manual** cases by hand and fill in their rows in `specs/execution/manual-results.csv` —
+the executor asks about those still Not Run. A case that fails: tell the healer its TCID and what happened,
+and it records the defect like any other.
+
+Then the executor offers the report — `/playwright-test-reporter`, scope ACME-1234 — and, once the tests are
+generated, reviewed and run, the merge: `npm run story -- finish ACME-1234` brings the latest base in, then
+the push and a pull request into it, each asked. Each agent has committed its own step along the way
+(`docs/GIT-WORKFLOW.md`).
 
 ---
 
@@ -290,9 +310,13 @@ Each release has its tickets — the plans whose `**Release:**` names it — and
 The STLC's last phase depends on the TCIDs being intact end to end, which is why I8 exists.
 
 1. **Name the build and retest anything reported fixed.** Set `BUILD_UNDER_TEST` in `.env` to the build
-   deployed for testing — it is recorded with every result and printed in the report. Then retest (workflow
+   deployed for testing — it is recorded with every result and printed in the report — and, optionally,
+   `TEST_ENVIRONMENT` to the environment's name (QA, UAT), which the report prints in place of the `BASE_URL`
+   host. Then retest (workflow
    9): a defect fixed in the tracker but still `fixme`'d here counts as blocked coverage.
-2. **Run the regression:**
+2. **Run the regression** — with `/playwright-test-executor`: say *regression for 2.26*. It shows the
+   selection from a dry run and waits for a yes, then runs it and sees it through — steps 4 and 5 below,
+   then the report. Or run it yourself:
 
    ```bash
    npm run regression
@@ -336,9 +360,13 @@ The STLC's last phase depends on the TCIDs being intact end to end, which is why
    with a reason written down — is a legitimate outcome. One missed because nobody looked is not.
 7. **Keep the final report** — the same command with `--closure` writes it to `specs/execution/closure/`.
    Commit it, with `specs/execution/` and `specs/defects/`.
+8. **Share it** — `/playwright-test-reporter` writes the formal report for the release — or a story, an epic,
+   several stories — as Markdown, HTML or PDF, with a verdict, the headline figures, every ticket and its Jira
+   status, tickets with no plan yet, and a sign-off block. On your yes it comments a test summary on each
+   ticket in Jira.
 
 **The report after every run.** Any `playwright test` run — one spec, a whole folder — writes a cycle report
-for the stories it ran, without being asked. `AUTO_CYCLE_REPORT=false` in `.env` turns that off.
+for the stories it ran, without being asked; `npx playwright test --list` runs nothing and records nothing. `AUTO_CYCLE_REPORT=false` in `.env` turns that off.
 `npm run report:cycle` is always there to build one by hand: for everything, `--release`, or `--stories`, and
 `--strict` to exit non-zero when a criterion is unmet.
 
@@ -348,7 +376,7 @@ for the stories it ran, without being asked. `AUTO_CYCLE_REPORT=false` in `.env`
 
 A `test.fixme` is only correct while its bug is open. Once it is fixed, the skipped test is lost coverage.
 
-1. Make sure each raised entry in `specs/defects/defect-log.json` has its `trackerKey` — filled in for
+1. Make sure each raised entry in `specs/defects/log/` has its `trackerKey` — filled in for
    you in tracker mode, by hand after a CSV import.
 2. Run the healer and ask it to retest raised defects — all of them, or one by TCID. With the tracker server
    wired it finds the fixed ones itself, from the bugs' status:
@@ -361,7 +389,8 @@ A `test.fixme` is only correct while its bug is open. Once it is fixed, the skip
    Fails either → `fixme` restored exactly, entry stays `raised`, retest recorded — worth telling whoever
    marked the ticket fixed. With a tracker it offers, asking first, to comment the result on the bug and
    to move it: it lists the transitions your team's Jira workflow offers on that bug, and applies only the
-   one you pick.
+   one you pick. It commits the spec, the entry and the results file together, on the branch the spec lives
+   on — the release branch once the story is merged.
 
 ---
 
@@ -423,6 +452,11 @@ Steps:
 
 Small drift does not need the agent. When one test fails because a `context/` document no longer matches
 the application, fix the document in the same change as the test.
+
+**After a run**, the executor offers a narrow *context sync*: `npm run context:sync` links the run's test cases
+to the rules they verified or contradicted, and the context-builder records only what you agree to — a
+`verified:` mark, a caveat naming an open defect, a known unknown answered. A rule with an open defect gets no
+`verified:` mark — its passing cases are held until the defect is fixed. A result never becomes a new rule.
 
 ---
 

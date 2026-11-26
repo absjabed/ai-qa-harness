@@ -32,12 +32,33 @@ already been written down. Everything below refers to those by name and
 number rather than restating them. If `PROJECT-PROFILE.md` still contains `<...>` placeholders in the
 sections you need, stop and say which sections are unfilled — do not guess an application's vocabulary.
 
+## Git
+Work on the story's branch (`docs/GIT-WORKFLOW.md`). Check with `npm run story -- status <KEY>`. Not on it →
+offer to resume it (`npm run story -- start <KEY> --resume --yes`); no branch yet → follow the story start
+protocol in that file before writing anything.
+
+Commit as you finish, saying first what you will commit: the spec and the page objects, fixtures and data it
+needed — `git commit -m "test-gen(<KEY>): <n> tests for <area> [tests-generated]"` — then the review line
+below — `git commit -m "test-review(<KEY>): spec reviewed clean [tests-reviewed]"`.
+Write a commit exactly in that one-line form — nothing between `git commit` and `-m`, no body, no
+trailer; `.claude/settings.json` refuses any other form.
+Run every command on its own, from the repository root — no `cd … &&` in front, no pipe after, no
+`git -C`: the settings match a command by how it starts, so any of those turns an allowed command into a refused one. A refused call — a commit or anything else — is
+reported once and never retried in another form — dropping a `cd`, a pipe or a flag and sending it
+again is a retry.
+
 ## Test Authoring Invariants
 Read `TEST-AUTHORING-INVARIANTS.md` and reference I1–I8 by number. Never restate them inline.
 
 ## For each test you generate
 - Obtain the test plan: the scenario's **TCID** and summary, suite name, target file, the role it starts
   as, and steps/verifications — note any fixtures, page objects, or data keys the plan already names.
+- **Raise what you cannot implement as written.** At your first checkpoint, list every plan line that does
+  not hold up: an Expected Result that contradicts itself or its scenario, a method or key named
+  inconsistently or not at all, a key no step uses, an assertion the harness has no way to make (a "recorded
+  but not failing" check, for one). Never resolve one silently. A fix that changes what a test asserts
+  against the plan's Expected Result needs the plan changed too — by the planner, or by the user — before
+  the story merges; say so rather than recording it only in the spec.
 - **The TCID comes from the plan, never from you (I8).** It is the `<STORY-KEY>-TC<NNN>` in the scenario's
   heading in `specs/<STORY-KEY>.plan.md`. If you are asked to generate a scenario that has no plan row —
   an ad hoc request, or a plan without TCIDs — do not assign a number yourself. Ask for the story's issue
@@ -55,7 +76,10 @@ Read `TEST-AUTHORING-INVARIANTS.md` and reference I1–I8 by number. Never resta
   `tests/seeds/<role>.spec.ts` for a scenario that starts logged in, `tests/seed.spec.ts` for one that
   starts signed out (the login screen itself). Never leave the seed out — the tool would then pick the first
   file it finds with "seed" in its name. The seed logs in inside the test runner, so you never handle a
-  password: never read `.env`. The generated test still logs in through `userLogin` in its `beforeEach`
+  password: never read `.env`, never fill a login form, and never reach for credentials from any other
+  source — environment variables included, inside `browser_run_code` or `browser_evaluate` too. A role
+  switch during the drive is a new `generator_setup_page` with that role's seed. The generated test still
+  logs in through `userLogin` in its `beforeEach`
   (I4); the seed only gives the live drive its starting point. This is mandatory even when the plan
   text reads as descriptive enough to write code directly — plan text states intent, not verified DOM or
   behavior. Writing a page object method or assertion for a step that was never actually driven through
@@ -83,6 +107,12 @@ Read `TEST-AUTHORING-INVARIANTS.md` and reference I1–I8 by number. Never resta
   every plan step and verification — not an empty or partial log. A missing or empty log means the live
   drive didn't happen or didn't start correctly: stop, re-run `generator_setup_page` and the per-step
   `browser_*` calls, and do not proceed to writing until the log reflects genuine actions for each step.
+  The log holds only the current session: when a scenario needs several (one per role), read the log
+  before each new `generator_setup_page` and keep what each one recorded. Never open a session only to
+  satisfy a tool.
+- A step that only a second session can reproduce — another browser context, a page left open while
+  another role acts — is driven in that form, or reported to the user as not driven. Never describe a step
+  as driven that wasn't.
 - **Blocking checkpoint — target file path.** Never assume a path from the scenario name, and never
   proceed to `generator_write_test` without an explicit path confirmed by the user, even when a plausible
   path seems obvious. If a full `<test-file>` path wasn't given in the invocation, propose one from the
@@ -110,7 +140,9 @@ Read `TEST-AUTHORING-INVARIANTS.md` and reference I1–I8 by number. Never resta
   - If the scenario requires an authenticated session, use a `test.beforeEach` calling `userLogin` (I4)
     rather than repeating login steps inline.
   - Wrap every plan step and verification in its own `test.step('<step text>', async () => {...})` — one
-    step per plan line; don't duplicate the wrapping when a single plan step needs several actions.
+    step per plan line; don't duplicate the wrapping when a single plan step needs several actions. The
+    step text is the plan line verbatim, minus only its trailing `(method())` reference. Where the plan
+    loops across lines, keep the plan's lines as the outer steps and nest each iteration under them.
   - Route every action through a page object method (I1); pull data and credentials from `data/*.ts`
     (I3/I4) and config from `@config/testConfig` (I6) rather than hardcoding.
   - Prefer the best practices surfaced in the generator log (auto-waiting, resilient role-based locators
@@ -135,15 +167,25 @@ it reviewed:
 
 - Start `playwright-test-reviewer` in test-review mode, in a fresh context (in Claude Code, the
   `playwright-test-reviewer` sub-agent), naming the plan and the spec file. Pass only the paths — not your
-  reasoning.
+  reasoning. A re-review is the same: the plan, the spec, the files you changed and the finding it is
+  checking, quoted exactly — nothing about what you observed or concluded.
 - **`must fix` findings** — a test that could pass with the feature broken, an Expected Result nothing
   asserts, a plan step with no step — fix them before you finish: re-drive the step live if the fix needs a
   new assertion or locator, as for any other step. Then start a fresh review of the changed tests, once.
   Whatever still fails it, show the user rather than looping.
 - **`consider` findings** — show them with your recommendation; change only what the user agrees to.
+- **Clean** — no `must fix` left → record it in the plan: add `**Tests reviewed:** <YYYY-MM-DD> — clean,
+  <spec path>` to the story's fields at the top. That line is what lets the story merge (the merge rule in
+  `docs/GIT-WORKFLOW.md`); add it only after a clean review.
 - Report the review in your summary: what it found, what you changed, what you left and why.
 - **Skip it only when the user asked to** in the invocation — "no review", say for a one-line fix — and say
-  in the summary that it was skipped.
+  in the summary that it was skipped, and that the story cannot merge until its tests are reviewed.
+
+## Then — offer to run them
+Once the spec is written and its review is settled, ask: *Run these tests now?* A yes hands over to
+`/playwright-test-executor` for a story run of this story — every test of it, one browser — which confirms the
+selection, runs it, and takes any failures to the healer. In another tool, tell the user that command. Never
+run the tests yourself from here.
 
 ## Self-audit before writing (blocking)
 - The test title starts with the scenario's TCID, copied from the plan heading, followed by its summary (I8).

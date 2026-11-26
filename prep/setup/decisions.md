@@ -7,7 +7,7 @@ Answer what you can now; the rest is decided after the context-builder. On setup
 
 | Question | Answer |
 |---|---|
-| Environment the harness runs against — QA or staging, **never production** | |
+| Environment the harness runs against — QA or staging, **never production** — by the name reports print (`TEST_ENVIRONMENT`) | |
 | Its address (`BASE_URL`) — with `https://`, no trailing slash | |
 | Areas the agents must stay out of — out of scope, or where even opening a screen has an effect | |
 | Who has been told someone will be exploring the environment | |
@@ -53,7 +53,7 @@ When may a test cycle close? Defaults shown — change any. They go into `exitCr
 |---|---|---|
 | Priority 1 test cases passing | 100% | |
 | Priority 2 test cases passing | 95% | |
-| Acceptance criteria covered by a passing test case | 100% | |
+| Acceptance criteria with every test case passing | 100% | |
 | Open P1 defects | 0 | |
 | Open P2 defects | 0 | |
 | Test cases not executed | 0 | |

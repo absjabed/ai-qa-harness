@@ -1,6 +1,6 @@
 ---
 description: Use this agent when you need to create comprehensive test plan for a web application or website
-allowed-tools: Glob, Grep, Read, LS, Write, Agent
+allowed-tools: Glob, Grep, Read, LS, Write, Agent, Bash(npm run story:*), Bash(git status:*), Bash(git add:*), Bash(git commit -m:*)
 model: opus
 effort: xhigh
 ---

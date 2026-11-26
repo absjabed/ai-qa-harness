@@ -1,6 +1,6 @@
 # Agent Reference
 
-Seven agents, defined in [`agents/`](../agents/) as vendor-neutral markdown and wired into Claude Code by
+Nine agents, defined in [`agents/`](../agents/) as vendor-neutral markdown and wired into Claude Code by
 thin wrappers in `.claude/commands/` — and the reviewer also as a sub-agent in `.claude/agents/`. They form a pipeline but each runs alone.
 
 Not using Claude Code? [`agents/README.md`](../agents/README.md) covers porting — it is a one-line wrapper
@@ -19,7 +19,7 @@ story ──▶ planner ──▶ plan.md + plan.csv ──▶ generator ──�
                                                             failing? ──▶ healer ──▶ fixed test
                                                                                       │
                                                                           genuine bug ▼
-                                                                          defect-log.json
+                                                                         specs/defects/log/
                                                                                       │
                                                                                       ▼
                                                                             defect-raiser
@@ -35,7 +35,7 @@ on top: it never changes what a test expects without the plan agreeing or you ap
 **Changing the harness.** When an agent does not behave as the team needs, `playwright-harness-improver`
 finds where the behavior comes from and changes it there — see its section at the end.
 
-All seven read `PROJECT-PROFILE.md` first. Six of them also read
+All nine read `PROJECT-PROFILE.md` first. Six of them also read
 `TEST-AUTHORING-INVARIANTS.md` and cite invariants by number rather than restating them — one file,
 so a convention has a single place to change.
 
@@ -55,6 +55,11 @@ or a SQL query when it can't find one — it flags the gap.
 unregistered module tag stops the run. A missing SQL query stops the run. Every one of those is a point
 where a guess would produce work that looks right and is wrong.
 
+**They run commands plainly and never work around a refusal.** Each command runs on its own from the repo
+root — no `cd … &&`, pipe or `git -C`, which turn an allowed command into a refused one — and a refused call
+is reported once, never retried in another form. A timestamp they record comes from `npm run env -- now`,
+never estimated.
+
 ---
 
 ## `/playwright-context-builder`
@@ -67,7 +72,7 @@ cover. Name an area, module or role to run it for that alone. Usually the QA lea
 | | |
 |---|---|
 | **Model** | opus, `effort: xhigh` |
-| **Tools** | Read, search and write over the repo; the Playwright browser tools; the database's read tools, if wired |
+| **Tools** | Read, search and write over the repo; the Playwright browser tools; the database's and Figma's read tools, if wired; `npm run context:sync` |
 | **Browser** | Required. It walks the application as each role, read-only, starting from each role's seed in `tests/seeds/`. |
 | **Input** | Answers to its inventory questions; documents in `context/sources/`; the Jira epics or releases to digest, if connected |
 | **Output** | `context/BASELINE.md`, `context/<area>.md`, drafts of PROJECT-PROFILE §2–4, navigation plans, module tags |
@@ -118,7 +123,7 @@ Turns a story into a reviewed test plan.
 | **Model** | opus, `effort: xhigh` |
 | **Tools** | Glob, Grep, Read, LS, Write — read-only over the codebase, plus writing the plan; the tracker's read tools, if wired |
 | **Browser** | None. Grounds everything in the codebase. |
-| **Input** | A story key. With the tracker server wired it fetches the story itself; otherwise paste key, title, description and AC. Optionally screenshots. |
+| **Input** | A story key. With the tracker server wired it fetches the story itself; otherwise paste key, title, description and AC. Optionally screenshots, or the Figma frames the story links, read through the `figma` server if wired. |
 | **Output** | `specs/<KEY>.plan.md` and `specs/<KEY>.plan.csv` |
 
 ### How to invoke
@@ -143,6 +148,11 @@ test title and defect downstream is built on that key (I8).
 
 Pasted screenshots are supplementary: used for field names, layout, labels, and states the text omitted.
 It will not invent behavior a screenshot only implies without text or codebase confirmation.
+
+**Designs from Figma**, when the `figma` server is wired: it reads the frames the ticket links, sparingly —
+Figma rations reads per seat — and uses them the same way, as design intent. The AC and `context/` decide;
+a design that disagrees with them is raised at the first checkpoint. Each frame is cited in the plan's
+`**Design:**` line, and a detail taken only from a design is marked `(design: <node>)`.
 
 ### What it reads first
 
@@ -284,7 +294,8 @@ this feature yet, I'm going to create `RecordListPage.ts`" — and waits.
 ### What it will not do
 
 Mint a TCID — if a scenario has no plan row, it asks you to add one (or run the planner) instead. Write a
-test for a step it never drove. Assume a file path. Invent a module tag — it asks, then writes the
+test for a step it never drove. Quietly work around a plan line it cannot implement as written — it lists
+them at its first checkpoint. Assume a file path. Invent a module tag — it asks, then writes the
 row into `regression-tags.md` itself. Invent SQL. Write a role name into a `test.describe` title as a
 substitute for a tag (`--grep` matches full title strings, which produces false positives).
 
@@ -314,7 +325,8 @@ An independent second reader. Did not write what it reviews, never edits, never 
 
 Each authoring agent already audits its own work, but against its own checklist and its own reading of the
 source. The reviewer starts fresh, from the ticket or the plan, with none of the author's reasoning — so it
-finds what the author never thought to look for.
+finds what the author never thought to look for. It never opens Figma either: a plan detail marked
+`(design: …)` is checked against the ticket, not taken on trust.
 
 ### What it looks for
 
@@ -333,6 +345,55 @@ generator re-reviews what it changed once, then shows you whatever still fails r
 
 ---
 
+## `/playwright-test-executor`
+
+Runs the tests and sees the run through to a report.
+
+| | |
+|---|---|
+| **Model** | opus |
+| **Tools** | Read, Edit (manual results only), `npm run regression`, `npm run results:last`, `npm run report:cycle -- --list` and `-- --preview` (read only), `npm run context:sync` |
+| **Input** | A story to run, or a release's regression |
+| **Output** | A finished run: results recorded, failures taken to the healer, defects to the defect-raiser, manual results recorded, the report offered |
+
+### Two modes, always confirmed
+
+- **Story run** — every test of the chosen stories. Usually right after the generator: it asks *run these tests
+  now?* and hands over.
+- **Regression run** — a client release's stories, or chosen epics or tickets, `@Regression` tests by default;
+  `all` for every release.
+
+It shows the selection from a dry run — tickets, test count, browsers, build — and waits for a yes. Running
+touches a shared environment, so it never starts without one. A narrow re-run you ask for in so many words —
+these TCIDs, on this build — needs the dry run shown, not a second yes, and is committed with that run's own
+counts.
+
+It always runs in the foreground — a background run ends with a non-interactive session, cut off part-way —
+and splits a run that could outlast the command time limit story by story.
+
+### After the run
+
+1. `npm run results:last` groups the failures by spec and error. It asks **once**: heal all, heal these groups,
+   skip, or stop.
+2. It hands over to the healer with that scope, then takes the session back and re-reads the results and the
+   defect log to say where the run stands — it never relies on memory for a count. It takes the session back
+   after every hand-over, so later runs, reports and syncs go through it.
+3. It offers the defect-raiser for pending defects.
+4. It asks about manual cases still not run: enter results now, or leave them.
+5. It offers the report, suggesting this run's scope.
+6. `npm run context:sync` links the run's test cases to the rules in `context/` they verified or contradicted,
+   and to known unknowns a case may answer. It shows them and asks once; the context-builder applies what you
+   agree to. A result never becomes a new rule.
+
+A session that ends mid-way picks up from the last run: everything it needs is on disk.
+
+### What it will not do
+
+Start a run without your yes; fix a test or a locator (the healer does); mark `fixme`, file bugs or post to
+Jira; count a figure the scripts did not print; read `.env`.
+
+---
+
 ## `/playwright-test-healer`
 
 Diagnoses and fixes failing tests. Stops short of filing defects.
@@ -340,17 +401,20 @@ Diagnoses and fixes failing tests. Stops short of filing defects.
 | | |
 |---|---|
 | **Model** | opus |
-| **Tools** | Read/Edit/Write + Playwright MCP snapshot, console, network, `test_run`, `test_debug`, `test_list`, and `AskUserQuestion`; the database's and tracker's read tools, if wired |
+| **Tools** | Read/Edit/Write + Playwright MCP snapshot, console, network, `test_run`, `test_debug`, `test_list`, `browser_resume`, and `AskUserQuestion`; `npx playwright test` for a re-run; the database's and tracker's read tools, if wired |
 | **Input** | What to heal: a story key, spec files, TCIDs, or the last run's failures — it asks if not told |
-| **Output** | Fixed tests, or an entry in `specs/defects/defect-log.json` with its evidence in `specs/defects/evidence/` |
+| **Output** | Fixed tests, or an entry in `specs/defects/log/` with its evidence in `specs/defects/evidence/` |
 
 ### What it heals
 
 What you point it at — `PROJ-1234`, a spec, a TCID, or "what failed in the last run", read from
 `test-results/results.json`. Point it at nothing and it lists the last run's failures and asks which; it runs
-the whole suite only when asked for exactly that. When it finishes, it runs the healed specs once more
-through the test runner, so the fixed results reach `specs/execution/automated-results.csv` and the cycle
-report.
+the whole suite only when asked for exactly that. If it changed a test, it runs the healed specs once more
+with `npx playwright test`, so the fixed results reach `specs/execution/automated-results.csv` and the cycle
+report; healed nothing, no re-run.
+
+A refused call is never rerouted — through another command, the MCP test runner or `npm run regression`. It
+says what was refused and gives you the exact command to run.
 
 ### The three-attempt rule
 
@@ -424,6 +488,9 @@ shows as done — and says which it found. Without one, tell it which were fixed
 - **passes both times** → keeps it active, removes the defect comment, marks the log entry `verified`
 - **fails either time** → restores the `fixme` exactly, leaves the entry `raised`, records the retest
 
+It commits the spec, the entry and `specs/execution/automated-results.csv` together, on the branch the spec
+lives on — the release branch once the story is merged.
+
 With a tracker, it offers to record the result on the bug — asking first: a comment, and a status change.
 The statuses come from your team's own Jira workflow: it lists the transitions that bug currently offers and
 asks which one, if any, to apply. It never picks one itself, and edits nothing else on the bug.
@@ -438,9 +505,10 @@ line, the observed behavior, the evidence ruling out a test-side cause, and a se
 against PROJECT-PROFILE.md section 7 — judged by observed impact, **never** by the test's own `@PriorityN`
 tag, which is test-coverage priority, not defect impact.
 
-On your confirmation it appends to `specs/defects/defect-log.json`, then runs `npm run defect:evidence`,
+On your confirmation it writes the entry as its own file in `specs/defects/log/`, then runs `npm run defect:evidence`,
 which copies the failure's screenshots and page snapshot into `specs/defects/evidence/<entry id>/` before the
-next run wipes `test-results/`. It does not file the bug and does not mark the test `fixme()`. The test stays
+next run wipes `test-results/`. If none are left, it re-runs that one test — `npx playwright test <spec> -g
+<TCID>`, or asks you to, never a wider run — and runs the script again. It does not file the bug and does not mark the test `fixme()`. The test stays
 red until the defect-raiser processes it.
 
 ### Defects found by hand
@@ -468,7 +536,7 @@ The mechanical last step. Does not investigate or judge.
 |---|---|
 | **Model** | opus |
 | **Tools** | Glob, Grep, Read, Edit, Write — no browser, no test runner; the tracker's search, create and link tools, if wired |
-| **Input** | The pending entries in `specs/defects/defect-log.json` — all of them, or the stories or TCIDs you name |
+| **Input** | The pending entries in `specs/defects/log/` — all of them, or the stories or TCIDs you name |
 | **Output** | Bugs in the tracker, linked to the story, evidence attached — or rows in `specs/defects/defects.csv` — plus tests marked `test.fixme()` |
 | **Interactive** | Asks once: it shows the batch — each bug, its severity, TCID, story and evidence — and files only what you agree to |
 
@@ -514,6 +582,47 @@ verifies. An entry that can't be traced to a TCID is left `pending` and reported
 
 It never alters the facts of a defect — summary, steps, actual/expected, evidence, severity all came from
 the human-confirmed healer finding. Its only judgment is a table lookup.
+
+---
+
+## `/playwright-test-reporter`
+
+Writes the formal test report: for one story, several, an epic or a release.
+
+| | |
+|---|---|
+| **Model** | sonnet — the numbers come from the script; it asks, enriches and words |
+| **Tools** | Read, Write (its own input files under `reports/.inputs/`), `npm run report:cycle`; the tracker's read tools and, on your yes, its comment tool |
+| **Input** | The scope and the formats, both asked every time |
+| **Output** | `specs/execution/reports/QA-Report_<app>_<scope>.md` — one per release, story, epic or set of stories, replaced by the next report for that scope — and `.html` / `.pdf` beside it on request |
+
+### How it works
+
+1. **Asks which report.** `npm run report:cycle -- --list` shows what there is; it suggests the scope the last
+   run covered — a story after a story run, the release after a regression.
+2. **Asks the format.** Markdown is always written and committed; HTML and PDF are made from it.
+   `QA_REPORT_FORMAT` in `.env` is the suggested answer. Who generated it comes from `QA_TESTER_NAME`, then the
+   git user name; if neither is set it asks.
+3. **Reads Jira**, if connected: each story's title and status, and for a release every ticket in it — so
+   tickets with no test plan yet show up in the report.
+4. **Previews the numbers** (`--preview`, which writes nothing), then writes two to five sentences of summary
+   from those numbers only.
+5. **Writes the report** with `--formal`.
+6. **Offers a test-summary comment** on each story in Jira — or an on-hold note on a blocked story — shown
+   first, posted only on your yes.
+
+### Every figure comes from the script
+
+The agent never counts or restates a number from memory. `npm run report:cycle` computes every figure from the
+plans, the results record, the manual results and the defect log; the agent adds only Jira details and the
+written summary. The HTML and PDF open with a verdict banner, the headline figures and a bar of how the test
+cases ended, then the tickets, exit criteria, results, priorities, acceptance-criteria coverage, defects,
+sign-off, and a short guide to reading it.
+
+### What it will not do
+
+Count or recalculate a figure; comment on a bug (the defect-raiser owns bugs); change any ticket's status or
+fields; read `.env`.
 
 ---
 
